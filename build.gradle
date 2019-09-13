@@ -1,11 +1,25 @@
-version '1.0-SNAPSHOT'
-
+// create a runnable jar with jar dependencies stored in lib subdirectory
+tasks.whenTaskAdded { task ->
+    ['startScripts', 'distTar'].each { String skipTaskName ->
+        if (task.name.contains(skipTaskName)) {
+            task.enabled = false
+        }
+    }
+}
 apply plugin: 'java'
+apply plugin: 'application'
 
-sourceCompatibility = 1.5
+// JDK 8
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+mainClassName = 'edu.mcw.rgd.data.EnsemblLoader'
+String myAppName = 'EnsemblDataPipeline'
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://packages.atlassian.com/maven-3rdparty'
+    }
 }
 
 dependencies {
@@ -22,3 +36,31 @@ dependencies {
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }
+
+jar {
+    baseName = myAppName
+    manifest {
+        attributes(
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date(),
+            'Built-JDK': System.getProperty('java.version'),
+            'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+            'Main-Class': mainClassName
+        )
+    }
+}
+
+distributions {
+    main {
+        baseName = myAppName
+    }
+}
+
+task createDistro(type: Copy) {
+    def zipFile = file('build/distributions/'+myAppName+'.zip')
+    def outputDir = file("build/install")
+
+    from zipTree(zipFile)
+    into outputDir
+}
+createDistro.dependsOn assembleDist
