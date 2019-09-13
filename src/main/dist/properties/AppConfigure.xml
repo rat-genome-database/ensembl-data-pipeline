@@ -1,0 +1,53 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
+        <property name="version" value="Ensembl Pipeline  build 2019-07-17"/>
+        <property name="pipelinePreprocessor" ref="pipelinePreprocessor"/>
+        <property name="pipelinePreprocessor2" ref="pipelinePreprocessor2"/>
+
+    </bean>
+
+    <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">
+        <property name="version" value="EnsemblDataPuller  build 2019-07-17" />
+        <property name="websiteUrl" value="http://www.ensembl.org/biomart/martservice"/>
+        <property name="biomartQueryTemplate" value="properties/biomart.xml"/>
+        <property name="biomartQueryAttrsGenes"><!-- ensembl gene attributes common to all species -->
+           <list>
+               <value>chromosome_name</value>
+               <value>start_position</value>
+               <value>end_position</value>
+               <value>strand</value>
+               <value>entrezgene_id</value>
+               <value>external_gene_name</value>
+               <value>gene_biotype</value>
+               <value>description</value>
+           </list>
+        </property>
+        <property name="biomartQueryAttrsRatGenes"><!-- ensembl gene attributes specific to rat -->
+            <list>
+                <value>rgd_id</value>
+            </list>
+        </property>
+        <property name="biomartQueryAttrsNcbiGene"><!-- biomart query attributes for NCBI gene ids-->
+            <list>
+                <value>entrezgene_id</value>
+            </list>
+        </property>
+
+    </bean>
+
+    <bean id="Parser" class="edu.mcw.rgd.data.Parser">
+    </bean>
+    <bean id="LogLoader" class="edu.mcw.rgd.data.LogLoader"></bean>
+    <bean id="pipelinePreprocessor" class="edu.mcw.rgd.data.EnsemblPipelinePreprocessor">
+        <property name="dataPuller" ref="ensemblDataPuller"/>
+        <property name="dataParser" ref="Parser"/>
+
+    </bean>
+    <bean id="pipelinePreprocessor2" class="edu.mcw.rgd.data.PipelinePreprocessor2">
+        <property name="loader" ref="LogLoader"></property>
+    </bean>
+
+
+
+</beans>
