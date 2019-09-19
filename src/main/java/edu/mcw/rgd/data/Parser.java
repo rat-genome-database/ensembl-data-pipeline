@@ -138,7 +138,7 @@ public class Parser
                                           if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null)
                                             {
                                                 matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                                //mapDAO.insertMapData(mapData);
+                                                mapDAO.insertMapData(mapData);
                                             }
                                         } else
                                             mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
@@ -150,7 +150,7 @@ public class Parser
                                          if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null)
                                             {
                                                 matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                                //mapDAO.insertMapData(mapData);
+                                                mapDAO.insertMapData(mapData);
                                           }
                                         } else
                                             mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
@@ -161,7 +161,7 @@ public class Parser
                                             if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null)
                                             {
                                                 matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                                //mapDAO.insertMapData(mapData);
+                                                mapDAO.insertMapData(mapData);
                                           }
                                         } else
                                             mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
@@ -174,7 +174,7 @@ public class Parser
                                       if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null)
                                         {
                                             matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                            //mapDAO.insertMapData(mapData);
+                                            mapDAO.insertMapData(mapData);
                                         }
                                     } else
                                         mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
@@ -207,33 +207,34 @@ public class Parser
                         {
                             if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null)
                             {
-                                test4log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id());
-                    /*String geneTypeLc = gene.getgene_biotype().toLowerCase();
-                     if (!ensemblDAO.existsGeneType(geneTypeLc))
-                         ensemblDAO.createGeneType(geneTypeLc);
-                     RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, SpeciesType.RAT);
-                     rgdid_new = newRgdId.getRgdId();
-                     Gene newGene = new Gene();
-                     newGene.setSymbol(gene.getgene_name());
-                     newGene.setRgdId(rgdid_new);
-                     newGene.setType(geneTypeLc);
-                     newGene.setName(gene.getgene_description());
-                     ensemblDAO.insertGene(newGene);
-                     mapData.setRgdId(rgdid_new);
-                     mapDAO.insertMapData(mapData);
-                     //matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                     //List<XdbId> ensemblXdbIds = new ArrayList<XdbId>();
-                     XdbId xdbId = new XdbId();
-                     xdbId.setRgdId(rgdid_new);
-                     xdbId.setSrcPipeline("Ensembl");
-                     xdbId.setAccId(gene.getEnsemblGeneId());
-                     xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
-                     ensemblDAO.insertXdbIds(xdbId);*/
-                            } else
-                                {
-                                ncbiexistbutnorgdid.info("Record has an ncbi_id  but no rgdid:" + gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
+                                test4log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
+                                /*String geneTypeLc = gene.getgene_biotype().toLowerCase();
+                                 if (!ensemblDAO.existsGeneType(geneTypeLc))
+                                 ensemblDAO.createGeneType(geneTypeLc);
+                                RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, SpeciesType.RAT);
+                                rgdid_new = newRgdId.getRgdId();
+                                Gene newGene = new Gene();
+                                newGene.setSymbol(gene.getgene_name());
+                                newGene.setRgdId(rgdid_new);
+                                newGene.setType(geneTypeLc);
+                                newGene.setName(gene.getgene_description());
+                                ensemblDAO.insertGene(newGene);
+                                mapData.setRgdId(rgdid_new);
+                                mapDAO.insertMapData(mapData);
+                               //matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
+                                //List<XdbId> ensemblXdbIds = new ArrayList<XdbId>();
+                                XdbId xdbId = new XdbId();
+                                xdbId.setRgdId(rgdid_new);
+                                xdbId.setSrcPipeline("Ensembl");
+                                xdbId.setAccId(gene.getEnsemblGeneId());
+                                xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
+                                ensemblDAO.insertXdbIds(xdbId);*/
                             }
 
+                        }
+                        else
+                        {
+                            ncbiexistbutnorgdid.info("Record has an ncbi_id  but no rgdid:" + gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
                         }
                     }
                 }
