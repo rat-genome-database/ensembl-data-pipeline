@@ -93,7 +93,7 @@ public class LogLoader
             {
                 if (ensemblDAO.getXdbIds(20, Integer.parseInt(gene.getrgdid())).contains(gene.getEnsemblGeneId()))
                 {
-                   // mapDAO.insertMapData(mapData);
+                   mapDAO.insertMapData(mapData);
                     mismatches_newposition_ensemblidexists_rgdxdb.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
                 } else
                     mismatches_ensemblid_doesnotexist_rgdxdb.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
@@ -115,7 +115,7 @@ public class LogLoader
             mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
             mapData.setStrand(gene.getStrand());
             test3log.info(entry.getKey()+"\t"+entry.getValue().getEntrezgene_id()+"\t"+entry.getValue().getrgdid()+"\t"+entry.getValue().getStartPos()+"\t"+entry.getValue().getStopPos()+"\t"+entry.getValue().getChromosome()+"\t"+entry.getValue().getStrand());
-           // mapDAO.insertMapData(mapData);
+           mapDAO.insertMapData(mapData);
         }
         reader.close();
         return log_genes;
