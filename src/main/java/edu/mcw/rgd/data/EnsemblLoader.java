@@ -26,7 +26,6 @@ public class EnsemblLoader {
     private String version;
     private Log log = LogFactory.getLog("status");
     EnsemblGene gene;
-    PipelinePreprocessor2 pipelinePreprocessor2;
 
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
@@ -72,9 +71,11 @@ public class EnsemblLoader {
         log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
         dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
         pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
+
         try {
+            System.out.println(ensemblDAO.getGeneType(1562697));
             Collection<EnsemblGene> genes = pipelinePreprocessor.run();
-            Collection<EnsemblGene> log_genes=pipelinePreprocessor2.run();
+            //Collection<EnsemblGene> log_genes=pipelinePreprocessor2.run();
        }
         catch(Exception e)
         {
@@ -106,13 +107,5 @@ public class EnsemblLoader {
 
     public String getVersion() {
         return version;
-    }
-
-    public void setPipelinePreprocessor2(PipelinePreprocessor2 pipelinePreprocessor2) {
-        this.pipelinePreprocessor2 = pipelinePreprocessor2;
-    }
-
-    public PipelinePreprocessor2 getPipelinePreprocessor2() {
-        return pipelinePreprocessor2;
     }
 }

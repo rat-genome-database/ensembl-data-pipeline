@@ -21,6 +21,7 @@ public class EnsemblDAO extends AbstractDAO {
     GeneDAO geneDAO = new GeneDAO();
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     MapDAO mapDAO = new MapDAO();
+    AliasDAO aliasdao = new AliasDAO();
     int[] primaryMapKey = new int[4];
     int speciesTypeKey;
 
@@ -37,11 +38,53 @@ public class EnsemblDAO extends AbstractDAO {
 
         return geneDAO.getGene(rgdId);
     }
-
-    /*public RgdId getRgdId(int rgdId) throws Exception
+    public List<String> getGeneType(int rgdId) throws Exception
     {
-        return managementDAO.getRgdId(rgdId);
-    }*/
+        String sql="select gene_type_lc from genes where rgd_id=?";
+        return StringListQuery.execute(this,sql,rgdId);
+    }
+    public void insertGeneType(int rgdId,String gene_type) throws Exception
+    {
+     String sql="update genes set ensembl_gene_type=? where rgd_id=?";
+        update(sql,gene_type,rgdId);
+    }
+    public List<String> getGeneSymbol(int rgdId) throws Exception
+    {
+        String sql="select gene_symbol from genes where rgd_id=?";
+        return StringListQuery.execute(this,sql,rgdId);
+    }
+    public void insertGeneSymbol(int rgdId,String gene_symbol) throws Exception
+    {
+        String sql="update genes set ensembl_gene_symbol=? where rgd_id=?";
+        update(sql,gene_symbol,rgdId);
+    }
+    public List<String> getGeneName(int rgdId) throws Exception
+    {
+        String sql="select full_name from genes where rgd_id=?";
+        return StringListQuery.execute(this,sql,rgdId);
+    }
+    public void insertGeneName(int rgdId,String gene_name) throws Exception
+    {
+        String sql="update genes set ensembl_full_name=? where rgd_id=?";
+        update(sql,gene_name,rgdId);
+    }
+    public void insertGeneSource(int rgdId,String gene_source) throws Exception
+    {
+        String sql="update genes set gene_source=? where rgd_id=?";
+        update(sql,gene_source,rgdId);
+    }
+    public String getGeneStringName(List<String> gene_name) throws Exception
+    {
+        String result=String.join(" ",gene_name);
+        return result;
+
+    }
+    public List<String> checkobjectstatus(int rgdId) throws Exception
+    {
+        String sql="select object_status from rgd_ids where rgd_id=?";
+        return StringListQuery.execute(this,sql,rgdId);
+    }
+
     public List<XdbId> getxdbid(int xdbkey,int rgdId) throws Exception
     {
 
@@ -70,12 +113,7 @@ public class EnsemblDAO extends AbstractDAO {
         }
         return activeRgdIds;
     }
-    public List<String> checkobjectstatus(int rgdId) throws Exception
-    {
-        String sql="select object_status from rgd_ids where rgd_id=?";
-        return StringListQuery.execute(this,sql,rgdId);
 
-    }
     public List<String> getmapdatarecords(String start_pos,String stop_pos,String chromosome,String strand) throws Exception
     {
      String sql="select maps_data_key from maps_data where map_key=361 and start_pos=? and stop_pos=? and chromosome=?and strand=? ";
@@ -101,6 +139,15 @@ public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
         String sql = "select acc_id from rgd_acc_xdb WHERE acc_id=?";
         return StringListQuery.execute(this,sql,Acc_id);
     }
+    public List<String> checkrgd_id(String Acc_id) throws Exception{
+        String sql = " select rgd_id from rgd_acc_xdb where acc_id=?";
+        return StringListQuery.execute(this,sql,Acc_id);
+    }
+    public int getrgd_id(String Acc_id) throws Exception{
+        String sql = " select rgd_id from rgd_acc_xdb where acc_id=?";
+        int rgd_id = 0;
+        return rgd_id;
+    }
     public List<MapData> insertdata(MapData mds) throws Exception
     {
         String sql = "INSERT INTO EXP1 (CHROMOSOME,MAP_KEY,RGD_ID, " +
@@ -120,6 +167,7 @@ public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
         MapDataQuery q = new MapDataQuery(this.getDataSource(), query);
         return execute(q, params);
     }
+
     public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome) throws Exception
     {
         String query="select * from maps_data where map_key=361 and rgd_id=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
@@ -146,21 +194,20 @@ public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
         }
     }
 
+    public int insertAliasType(String aliasType,String notes) throws Exception
+    {
+        return aliasDAO.insertAliasType(aliasType,notes);
+    }
+    public List<String> getAliasTypes() throws Exception
+    {
+        return aliasDAO.getAliasTypes();
 
+    }
 
+    public int insertAlias(Alias alias) throws Exception
+    {
+       return aliasDAO.insertAlias(alias);
+    }
 
 }
-
-    /**
-     * wrapper: get RgdId obls
-     * ject for given rgd id
-
-     * @return RgdId object or null if rgd id is invalid
-     * @throws Exception
-     */
-
-
-    //update(sql,gene.getEnsemblGeneId(),gene.getChromosome(),gene.getStartPos(),gene.getStopPos(),gene.getStrand(),gene.getRgdIds());
-
-
 

@@ -16,6 +16,7 @@ public class EnsemblPipelinePreprocessor {
 
     EnsemblDataPuller dataPuller;
     EnsemblDAO ensemblDAO;
+   // EnsemblGeneLoader geneLoader;
     //Parser parser;
     Databaseloading dbloading;
      Parser dataParser;
@@ -32,17 +33,20 @@ public class EnsemblPipelinePreprocessor {
     String STRAND;
     String RGD_ID;
     String entrezgene_id;
+    private EnsemblGeneLoader geneLoader;
 
     public Collection<EnsemblGene> run() throws Exception {
 //public void run() throws Exception{
         // download genes data from Ensembl biomart and store it locally in data folder
        dataPuller.setSpeciesTypeKey(speciesTypeKey);
+
         String dataFile = dataPuller.downloadGenesFile();
        // String dataFile1="C:/git/ensembl-data/src/main/dist/logs/mismatchofexternalidwithrgdid.log";
         // parse the file; map key is 'ensembl gene id'
         //System.out.println(dataFile);
         //Map<String, EnsemblGene> genes = dataParser.parseGene(dataFile);
        List<EnsemblGene> genes=dataParser.parseGene(dataFile);
+        geneLoader.run(genes);
         //List<EnsemblGene> log_genes = loader.parseGene(dataFile1);
         //List<EnsemblGene> genes =parser.parseGene(dataFile);
         //traverseallgenes(genes);
@@ -90,8 +94,17 @@ public class EnsemblPipelinePreprocessor {
         return speciesTypeKey;
     }
 
+
     public void setSpeciesTypeKey(int speciesTypeKey) {
         this.speciesTypeKey = speciesTypeKey;
+    }
+
+    public void setGeneLoader(EnsemblGeneLoader geneLoader) {
+        this.geneLoader = geneLoader;
+    }
+
+    public EnsemblGeneLoader getGeneLoader() {
+        return geneLoader;
     }
     /*public EnsemblParser getPaser()
     {
