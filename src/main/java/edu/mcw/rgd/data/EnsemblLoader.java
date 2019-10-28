@@ -19,7 +19,6 @@ import java.util.Collection;
 public class EnsemblLoader {
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     EnsemblDAO ensemblDAO;
-    Databaseloading dbloading;
     PipelineLogger dbLogger = PipelineLogger.getInstance();
     PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
     EnsemblPipelinePreprocessor pipelinePreprocessor;

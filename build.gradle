@@ -29,21 +29,30 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.5.7'
     compile 'org.springframework:spring-beans:5.1.0.RELEASE'
     compile 'org.springframework:spring-jdbc:5.1.0.RELEASE'
+    compile 'org.apache.logging.log4j:log4j-api'
+    compile 'org.apache.logging.log4j:log4j-core'
     compile 'com.oracle:ojdbc6:11.2.0.4.0-atlassian-hosted'
     compile 'com.io7m.xom:xom:1.2.10'
+    compile files('libs/ojdbc7.jar')
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }
+repositories {
+    flatDir(dir: 'libs')//, name: 'Local libs'
+}
 
+dependencies {
+    compile name: 'ojdbc7'
+}
 jar {
     baseName = myAppName
     manifest {
         attributes(
-            'Built-By': System.getProperty('user.name'),
-            'Built-Date': new Date(),
-            'Built-JDK': System.getProperty('java.version'),
-            'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-            'Main-Class': mainClassName
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': mainClassName
         )
     }
 }
@@ -62,3 +71,5 @@ task createDistro(type: Copy) {
     into outputDir
 }
 createDistro.dependsOn assembleDist
+
+

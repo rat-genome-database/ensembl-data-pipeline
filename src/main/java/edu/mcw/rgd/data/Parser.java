@@ -14,7 +14,7 @@ public class Parser
 {
     PipelineLogger dbLogger = PipelineLogger.getInstance();
     EnsemblDAO ensemblDAO = new EnsemblDAO();
-    Databaseloading dbloading;
+
     EnsemblGene gene;
     Connection conn;
     int speciesTypeKey;
@@ -25,7 +25,7 @@ public class Parser
     {
         dbLogger.log("  parsing gene file ", inputFile, PipelineLogger.INFO);
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-        conn = dbloading.getConnection();
+
         List<EnsemblGene> genes = new ArrayList<EnsemblGene>();
         String line;
         while ((line = reader.readLine()) != null)
