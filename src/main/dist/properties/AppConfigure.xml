@@ -3,7 +3,7 @@
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
         <property name="version" value="Ensembl Pipeline  build 2019-07-17"/>
         <property name="pipelinePreprocessor" ref="pipelinePreprocessor"/>
-        <property name="pipelinePreprocessor2" ref="pipelinePreprocessor2"/>
+
 
     </bean>
 
@@ -35,6 +35,7 @@
         </property>
 
     </bean>
+    <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader"></bean>
 
     <bean id="Parser" class="edu.mcw.rgd.data.Parser">
     </bean>
@@ -42,6 +43,7 @@
     <bean id="pipelinePreprocessor" class="edu.mcw.rgd.data.EnsemblPipelinePreprocessor">
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
+        <property name="geneLoader" ref="GeneLoader"></property>
 
     </bean>
     <bean id="pipelinePreprocessor2" class="edu.mcw.rgd.data.PipelinePreprocessor2">
