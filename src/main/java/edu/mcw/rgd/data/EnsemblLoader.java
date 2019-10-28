@@ -82,10 +82,7 @@ public class EnsemblLoader {
             e.printStackTrace();
             throw e;
         }
-        finally {
 
-            //
-        }
     }
     /**
      * print to stdout the information about command line parameters

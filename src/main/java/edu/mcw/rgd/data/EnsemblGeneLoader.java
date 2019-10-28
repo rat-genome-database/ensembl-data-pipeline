@@ -24,12 +24,8 @@ public class EnsemblGeneLoader {
     static Logger test3log = Logger.getLogger("test3");
     static Logger test5log = Logger.getLogger("test5");
     static Logger matchedrecords = Logger.getLogger("matchedrecords");
-
-
     RGDManagementDAO managementDAO = new RGDManagementDAO();
-
     MapDAO mapDAO = new MapDAO();
-
     List totalgenesloaded=new ArrayList();
     List totalmismatches=new ArrayList();
     List external_idexistnorgd_id=new ArrayList();
