@@ -243,7 +243,7 @@ public class EnsemblGeneLoader {
                 }
             }
         }
-        statuslog.info("Total loaded genes are \t"+totalgenesloaded.size());
+        statuslog.info("\nTotal loaded genes are \t"+totalgenesloaded.size());
         statuslog.info("\nTotal no of mismatched genes\t"+totalmismatches.size());
         statuslog.info("\nTotal no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
         statuslog.info("\nTotal number of Aliases inserted\t"+toalaliasesinserted.size());
