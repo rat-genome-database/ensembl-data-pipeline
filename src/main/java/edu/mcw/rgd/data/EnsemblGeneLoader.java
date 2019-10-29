@@ -243,22 +243,13 @@ public class EnsemblGeneLoader {
                 }
             }
         }
-        System.out.println("Total loaded genes are :"+totalgenesloaded.size());
         statuslog.info("Total loaded genes are \t"+totalgenesloaded.size());
-        System.out.println("Total no of mismatched genes"+totalmismatches.size());
         statuslog.info("Total no of mismatched genes\t"+totalmismatches.size());
-        System.out.println("Total no of genes external id exist and no rgdid"+external_idexistnorgd_id.size());
         statuslog.info("Total no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
-        System.out.println("Total number of Aliases inserted"+toalaliasesinserted.size());
         statuslog.info("Total number of Aliases inserted\t"+toalaliasesinserted.size());
-        System.out.println("Total number of new gene records created"+newgenerecords.size());
         statuslog.info("Total number of new gene records created\t"+newgenerecords.size());
-        System.out.println("Total number of records in which ncbi exist and no rgdid"+ncbi_idexistnorgd_id.size());
         statuslog.info("Total number of records in which ncbi exist and no rgdid\t"+ncbi_idexistnorgd_id.size());
-
     }
-
-
     public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
         List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
         String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
