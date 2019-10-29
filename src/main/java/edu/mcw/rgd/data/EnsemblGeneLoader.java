@@ -167,7 +167,7 @@ public class EnsemblGeneLoader {
                                         aliasData.setRgdId(rgd_id_new);
                                         aliasData.setValue(gene.getgene_biotype());
                                         aliasData.setTypeName("ensembl_gene_type");
-                                        ensemblDAO.insertAlias(aliasData);
+                                        //ensemblDAO.insertAlias(aliasData);
                                         toalaliasesinserted.add(aliasData);
                                         test1log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_biotype() + "\t" + ensemblDAO.getGeneType(rgdid_new) + "\t" + gene.getrgdid());
                                     }
