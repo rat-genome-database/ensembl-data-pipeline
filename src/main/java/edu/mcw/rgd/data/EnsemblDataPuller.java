@@ -66,17 +66,17 @@ public class EnsemblDataPuller {
 
     // return the name of output file
     String downloadFile(List<String> attributes, String outFile) throws Exception {
-        System.out.println(attributes);
+        //System.out.println(attributes);
 
         String data = buildBiomartQuery(attributes);
-System.out.println("Data"+ data);
+//System.out.println("Data"+ data);
         FileDownloader downloader = new FileDownloader();
         downloader.setExternalFile(websiteUrl + "?" + data);
         downloader.setLocalFile("data/" + SpeciesType.getCommonName(speciesTypeKey).toLowerCase() + "_" + outFile);
         downloader.setPrependDateStamp(true); // every downloaded file will have the current date in the name
         String outPath = downloader.download();
 
-        dbLogger.log("Downloaded file "+outPath, PipelineLogger.INFO);
+        //dbLogger.log("Downloaded file "+outPath, PipelineLogger.INFO);
         return outPath;
     }
 

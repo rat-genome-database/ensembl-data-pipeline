@@ -30,20 +30,13 @@ public class EnsemblPipelinePreprocessor {
         geneLoader.run(genes);
         return genes;
     }
-    void traverseallgenes(Collection<EnsemblGene> genes) throws Exception
-    {
-        for(EnsemblGene gene:genes)
-        {
-            System.out.println(gene.getChromosome());
-        }
-    }
     public EnsemblDataPuller getDataPuller() {
         return dataPuller;
     }
 
     public void setDataPuller(EnsemblDataPuller dataPuller) {
         this.dataPuller = dataPuller;
-        System.out.println(dataPuller.getVersion());
+       // System.out.println(dataPuller.getVersion());
     }
 
     public Parser getDataParser() {
