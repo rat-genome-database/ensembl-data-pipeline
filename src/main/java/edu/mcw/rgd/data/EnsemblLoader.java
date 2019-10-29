@@ -67,8 +67,8 @@ public class EnsemblLoader {
      */
     public void run(int speciesTypeKey) throws Exception {
         CounterPool counters = new CounterPool();
-        //log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
-        //dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
+        log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
+        dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
         pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
 
         try {
