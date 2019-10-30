@@ -20,7 +20,7 @@ public class EnsemblLoader {
     EnsemblDAO ensemblDAO;
     //PipelineLogger dbLogger = PipelineLogger.getInstance();
    // PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
-    EnsemblPipelinePreprocessor pipelinePreprocessor;
+   // EnsemblPipelinePreprocessor pipelinePreprocessor;
     private String version;
     private Log log = LogFactory.getLog("status");
     EnsemblGene gene;
