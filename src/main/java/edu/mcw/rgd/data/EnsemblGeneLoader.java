@@ -167,7 +167,7 @@ public class EnsemblGeneLoader {
                                         aliasData.setRgdId(rgd_id_new);
                                         aliasData.setValue(gene.getgene_biotype());
                                         aliasData.setTypeName("ensembl_gene_type");
-                                        //ensemblDAO.insertAlias(aliasData);
+                                        ensemblDAO.insertAlias(aliasData);
                                         toalaliasesinserted.add(aliasData);
                                         test1log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_biotype() + "\t" + ensemblDAO.getGeneType(rgdid_new) + "\t" + gene.getrgdid());
                                     }
@@ -261,14 +261,13 @@ public class EnsemblGeneLoader {
         String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
-        //System.out.println(gene.getgene_biotype());
         if (!ensemblDAO.getGeneType(rgdid_new).contains(gene.getgene_biotype())) {
             aliasData.setRgdId(rgdid_new);
             aliasData.setValue(gene.getgene_biotype());
             aliasData.setTypeName("ensembl_gene_type");
             ensemblDAO.insertAlias(aliasData);
             toalaliasesinserted.add(aliasData);
-           // test1log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_biotype() + "\t" + ensemblDAO.getGeneType(rgdid_new) + "\t" + gene.getrgdid());
+           test1log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_biotype() + "\t" + ensemblDAO.getGeneType(rgdid_new) + "\t" + gene.getrgdid());
         }
         if (!ensemblDAO.getGeneSymbol(rgdid_new).contains(gene.getgene_name())) {
             aliasData.setRgdId(rgdid_new);
@@ -276,7 +275,7 @@ public class EnsemblGeneLoader {
             aliasData.setTypeName("ensembl_gene_symbol");
             ensemblDAO.insertAlias(aliasData);
             toalaliasesinserted.add(aliasData);
-           // test2log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_name() + "\t" + ensemblDAO.getGeneSymbol(rgdid_new) + "\t" + gene.getrgdid());
+           test2log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_name() + "\t" + ensemblDAO.getGeneSymbol(rgdid_new) + "\t" + gene.getrgdid());
         }
         if (!gene.getgene_description().contains(gene_name_str)) {
             aliasData.setRgdId(rgdid_new);
@@ -284,7 +283,7 @@ public class EnsemblGeneLoader {
             aliasData.setTypeName("ensembl_full_name");
             ensemblDAO.insertAlias(aliasData);
             toalaliasesinserted.add(aliasData);
-           // test3log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_description() + "\t" + ensemblDAO.getGeneName(rgdid_new) + "\t" + gene.getrgdid());
+           test3log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_description() + "\t" + ensemblDAO.getGeneName(rgdid_new) + "\t" + gene.getrgdid());
         }
         ensemblDAO.insertGeneType(rgdid_new, gene.getgene_biotype());
         ensemblDAO.insertGeneSymbol(rgdid_new, gene.getgene_name());

@@ -17,14 +17,6 @@ public class EnsemblGene {
     String gene_name;
     String gene_biotype;
     String gene_description;
-/*public String toXml(){
-    Element ens = new Element("Ensembl");
-    ens.addAttribute(new Attribute("chromosome",this.getChromosome()+"Start Position"+this.getStartPos()+"Stop Position"+this.getStopPos()));
-    ens.addAttribute(new Attribute("strand",this.getStrand()));
-    ens.addAttribute(new Attribute("rgdid",this.getrgdid()));
-    return ens.toXML();
-}*/
-   // List<Integer> rgdIds = new ArrayList<Integer>();
     public String getgene_description(){return gene_description;}
     public void setgene_description(String gene_description){this.gene_description=gene_description;}
     public String getgene_name()

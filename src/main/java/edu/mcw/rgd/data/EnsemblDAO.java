@@ -6,8 +6,10 @@ import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
 
-import java.util.*;
-import java.util.Map;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -24,10 +26,6 @@ public class EnsemblDAO extends AbstractDAO {
     AliasDAO aliasdao = new AliasDAO();
     int[] primaryMapKey = new int[4];
     int speciesTypeKey;
-
-    // mapping of map keys to Map objects
-    Map<Integer, edu.mcw.rgd.datamodel.Map> maps = new HashMap<Integer, edu.mcw.rgd.datamodel.Map>();
-
 
     public EnsemblDAO() throws Exception {
         primaryMapKey[1] = mapDAO.getPrimaryRefAssembly(SpeciesType.HUMAN).getKey();
