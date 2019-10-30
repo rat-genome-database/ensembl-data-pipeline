@@ -3,10 +3,10 @@
 APPNAME=EnsemblDataPipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
-EMAILLIST=sellanki@mcw.edu
+EMAILLIST=sellanki@mcw.edu,mtutaj@mcw.edu,jrsmith@mcw.edu,jdepons@mcw.edu
 
 if [ "$SERVER" == "REED" ]; then
-  EMAILLIST=sellanki@mcw.edu
+  EMAILLIST=sellanki@mcw.edu,mtutaj@mcw.edu,jrsmith@mcw.edu,jdepons@mcw.edu
 fi
 cd $APPDIR
 java -jar -Dspring.config=$APPDIR/../properties/default_db.xml \
