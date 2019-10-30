@@ -3,6 +3,7 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.dao.impl.RGDManagementDAO;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.CounterPool;
+import edu.mcw.rgd.process.PipelineLogFlagManager;
 import edu.mcw.rgd.process.PipelineLogger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,9 +19,9 @@ import java.util.Collection;
 public class EnsemblLoader {
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     EnsemblDAO ensemblDAO;
-    //PipelineLogger dbLogger = PipelineLogger.getInstance();
-   // PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
-   // EnsemblPipelinePreprocessor pipelinePreprocessor;
+    PipelineLogger dbLogger = PipelineLogger.getInstance();
+    PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
+   EnsemblPipelinePreprocessor pipelinePreprocessor;
     private String version;
     private Log log = LogFactory.getLog("status");
     EnsemblGene gene;
@@ -66,9 +67,9 @@ public class EnsemblLoader {
      */
     public void run(int speciesTypeKey) throws Exception {
         CounterPool counters = new CounterPool();
-        log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
-        dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
-        pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
+       // log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
+        //dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
+        //pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
         try {
             Collection<EnsemblGene> genes = pipelinePreprocessor.run();
             //Collection<EnsemblGene> log_genes=pipelinePreprocessor2.run();
