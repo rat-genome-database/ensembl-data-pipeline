@@ -138,7 +138,7 @@ public class EnsemblGeneLoader {
                         }
                     }
                 } catch (Exception e) {
-                    System.out.println("RGD id is" + gene.getrgdid());
+                    statuslog.error(e);
                     e.printStackTrace();
                 }
             if (gene.getrgdid() == "0")

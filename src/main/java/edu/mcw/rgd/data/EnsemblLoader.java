@@ -3,7 +3,6 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.dao.impl.RGDManagementDAO;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.PipelineLogFlagManager;
 import edu.mcw.rgd.process.PipelineLogger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,8 +18,8 @@ import java.util.Collection;
 public class EnsemblLoader {
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     EnsemblDAO ensemblDAO;
-    PipelineLogger dbLogger = PipelineLogger.getInstance();
-    PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
+    //PipelineLogger dbLogger = PipelineLogger.getInstance();
+   // PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
     EnsemblPipelinePreprocessor pipelinePreprocessor;
     private String version;
     private Log log = LogFactory.getLog("status");
@@ -76,6 +75,7 @@ public class EnsemblLoader {
        }
         catch(Exception e)
         {
+
             e.printStackTrace();
             throw e;
         }
