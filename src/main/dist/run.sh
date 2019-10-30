@@ -18,5 +18,5 @@ java -jar -Dspring.config=$APPDIR/../properties/default_db.xml \
 
 
 
-/bin/mailx -s "[$SERVER] EnsemblDataPipeline OK!" $EMAILLIST < $APPDIR/logs/status.log
+mailx -s "[$SERVER] EnsemblDataPipeline OK!" $EMAILLIST < $APPDIR/logs/status.log
 
