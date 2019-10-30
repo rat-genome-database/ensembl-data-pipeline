@@ -138,7 +138,7 @@ public class EnsemblGeneLoader {
                         }
                     }
                 } catch (Exception e) {
-                    statuslog.error(e);
+                    statuslog.info(e);
                     e.printStackTrace();
                 }
             if (gene.getrgdid() == "0")
