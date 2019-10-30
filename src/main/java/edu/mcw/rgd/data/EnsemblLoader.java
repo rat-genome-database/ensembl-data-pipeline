@@ -67,12 +67,11 @@ public class EnsemblLoader {
      */
     public void run(int speciesTypeKey) throws Exception {
         CounterPool counters = new CounterPool();
-       log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
+        log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
         dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
         pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
         try {
             Collection<EnsemblGene> genes = pipelinePreprocessor.run();
-            //Collection<EnsemblGene> log_genes=pipelinePreprocessor2.run();
        }
         catch(Exception e)
         {

@@ -2,8 +2,7 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.dao.impl.MapDAO;
 import edu.mcw.rgd.dao.impl.RGDManagementDAO;
-import edu.mcw.rgd.datamodel.Alias;
-import edu.mcw.rgd.datamodel.MapData;
+import edu.mcw.rgd.datamodel.*;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -210,7 +209,7 @@ public class EnsemblGeneLoader {
                     if (gene.getEntrezgene_id().equals("NIL")) {
                         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
                             test4log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                /*String geneTypeLc = gene.getgene_biotype().toLowerCase();
+                                String geneTypeLc = gene.getgene_biotype().toLowerCase();
                                  if (!ensemblDAO.existsGeneType(geneTypeLc))
                                      ensemblDAO.createGeneType(geneTypeLc);
                                 RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, SpeciesType.RAT);
@@ -234,7 +233,7 @@ public class EnsemblGeneLoader {
                                 xdbId.setSrcPipeline("Ensembl");
                                 xdbId.setAccId(gene.getEnsemblGeneId());
                                 xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
-                                ensemblDAO.insertXdbIds(xdbId);*/
+                                ensemblDAO.insertXdbIds(xdbId);
                         }
                     } else {
                         ncbiexistbutnorgdid.info("Record has an ncbi_id  but no rgdid:" + gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
