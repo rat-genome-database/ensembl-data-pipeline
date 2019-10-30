@@ -244,11 +244,17 @@ public class EnsemblGeneLoader {
             }
         }
         statuslog.info("\nTotal loaded genes are \t"+totalgenesloaded.size());
+        System.out.println("\nTotal loaded genes are \t"+totalgenesloaded.size());
         statuslog.info("\nTotal no of mismatched genes\t"+totalmismatches.size());
+        System.out.println("\nTotal no of mismatched genes\t"+totalmismatches.size());
         statuslog.info("\nTotal no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
+        System.out.println("\nTotal no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
         statuslog.info("\nTotal number of Aliases inserted\t"+toalaliasesinserted.size());
+        System.out.println("\nTotal number of Aliases inserted\t"+toalaliasesinserted.size());
         statuslog.info("\nTotal number of new gene records created\t"+newgenerecords.size());
+        System.out.println("\nTotal number of new gene records created\t"+newgenerecords.size());
         statuslog.info("\nTotal number of records in which ncbi exist and no rgdid\t"+ncbi_idexistnorgd_id.size());
+        System.out.println("\nTotal number of records in which ncbi exist and no rgdid\t"+ncbi_idexistnorgd_id.size());
     }
     public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
         List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
