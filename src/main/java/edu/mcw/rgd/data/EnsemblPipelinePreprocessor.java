@@ -14,35 +14,28 @@ public class EnsemblPipelinePreprocessor {
 
     EnsemblDataPuller dataPuller;
     EnsemblDAO ensemblDAO;
-     Parser dataParser;
-
+    Parser dataParser;
     int speciesTypeKey;
     PipelineLogger dbLogger = PipelineLogger.getInstance();
-     EnsemblGene gene;
+    EnsemblGene gene;
     private EnsemblGeneLoader geneLoader;
-
     public Collection<EnsemblGene> run() throws Exception {
         // download genes data from Ensembl biomart and store it locally in data folder
        dataPuller.setSpeciesTypeKey(speciesTypeKey);
-
         String dataFile = dataPuller.downloadGenesFile();
-       List<EnsemblGene> genes=dataParser.parseGene(dataFile);
+        List<EnsemblGene> genes=dataParser.parseGene(dataFile);
         geneLoader.run(genes);
         return genes;
     }
     public EnsemblDataPuller getDataPuller() {
         return dataPuller;
     }
-
     public void setDataPuller(EnsemblDataPuller dataPuller) {
         this.dataPuller = dataPuller;
-       // System.out.println(dataPuller.getVersion());
     }
-
     public Parser getDataParser() {
         return dataParser;
     }
-
     public void setDataParser(Parser dataParser) {
         this.dataParser = dataParser;
     }

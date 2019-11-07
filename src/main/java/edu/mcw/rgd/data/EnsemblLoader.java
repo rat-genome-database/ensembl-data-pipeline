@@ -1,5 +1,4 @@
 package edu.mcw.rgd.data;
-
 import edu.mcw.rgd.dao.impl.RGDManagementDAO;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.CounterPool;
@@ -10,7 +9,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
-
 import java.util.Collection;
 
 /**
@@ -21,7 +19,7 @@ public class EnsemblLoader {
     EnsemblDAO ensemblDAO;
     PipelineLogger dbLogger = PipelineLogger.getInstance();
     PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
-   EnsemblPipelinePreprocessor pipelinePreprocessor;
+    EnsemblPipelinePreprocessor pipelinePreprocessor;
     private String version;
     private Log log = LogFactory.getLog("status");
     EnsemblGene gene;
@@ -75,7 +73,6 @@ public class EnsemblLoader {
        }
         catch(Exception e)
         {
-
             e.printStackTrace();
             throw e;
         }

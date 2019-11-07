@@ -17,7 +17,6 @@ import java.util.List;
 /**
  * Created by sellanki on 8/6/2019.
  */
-
 public class EnsemblDataPuller {
     String websiteUrl; // ensembl biomart url
     String biomartQueryTemplate; // xml config file containing the query template to be POST-ed to biomart
@@ -28,7 +27,6 @@ public class EnsemblDataPuller {
     int speciesTypeKey;
     PipelineLogger dbLogger = PipelineLogger.getInstance();
     private String version;
-
     /**
      * download data from Ensembl biomart
      * @return name of the local copy of sorted data file
@@ -41,35 +39,18 @@ public class EnsemblDataPuller {
         List<String> attrs = new ArrayList<String>(this.getBiomartQueryAttrsGenes());
         if( speciesTypeKey== SpeciesType.RAT )
             attrs.addAll(this.getBiomartQueryAttrsRatGenes());
-
         // build biomart url
         // and download the file from biomart given the url
         String inputFile = downloadFile(attrs, "genes.txt");
 		// now sort the file using external merge sort
 		return sortFile(inputFile);
-
     }
-
-    /*public String downloadGenesEgFile() throws Exception {
-        // build biomart url and download the file from biomart given the url
-        return downloadFile(this.getBiomartQueryAttrsNcbiGene(), "ncbigene.txt");
-    }
-
-    public String downloadTranscriptsFile() throws Exception {
-
-        // build biomart url
-        // and download the file from biomart given the url
-        String inputFile = downloadFile(this.getBiomartQueryAttrsTranscripts(), "transcripts.txt");
-		// now sort the file using external merge sort
-		return sortFile(inputFile);
-    }*/
-
     // return the name of output file
     String downloadFile(List<String> attributes, String outFile) throws Exception {
         //System.out.println(attributes);
 
         String data = buildBiomartQuery(attributes);
-//System.out.println("Data"+ data);
+
         FileDownloader downloader = new FileDownloader();
         downloader.setExternalFile(websiteUrl + "?" + data);
         downloader.setLocalFile("data/" + SpeciesType.getCommonName(speciesTypeKey).toLowerCase() + "_" + outFile);
@@ -169,9 +150,6 @@ public class EnsemblDataPuller {
     public void setBiomartQueryAttrsNcbiGene(List<String> biomartQueryAttrsNcbiGene) {
         this.biomartQueryAttrsNcbiGene = biomartQueryAttrsNcbiGene;
     }
-
-
-
     public int getSpeciesTypeKey() {
         return speciesTypeKey;
     }
@@ -196,4 +174,5 @@ public class EnsemblDataPuller {
     public String getVersion() {
         return version;
     }
+
 }

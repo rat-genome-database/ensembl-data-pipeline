@@ -32,20 +32,14 @@
             </list>
         </property>
 
+
     </bean>
     <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader"></bean>
-
     <bean id="Parser" class="edu.mcw.rgd.data.Parser">
     </bean>
-
     <bean id="pipelinePreprocessor" class="edu.mcw.rgd.data.EnsemblPipelinePreprocessor">
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="geneLoader" ref="GeneLoader"></property>
-
     </bean>
-
-
-
-
 </beans>

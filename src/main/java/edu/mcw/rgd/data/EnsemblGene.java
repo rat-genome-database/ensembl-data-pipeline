@@ -19,6 +19,7 @@ public class EnsemblGene {
     String gene_description;
     public String getgene_description(){return gene_description;}
     public void setgene_description(String gene_description){this.gene_description=gene_description;}
+
     public String getgene_name()
     {
         return gene_name;
@@ -27,6 +28,7 @@ public class EnsemblGene {
     {
         this.gene_name=gene_name;
     }
+
     public String getgene_biotype()
     {
         return gene_biotype;
@@ -35,9 +37,14 @@ public class EnsemblGene {
     {
         this.gene_biotype=gene_biotype;
     }
+
     public String getrgdid() {
         return rgdid;
     }
+    public void setrgdid(String rgdid) {
+        this.rgdid = rgdid;
+    }
+
     public String getEntrezgene_id()
     {
         return entrezgene_id;
@@ -45,9 +52,6 @@ public class EnsemblGene {
     public void setEntrezgene_id(String entrezgene_id)
     {
         this.entrezgene_id=entrezgene_id;
-    }
-    public void setrgdid(String rgdid) {
-        this.rgdid = rgdid;
     }
 
     public String getChromosome() {

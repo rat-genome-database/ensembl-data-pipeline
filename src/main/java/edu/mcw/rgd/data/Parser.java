@@ -3,7 +3,6 @@ import edu.mcw.rgd.process.PipelineLogger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,9 +13,7 @@ public class Parser
 {
     PipelineLogger dbLogger = PipelineLogger.getInstance();
     EnsemblDAO ensemblDAO = new EnsemblDAO();
-
     EnsemblGene gene;
-    Connection conn;
     int speciesTypeKey;
     public Parser() throws Exception
     {
@@ -111,8 +108,8 @@ public class Parser
     public void setSpeciesTypeKey(int speciesTypeKey)
     {
         this.speciesTypeKey = speciesTypeKey;
-    }
 
+    }
     }
 
 
