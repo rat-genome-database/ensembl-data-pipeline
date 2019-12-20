@@ -3,9 +3,11 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.dao.impl.MapDAO;
 import edu.mcw.rgd.dao.impl.RGDManagementDAO;
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -13,258 +15,239 @@ import java.util.stream.Collectors;
  */
 public class EnsemblGeneLoader {
     EnsemblDAO ensemblDAO;
-    static Logger statuslog = Logger.getLogger("statuscheck");
-    static Logger mismatchlog = Logger.getLogger("mismatchcheck");
-    static Logger externalidexsistnorgdid = Logger.getLogger("externalidexsistnorgdid");
-    static Logger ncbiexistbutnorgdid = Logger.getLogger("ncbiexistbutnorgdid");
-    static Logger matchedrecords = Logger.getLogger("matchedrecords");
-    RGDManagementDAO managementDAO = new RGDManagementDAO();
     MapDAO mapDAO = new MapDAO();
-    List totalgenesloaded=new ArrayList();
-    List totalmismatches=new ArrayList();
-    List external_idexistnorgd_id=new ArrayList();
-    Set toalaliasesinserted = new HashSet();
-    List newgenerecords = new ArrayList();
-    List ncbi_idexistnorgd_id=new ArrayList();
+    static Logger statuslog = Logger.getLogger("statuscheck");
+
+    Map<String,String> matches=new HashMap<String,String>();
+    List mismatches=new ArrayList();
+    List newGenes = new ArrayList<>();
     public EnsemblGeneLoader() throws Exception {
         ensemblDAO = new EnsemblDAO();
     }
-    public void run(Collection<EnsemblGene> genes) throws Exception
+    public void run(Collection<EnsemblGene> genes,int speciesTypeKey) throws Exception
     {
+        System.out.println("Loading the file");
+        int mapKey = 0;
+        List<String> chromosomes = ensemblDAO.getChromosomes(MapManager.getInstance().getReferenceAssembly(speciesTypeKey).getKey());
+
+        if(speciesTypeKey == SpeciesType.RAT) {
+            mapKey = 361;
+        }
+        else if(speciesTypeKey == SpeciesType.MOUSE) {
+            mapKey =  39;
+        }
+        else if(speciesTypeKey == SpeciesType.HUMAN){
+            mapKey = 40;
+        }
+
+
         for (EnsemblGene gene : genes) {
-            int rgdid_new = Integer.parseInt(gene.getrgdid());
-            MapData mapData = new MapData();
-            mapData.setSrcPipeline("Ensembl");
-            mapData.setChromosome(gene.getChromosome());
-            mapData.setMapKey(361);
-            mapData.setRgdId(rgdid_new);
-            mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
-            mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
-            mapData.setStrand(gene.getStrand());
-            Alias aliasData = new Alias();
-            aliasData.setNotes("Added by Ensembl pipeline");
-            List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
-            String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
-            if (gene.getrgdid() != "0")
-                try {
-                    if (gene.getChromosome().matches("[1-9]|1[0-9]") || gene.getChromosome().matches("20") || gene.getChromosome().matches("X") || gene.getChromosome().matches("Y") || gene.getChromosome().matches("MT"))
-                    {
-                        if (managementDAO.getRgdId2(rgdid_new) != null) {
-                            if (!ensemblDAO.checkobjectstatus(rgdid_new).contains("ACTIVE")) {
-                                statuslog.info(gene.getrgdid() + "\t" + gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + ensemblDAO.checkobjectstatus(rgdid_new));
-                            }
-                            if (!gene.getEntrezgene_id().contains("NIL")) {
-                                if (!(ensemblDAO.getXdbIds(3, rgdid_new).isEmpty()) && !(ensemblDAO.getXdbIds(20, rgdid_new).isEmpty())) {
-                                    if (ensemblDAO.getXdbIds(3, rgdid_new).contains(gene.getEntrezgene_id()) && ensemblDAO.getXdbIds(20, rgdid_new).contains(gene.getEnsemblGeneId())) {
-                                        if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                                            matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
+            if(chromosomes.contains(gene.getChromosome())) {
+                String ncbiRgdId = null;
+                String rgdId = null;
 
-                                                mapDAO.insertMapData(mapData);
-                                                totalgenesloaded.add(gene.getEnsemblGeneId());
-                                                aliasesinsert(rgdid_new, gene);
-
-                                        }
-                                    } else {
-                                        mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                        totalmismatches.add(gene.getEnsemblGeneId());
-                                    }
-                                }
-                                if (!(ensemblDAO.getXdbIds(3, rgdid_new).isEmpty()) && (ensemblDAO.getXdbIds(20, rgdid_new).isEmpty())) {
-                                    if (ensemblDAO.getXdbIds(3, rgdid_new).contains(gene.getEntrezgene_id())) {
-                                        if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                                            matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-
-                                                mapDAO.insertMapData(mapData);
-                                                totalgenesloaded.add(gene.getEnsemblGeneId());
-                                                aliasesinsert(rgdid_new, gene);
-
-                                        }
-                                    } else {
-                                        mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                        totalmismatches.add(gene.getEnsemblGeneId());
-                                    }
-                                }
-                                if ((ensemblDAO.getXdbIds(3, rgdid_new).isEmpty()) && !(ensemblDAO.getXdbIds(20, rgdid_new).isEmpty())) {
-
-                                    if (ensemblDAO.getXdbIds(20, rgdid_new).contains(gene.getEnsemblGeneId())) {
-                                        if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                                            matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-
-                                                mapDAO.insertMapData(mapData);
-                                                totalgenesloaded.add(gene.getEnsemblGeneId());
-                                                aliasesinsert(rgdid_new, gene);
-
-                                        }
-                                    } else {
-                                        mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                        totalmismatches.add(gene.getEnsemblGeneId());
-                                    }
-                                }
-                            }
-                            if (gene.getEntrezgene_id().contains("NIL")) {
-                                if (ensemblDAO.getXdbIds(20, rgdid_new).contains(gene.getEnsemblGeneId())) {
-                                    if (ensemblDAO.checkrecord(rgdid_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                                        matchedrecords.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-
-                                            mapDAO.insertMapData(mapData);
-                                            totalgenesloaded.add(gene.getEnsemblGeneId());
-                                            aliasesinsert(rgdid_new, gene);
-
-                                    }
-                                } else {
-                                    mismatchlog.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                                    totalmismatches.add(gene.getEnsemblGeneId());
-                                }
-                            }
-                        }
-                  }
-                } catch (Exception e) {
-                    statuslog.info(e);
-                    e.printStackTrace();
+                List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), 20);
+                if(!gene.getEntrezgene_id().equals("NIL")) {
+                    List<String> ncbiIds = ensemblDAO.getRgd_id(gene.getEntrezgene_id(), 3);
+                    if (ncbiIds != null && ncbiIds.size() == 1)
+                        ncbiRgdId = ncbiIds.get(0);
+                    else {
+                        //This indicates multiple rgdIds for a ncbi
+                        if (ncbiIds != null) {
+                            statuslog.info("Check the ncbi Id: " + gene.getEntrezgene_id());
+                        } else ncbiRgdId = null; //Ncbi Id doesnt exist in rgd database
+                    }
                 }
-            if (gene.getrgdid() == "0")
-            {
-                if (gene.getChromosome().matches("[1-9]|1[0-9]") || gene.getChromosome().matches("20") || gene.getChromosome().matches("X") || gene.getChromosome().matches("Y") || gene.getChromosome().matches("MT"))
-                {
-                if ((ensemblDAO.checkXdbIds(gene.getEntrezgene_id()).contains(gene.getEntrezgene_id())) || (ensemblDAO.checkXdbIds(gene.getEnsemblGeneId()).contains(gene.getEnsemblGeneId()))) {
-                    if ((ensemblDAO.checkXdbIds(gene.getEntrezgene_id()).contains(gene.getEntrezgene_id())) && (ensemblDAO.checkXdbIds(gene.getEnsemblGeneId()).contains(gene.getEnsemblGeneId()))) {
-                        MapData[] array = new MapData[ensemblDAO.checkrgd_id(gene.getEnsemblGeneId()).size()];
-                        List<String> list3 = new ArrayList<String>();
-                        list3 = ensemblDAO.checkrgd_id(gene.getEntrezgene_id()).stream()
-                                .filter(ensemblDAO.checkrgd_id(gene.getEnsemblGeneId())::contains)
-                                .collect(Collectors.toList());
-                        if (!list3.isEmpty()) {
-                            String rgd1_new = "";
-                            for (String s : list3) {
-                                rgd1_new += s;
-                                int rgd_id_new = Integer.parseInt(rgd1_new);
-                                mapData.setRgdId(rgd_id_new);
-                                if (ensemblDAO.checkrecord(rgd_id_new, gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-
-                                        mapDAO.insertMapData(mapData);
-                                        totalgenesloaded.add(gene.getEnsemblGeneId());
-                                        if (!ensemblDAO.getGeneType(rgd_id_new).contains(gene.getgene_biotype())) {
-                                            aliasData.setRgdId(rgd_id_new);
-                                            aliasData.setValue(gene.getgene_biotype());
-                                            aliasData.setTypeName("ensembl_gene_type");
-                                            ensemblDAO.insertAlias(aliasData);
-                                            toalaliasesinserted.add(aliasData);
-                                        }
-                                        if (!ensemblDAO.getGeneSymbol(rgd_id_new).contains(gene.getgene_name())) {
-                                            aliasData.setRgdId(rgd_id_new);
-                                            aliasData.setValue(gene.getgene_name());
-                                            aliasData.setTypeName("ensembl_gene_symbol");
-                                            ensemblDAO.insertAlias(aliasData);
-                                            toalaliasesinserted.add(aliasData);
-                                        }
-                                        if (!gene.getgene_description().contains(gene_name_str)) {
-                                            aliasData.setRgdId(rgd_id_new);
-                                            aliasData.setValue(gene.getgene_description());
-                                            aliasData.setTypeName("ensembl_full_name");
-                                            ensemblDAO.insertAlias(aliasData);
-                                            toalaliasesinserted.add(aliasData);
-                                        }
-                                        ensemblDAO.insertGeneType(rgd_id_new, gene.getgene_biotype());
-                                        ensemblDAO.insertGeneSymbol(rgd_id_new, gene.getgene_name());
-                                        ensemblDAO.insertGeneName(rgd_id_new, gene.getgene_description());
-                                        //test5log.info(gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand() + "\t" + gene.getgene_description() + "\t" + rgd1_new);
-
-                                }
-                            }
-                        } else {
-                            externalidexsistnorgdid.info("Record with ncbi id and ensembl id exsists in rgd_acc_xdb table with, Ncbi id:" + gene.getEntrezgene_id() + ", Ensembl id:" + gene.getEnsemblGeneId() + " but rgd_id is not found in the file");
-                            external_idexistnorgd_id.add(gene.getEnsemblGeneId());
-                        }
-
-                    } else if ((ensemblDAO.checkXdbIds(gene.getEntrezgene_id()).contains(gene.getEntrezgene_id()))) {
-                        if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                            externalidexsistnorgdid.info("Record with ncbi id exsists in rgd_acc_xdb table with, Ncbi id:" + gene.getEntrezgene_id() + ", Ensembl id:" + gene.getEnsemblGeneId() + " but rgd_id is not found in the file");
-                            external_idexistnorgd_id.add(gene.getEnsemblGeneId());
-                        }
-                    } else if ((ensemblDAO.checkXdbIds(gene.getEnsemblGeneId()).contains(gene.getEnsemblGeneId()))) {
-                        if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                            externalidexsistnorgdid.info("Record with ensemblgene id exsists in rgd_acc_xdb table with, Ncbi id:" + gene.getEntrezgene_id() + ", Ensembl id:" + gene.getEnsemblGeneId() + " but rgd_id is not found in the file");
-                            external_idexistnorgd_id.add(gene.getEnsemblGeneId());
+                // Get rgdId based on the id from the file. RgdiD for Rat, MGI Id for Mouse and HGNC id for human are the ids from file.
+                if (!gene.getrgdid().equals("0")) {
+                    if (speciesTypeKey == SpeciesType.RAT)
+                        rgdId = gene.getrgdid();
+                    else if (speciesTypeKey == SpeciesType.MOUSE) {
+                        List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), 5);
+                        if(rgdIds != null && rgdIds.size() == 1)
+                            rgdId = rgdIds.get(0);
+                        else {
+                            if(rgdId != null)
+                                statuslog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
+                            rgdId = null;
                         }
                     }
-                } else {
-                    if (gene.getEntrezgene_id().equals("NIL")) {
-                        if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome()) == null) {
-                                 String geneTypeLc = gene.getgene_biotype().toLowerCase();
-                                 if (!ensemblDAO.existsGeneType(geneTypeLc))
-                                     ensemblDAO.createGeneType(geneTypeLc);
-                                RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, SpeciesType.RAT);
-                                rgdid_new = newRgdId.getRgdId();
-                                Gene newGene = new Gene();
-                                newGene.setSymbol(gene.getgene_name());
-                                newGene.setRgdId(rgdid_new);
-                                newGene.setType(geneTypeLc);
-                                newGene.setName(gene.getgene_description());
-                                newGene.setGeneSource("Ensembl");
-                                newGene.setEnsemblFullName(gene.getgene_description());
-                                newGene.setEnsemblGeneSymbol(gene.getgene_name());
-                                newGene.setEnsemblGeneType(gene.getgene_biotype());
-                                ensemblDAO.insertGene(newGene);
-                                newgenerecords.add(gene.getEnsemblGeneId());
-                                mapData.setRgdId(rgdid_new);
-                                mapDAO.insertMapData(mapData);
-                                totalgenesloaded.add(gene.getEnsemblGeneId());
-                                XdbId xdbId = new XdbId();
-                                xdbId.setRgdId(rgdid_new);
-                                xdbId.setSrcPipeline("Ensembl");
-                                xdbId.setAccId(gene.getEnsemblGeneId());
-                                xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
-                                ensemblDAO.insertXdbIds(xdbId);
+                    else {
+                        List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), 21);
+                        if(rgdIds != null && rgdIds.size() == 1)
+                            rgdId = rgdIds.get(0);
+                        else {
+                            if(rgdId != null)
+                                statuslog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid());
+                            rgdId = null;
+                        }
+                    }
+                }
+
+                // Ncbi id missing in the db
+                // check for rgdId in file and rgdId in database for ensemble gene id
+                if (ncbiRgdId == null) {
+                    if (rgdId == null) {
+                        // Case 1: No rgdid and no ncbi id in the file.
+                        if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
+                            statuslog.info("Check this out: Multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
+                        else {
+                            if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
+                                createNewEnsemblGene(gene, mapKey,null);
+                            else
+                                updateData(gene, ensembleRgdIds.get(0), mapKey);
+
                         }
                     } else {
-                        ncbiexistbutnorgdid.info("Record has an ncbi_id  but no rgdid:" + gene.getEnsemblGeneId() + "\t" + gene.getEntrezgene_id() + "\t" + gene.getrgdid() + "\t" + gene.getStartPos() + "\t" + gene.getStopPos() + "\t" + gene.getChromosome() + "\t" + gene.getStrand());
-                        ncbi_idexistnorgd_id.add(gene.getEnsemblGeneId());
+
+                        // Case 2: No ncbi id in the file
+                        if (ensembleRgdIds != null && ensembleRgdIds.contains(rgdId)) {
+                            updateData(gene, rgdId, mapKey);
+                        } else {
+                            // Ignore the duplicate entries which ensemble sends in the file with wrong ncbi ids and rgd ids
+                            if (matches.containsKey(gene.getEnsemblGeneId()) )
+                                continue;
+                            else {
+                                    if(ensembleRgdIds != null) {
+                                        mismatches.add(gene.getEnsemblGeneId());
+                                        statuslog.info(" Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId());
+                                    } else {
+                                        createNewEnsemblGene(gene, mapKey,rgdId);
+                                    }
+                                }
+                            }
+                        }
                     }
+                 else {
+
+                    // Ncbi Rgd Id and ensemble RgdId matches
+                    if (ensembleRgdIds != null && ensembleRgdIds.contains(ncbiRgdId)) {
+                        updateData(gene, ncbiRgdId, mapKey);
+                        matches.put(gene.getEnsemblGeneId(), ncbiRgdId);
+                    } else {
+                        // Check if ncbi rgdId and rgdId from file matches
+                        if (ensembleRgdIds == null && rgdId == null) {
+                            createNewEnsemblGene(gene, mapKey,ncbiRgdId);
+                        } else {
+                            if (rgdId == null) {
+                                if (matches.containsKey(gene.getEnsemblGeneId()))
+                                    continue;
+                                else {
+                                    mismatches.add(gene.getEnsemblGeneId());
+                                    statuslog.info(" Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
+                                }
+                            } else if (rgdId.equals(ncbiRgdId)) {
+                                updateData(gene, ncbiRgdId, mapKey);
+                                matches.put(gene.getEnsemblGeneId(), rgdId);
+                            }
+                        }
+                    }
+
                 }
             }
         }
-        }
-        statuslog.info("\nTotal loaded genes are \t"+totalgenesloaded.size());
-        System.out.println("\nTotal loaded genes are \t"+totalgenesloaded.size());
-        statuslog.info("\nTotal no of mismatched genes\t"+totalmismatches.size());
-        System.out.println("\nTotal no of mismatched genes\t"+totalmismatches.size());
-        statuslog.info("\nTotal no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
-        System.out.println("\nTotal no of genes external id exist and no rgdid\t"+external_idexistnorgd_id.size());
-        statuslog.info("\nTotal number of Aliases inserted\t"+toalaliasesinserted.size());
-        System.out.println("\nTotal number of Aliases inserted\t"+toalaliasesinserted.size());
-        statuslog.info("\nTotal number of new gene records created\t"+newgenerecords.size());
-        System.out.println("\nTotal number of new gene records created\t"+newgenerecords.size());
-        statuslog.info("\nTotal number of records in which ncbi exist and no rgdid\t"+ncbi_idexistnorgd_id.size());
-        System.out.println("\nTotal number of records in which ncbi exist and no rgdid\t"+ncbi_idexistnorgd_id.size());
+
+        statuslog.info("Total mismatches: "+mismatches.size());
+        statuslog.info("Total matches: "+ matches.size());
+        statuslog.info("Total new Genes: "+ newGenes.size());
+        statuslog.info("Total genes in file: "+genes.size());
     }
-    public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
+   public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
         List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
         String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
-        if (!ensemblDAO.getGeneType(rgdid_new).contains(gene.getgene_biotype())) {
-            aliasData.setRgdId(rgdid_new);
-            aliasData.setValue(gene.getgene_biotype());
-            aliasData.setTypeName("ensembl_gene_type");
-            ensemblDAO.insertAlias(aliasData);
-            toalaliasesinserted.add(aliasData);
-        }
+
+
         if (!ensemblDAO.getGeneSymbol(rgdid_new).contains(gene.getgene_name())) {
             aliasData.setRgdId(rgdid_new);
             aliasData.setValue(gene.getgene_name());
             aliasData.setTypeName("ensembl_gene_symbol");
             ensemblDAO.insertAlias(aliasData);
-            toalaliasesinserted.add(aliasData);
+
         }
-        if (!gene.getgene_description().contains(gene_name_str)) {
+        if (gene.getgene_description() != null && !gene.getgene_description().isEmpty() && !gene.getgene_description().contains(gene_name_str)) {
             aliasData.setRgdId(rgdid_new);
             aliasData.setValue(gene.getgene_description());
             aliasData.setTypeName("ensembl_full_name");
             ensemblDAO.insertAlias(aliasData);
-            toalaliasesinserted.add(aliasData);
+
         }
+
         ensemblDAO.insertGeneType(rgdid_new, gene.getgene_biotype());
         ensemblDAO.insertGeneSymbol(rgdid_new, gene.getgene_name());
         ensemblDAO.insertGeneName(rgdid_new, gene.getgene_description());
+    }
+
+   public void updateData(EnsemblGene gene,String rgdId, int mapKey) throws Exception{
+
+       MapData mapData = new MapData();
+       mapData.setSrcPipeline("Ensembl");
+       mapData.setChromosome(gene.getChromosome());
+       mapData.setMapKey(mapKey);
+       mapData.setRgdId(Integer.parseInt(rgdId));
+       mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
+       mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
+       mapData.setStrand(gene.getStrand());
+
+
+       if (ensemblDAO.checkrecord(Integer.parseInt(rgdId), gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
+           mapDAO.insertMapData(mapData);
+           aliasesinsert(Integer.parseInt(rgdId), gene);
+       }
+
+       if(!ensemblDAO.checkXDBRecord(Integer.parseInt(rgdId),gene.getEnsemblGeneId(),"Ensembl")) {
+           XdbId xdbId = new XdbId();
+           xdbId.setRgdId(Integer.parseInt(rgdId));
+           xdbId.setSrcPipeline("Ensembl");
+           xdbId.setAccId(gene.getEnsemblGeneId());
+           xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
+           ensemblDAO.insertXdbIds(xdbId);
+       }
+   }
+
+    public void createNewEnsemblGene(EnsemblGene gene, int mapKey,String rgdId) throws Exception {
+
+
+        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
+        if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
+            String geneTypeLc = gene.getgene_biotype().toLowerCase();
+            if (!ensemblDAO.existsGeneType(geneTypeLc))
+                ensemblDAO.createGeneType(geneTypeLc);
+            if(rgdId == null) {
+                newGenes.add(gene);
+                RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, speciesTypeKey);
+                rgdId = String.valueOf(newRgdId.getRgdId());
+                Gene newGene = new Gene();
+                newGene.setSymbol(gene.getgene_name());
+                newGene.setRgdId(Integer.parseInt(rgdId));
+                newGene.setType(geneTypeLc);
+                newGene.setName(gene.getgene_description());
+                newGene.setGeneSource("Ensembl");
+                newGene.setEnsemblFullName(gene.getgene_description());
+                newGene.setEnsemblGeneSymbol(gene.getgene_name());
+                newGene.setEnsemblGeneType(gene.getgene_biotype());
+                ensemblDAO.insertGene(newGene);
+            } else aliasesinsert(Integer.parseInt(rgdId), gene);
+
+
+            MapData mapData = new MapData();
+            mapData.setSrcPipeline("Ensembl");
+            mapData.setChromosome(gene.getChromosome());
+            mapData.setMapKey(mapKey);
+            mapData.setRgdId(Integer.parseInt(rgdId));
+            mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
+            mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
+            mapData.setStrand(gene.getStrand());
+            mapDAO.insertMapData(mapData);
+
+
+            XdbId xdbId = new XdbId();
+            xdbId.setRgdId(Integer.parseInt(rgdId));
+            xdbId.setSrcPipeline("Ensembl");
+            xdbId.setAccId(gene.getEnsemblGeneId());
+            xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
+            ensemblDAO.insertXdbIds(xdbId);
+        }
     }
 }

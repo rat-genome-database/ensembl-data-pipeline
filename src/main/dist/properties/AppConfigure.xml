@@ -2,7 +2,10 @@
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
         <property name="version" value="Ensembl Pipeline  build 2019-07-17"/>
-        <property name="pipelinePreprocessor" ref="pipelinePreprocessor"/>
+        <property name="dataPuller" ref="ensemblDataPuller"/>
+        <property name="dataParser" ref="Parser"/>
+        <property name="geneLoader" ref="GeneLoader"></property>
+        <property name="transcriptLoader" ref="TranscriptLoader"></property>
     </bean>
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">
@@ -21,25 +24,43 @@
                 <value>description</value>
             </list>
         </property>
+        <property name="biomartQueryAttrsTranscripts"><!-- ensembl transcript attributes common to all species -->
+            <list>
+                <value>ensembl_transcript_id</value>
+                <value>ensembl_transcript_id_version</value>
+                <value>chromosome_name</value>
+                <value>transcript_start</value>
+                <value>transcript_end</value>
+                <value>strand</value>
+                <value>exon_chrom_start</value>
+                <value>exon_chrom_end</value>
+                <value>rank</value>
+                <value>genomic_coding_start</value>
+                <value>genomic_coding_end</value>
+                <value>ensembl_peptide_id</value>
+            </list>
+        </property>
         <property name="biomartQueryAttrsRatGenes"><!-- ensembl gene attributes specific to rat -->
             <list>
                 <value>rgd_id</value>
             </list>
         </property>
-        <property name="biomartQueryAttrsNcbiGene"><!-- biomart query attributes for NCBI gene ids-->
+        <property name="biomartQueryAttrsMouseGenes"><!-- ensembl gene attributes specific to rat -->
             <list>
-                <value>entrezgene_id</value>
+                <value>mgi_id</value>
+            </list>
+        </property>
+        <property name="biomartQueryAttrsHumanGenes"><!-- ensembl gene attributes specific to rat -->
+            <list>
+                <value>hgnc_id</value>
             </list>
         </property>
 
 
     </bean>
     <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader"></bean>
+    <bean id="TranscriptLoader" class="edu.mcw.rgd.data.EnsemblTranscriptLoader"></bean>
     <bean id="Parser" class="edu.mcw.rgd.data.Parser">
     </bean>
-    <bean id="pipelinePreprocessor" class="edu.mcw.rgd.data.EnsemblPipelinePreprocessor">
-        <property name="dataPuller" ref="ensemblDataPuller"/>
-        <property name="dataParser" ref="Parser"/>
-        <property name="geneLoader" ref="GeneLoader"></property>
-    </bean>
+
 </beans>

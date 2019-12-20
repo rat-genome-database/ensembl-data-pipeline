@@ -6,23 +6,25 @@ import edu.mcw.rgd.process.PipelineLogFlagManager;
 import edu.mcw.rgd.process.PipelineLogger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by sellanki on 8/6/2019.
  */
 public class EnsemblLoader {
-    RGDManagementDAO managementDAO = new RGDManagementDAO();
-    EnsemblDAO ensemblDAO;
-    PipelineLogger dbLogger = PipelineLogger.getInstance();
-    PipelineLogFlagManager dbFlagManager = new PipelineLogFlagManager(dbLogger);
-    EnsemblPipelinePreprocessor pipelinePreprocessor;
+
+
     private String version;
-    private Log log = LogFactory.getLog("status");
-    EnsemblGene gene;
+    static Logger log = Logger.getLogger("statuscheck");
+    EnsemblDataPuller dataPuller;
+    Parser dataParser;
+    EnsemblGeneLoader geneLoader;
+    EnsemblTranscriptLoader transcriptLoader;
 
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
@@ -33,7 +35,7 @@ public class EnsemblLoader {
         DefaultListableBeanFactory bf= new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         edu.mcw.rgd.data.EnsemblLoader loader=(edu.mcw.rgd.data.EnsemblLoader) (bf.getBean("loader"));
-        loader.ensemblDAO = new EnsemblDAO();
+
         // parse cmd line params
         if( args.length<2 ) {
             usage();
@@ -64,12 +66,21 @@ public class EnsemblLoader {
      * @throws Exception
      */
     public void run(int speciesTypeKey) throws Exception {
-        CounterPool counters = new CounterPool();
         log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
-        dbLogger.init(speciesTypeKey, "download+process", "Ensembl");
-        pipelinePreprocessor.setSpeciesTypeKey(speciesTypeKey);
         try {
-            Collection<EnsemblGene> genes = pipelinePreprocessor.run();
+          //  Collection<EnsemblGene> genes = pipelinePreprocessor.run();
+
+           dataPuller.setSpeciesTypeKey(speciesTypeKey);
+            String dataFile = dataPuller.downloadGenesFile();
+            List<EnsemblGene> genes=dataParser.parseGene(dataFile);
+            System.out.println("Total genes parsed from file: "+genes.size());
+            geneLoader.run(genes,speciesTypeKey);
+
+           String transcriptsFile = dataPuller.downloadTranscriptsFile();
+           List<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
+            transcriptLoader.run(transcripts,speciesTypeKey);
+           System.out.println("Total transcripts parsed from file: "+transcripts.size());
+
        }
         catch(Exception e)
         {
@@ -82,21 +93,47 @@ public class EnsemblLoader {
      * print to stdout the information about command line parameters
      */
     static public void usage() {
-        System.out.println("Command line parameters required:");
-        System.out.println(" -species 0|1|2|3|Rat|Mouse|Human|All");
-    }
-    public EnsemblPipelinePreprocessor getPipelinePreprocessor() {
-        return pipelinePreprocessor;
+        log.info("Command line parameters required:");
+        log.info(" -species 0|1|2|3|Rat|Mouse|Human|All");
     }
 
-    public void setPipelinePreprocessor(EnsemblPipelinePreprocessor pipelinePreprocessor) {
-        this.pipelinePreprocessor = pipelinePreprocessor;
-    }
     public void setVersion(String version) {
         this.version = version;
     }
 
     public String getVersion() {
         return version;
+    }
+
+    public EnsemblDataPuller getDataPuller() {
+        return dataPuller;
+    }
+
+    public void setDataPuller(EnsemblDataPuller dataPuller) {
+        this.dataPuller = dataPuller;
+    }
+
+    public EnsemblGeneLoader getGeneLoader() {
+        return geneLoader;
+    }
+
+    public void setGeneLoader(EnsemblGeneLoader geneLoader) {
+        this.geneLoader = geneLoader;
+    }
+
+    public Parser getDataParser() {
+        return dataParser;
+    }
+
+    public void setDataParser(Parser dataParser) {
+        this.dataParser = dataParser;
+    }
+
+    public EnsemblTranscriptLoader getTranscriptLoader() {
+        return transcriptLoader;
+    }
+
+    public void setTranscriptLoader(EnsemblTranscriptLoader transcriptLoader) {
+        this.transcriptLoader = transcriptLoader;
     }
 }
