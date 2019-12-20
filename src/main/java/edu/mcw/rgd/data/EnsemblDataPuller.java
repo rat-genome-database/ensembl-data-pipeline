@@ -84,7 +84,7 @@ public class EnsemblDataPuller {
 
         FileDownloader downloader = new FileDownloader();
         downloader.setExternalFile(websiteUrl + "?" + data);
-        downloader.setLocalFile("E://data/" + SpeciesType.getCommonName(speciesTypeKey).toLowerCase() + "_" + outFile);
+        downloader.setLocalFile("data/" + SpeciesType.getCommonName(speciesTypeKey).toLowerCase() + "_" + outFile);
         downloader.setPrependDateStamp(true); // every downloaded file will have the current date in the name
         String outPath = downloader.download();
 

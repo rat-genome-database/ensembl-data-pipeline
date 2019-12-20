@@ -19,7 +19,7 @@ public class EnsemblTranscriptLoader {
 
 
     List loaded=new ArrayList();
-
+    List genesNotFound=new ArrayList();
     public EnsemblTranscriptLoader() throws Exception {
         ensemblDAO = new EnsemblDAO();
     }
@@ -44,38 +44,41 @@ public class EnsemblTranscriptLoader {
         for (EnsemblTranscript transcript : transcripts) {
             if(chromosomes.contains(transcript.getChromosome())) {
                 boolean transcriptMatch = false;
-                int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
-                List<EnsemblExon> features = transcript.getExonList();
-                List<Transcript> transcriptsForGene = transcriptDAO.getTranscriptsForGene(geneRgdId);
-                for(Transcript oldTranscript: transcriptsForGene) {
-                    if(oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
-                            oldTranscript.isNonCoding() == transcript.isNonCodingInd() &&
-                            oldTranscript.getProteinAccId().equalsIgnoreCase(transcript.getProteinId())){
-                        transcriptMatch = true;
-                        transcript.setRgdId(oldTranscript.getRgdId());
-                        List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
-                        List<EnsemblExon> matchedPositions = new ArrayList<>();
-                        for(TranscriptFeature oldPos: positions){
-                            for(EnsemblExon feature: features) {
-                                if(oldPos.getChromosome().equalsIgnoreCase(feature.getExonChromosome()) && oldPos.getStartPos() == feature.getExonStart() && oldPos.getStopPos() == feature.getExonStop()
-                                        && oldPos.getStrand().equalsIgnoreCase(feature.getStrand())) {
-                                    System.out.println("feature exists : "+ oldPos.getRgdId());
-                                    matchedPositions.add(feature);
+                String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
+                if (rgdId != null) {
+                    int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
+                    List<EnsemblExon> features = transcript.getExonList();
+                    List<Transcript> transcriptsForGene = transcriptDAO.getTranscriptsForGene(geneRgdId);
+                    for (Transcript oldTranscript : transcriptsForGene) {
+                        if (oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
+                                oldTranscript.isNonCoding() == transcript.isNonCodingInd()) {
+                            transcriptMatch = true;
+                            transcript.setRgdId(oldTranscript.getRgdId());
+                            List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
+                            List<EnsemblExon> matchedPositions = new ArrayList<>();
+                            for (TranscriptFeature oldPos : positions) {
+                                for (EnsemblExon feature : features) {
+                                    if (oldPos.getChromosome().equalsIgnoreCase(feature.getExonChromosome()) && oldPos.getStartPos() == feature.getExonStart() && oldPos.getStopPos() == feature.getExonStop()
+                                            && oldPos.getStrand().equalsIgnoreCase(feature.getStrand())) {
+                                        System.out.println("feature exists : " + oldPos.getRgdId());
+                                        matchedPositions.add(feature);
+                                    }
                                 }
                             }
+
+                            features.removeAll(matchedPositions);
                         }
-
-                        features.removeAll(matchedPositions);
                     }
-                }
-                if(transcriptMatch)
-                    updateTranscriptData(transcript.getRgdId(),features,mapKey);
-                else createNewEnsemblTranscript(transcript,mapKey);
+                    if (transcriptMatch)
+                        updateTranscriptData(transcript.getRgdId(), features, mapKey);
+                    else createNewEnsemblTranscript(transcript, mapKey);
 
+                }else genesNotFound.add(transcript.getEnsGeneId());
             }
         }
 
         statuslog.info("Total loaded: "+loaded.size());
+        statuslog.info("Total genes not found: "+genesNotFound.size());
         statuslog.info("Total in file: "+ transcripts.size());
 
     }

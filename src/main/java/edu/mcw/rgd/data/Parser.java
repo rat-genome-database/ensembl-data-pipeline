@@ -99,7 +99,6 @@ public class Parser
         while ((line = reader.readLine()) != null)
         {
             String[] cols = line.split("\t", -1);
-            System.out.println( line);
             if (cols.length < 10) {
                 System.out.println("\n" + cols);
                 throw new Exception("10 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
@@ -119,8 +118,14 @@ public class Parser
 
 
             EnsemblExon exon = new EnsemblExon();
+            exon.setExonChromosome(cols[3]);
             exon.setExonStart(Integer.valueOf(cols[7]));
             exon.setExonStop(Integer.valueOf(cols[8]));
+            if(cols[6].equals("1"))
+                exon.setStrand("+");
+            else if(cols[6].equals("-1"))
+                exon.setStrand("-");
+            exon.setExonTranscriptAccId(cols[1]);
             exon.setExonNumber(cols[9]);
 
             if(cols[10] != null && cols[11] != null)
