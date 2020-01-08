@@ -2,10 +2,13 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.dao.AbstractDAO;
 import edu.mcw.rgd.dao.impl.*;
+import edu.mcw.rgd.dao.spring.CountQuery;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
+import org.springframework.jdbc.core.SqlParameter;
 
+import java.sql.Types;
 import java.util.List;
 
 
@@ -18,11 +21,10 @@ public class EnsemblDAO extends AbstractDAO {
     XdbIdDAO xdbDAO = new XdbIdDAO();
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
+    TranscriptDAO transcriptDAO = new TranscriptDAO();
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     MapDAO mapDAO = new MapDAO();
-    AliasDAO aliasdao = new AliasDAO();
     int[] primaryMapKey = new int[4];
-    int speciesTypeKey;
 
     public EnsemblDAO() throws Exception {
         primaryMapKey[1] = mapDAO.getPrimaryRefAssembly(SpeciesType.HUMAN).getKey();
@@ -30,11 +32,7 @@ public class EnsemblDAO extends AbstractDAO {
         primaryMapKey[3] = mapDAO.getPrimaryRefAssembly(SpeciesType.RAT).getKey();
     }
 
-    public List<String> getGeneType(int rgdId) throws Exception
-    {
-        String sql="select gene_type_lc from genes where rgd_id=?";
-        return StringListQuery.execute(this,sql,rgdId);
-    }
+
     public void insertGeneType(int rgdId,String gene_type) throws Exception
     {
      String sql="update genes set ensembl_gene_type=? where rgd_id=?";
@@ -60,22 +58,14 @@ public class EnsemblDAO extends AbstractDAO {
         String sql="update genes set ensembl_full_name=? where rgd_id=?";
         update(sql,gene_name,rgdId);
     }
-    public void insertGeneSource(int rgdId,String gene_source) throws Exception
-    {
-        String sql="update genes set gene_source=? where rgd_id=?";
-        update(sql,gene_source,rgdId);
-    }
+
     public String getGeneStringName(List<String> gene_name) throws Exception
     {
         String result=String.join(" ",gene_name);
         return result;
 
     }
-    public List<String> checkobjectstatus(int rgdId) throws Exception
-    {
-        String sql="select object_status from rgd_ids where rgd_id=?";
-        return StringListQuery.execute(this,sql,rgdId);
-    }
+
 
     RgdId createRgdId(int objectKey, int speciesTypeKey) throws Exception {
         return managementDAO.createRgdId(objectKey, "ACTIVE", "created by Ensembl pipeline", speciesTypeKey);
@@ -90,32 +80,42 @@ public class EnsemblDAO extends AbstractDAO {
     public void insertGene(Gene gene) throws Exception {
         geneDAO.insertGene(gene);
     }
-public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
-    {
-        String sql = "select acc_id from rgd_acc_xdb WHERE xdb_key=? AND rgd_id=?";
-        return StringListQuery.execute(this,sql,xdbKey,rgdId);
-
+    public void insertTranscript(Transcript transcript,int speciesTypeKey) throws Exception {
+        transcriptDAO.createTranscript(transcript,speciesTypeKey);
     }
 
-    public List<String> checkXdbIds(String Acc_id) throws Exception
-    {
-        String sql = "select acc_id from rgd_acc_xdb WHERE acc_id=?";
-        return StringListQuery.execute(this,sql,Acc_id);
+    public void insertTranscriptFeature(TranscriptFeature transcriptFeature,int speciesTypeKey) throws Exception {
+        transcriptDAO.createFeature(transcriptFeature,speciesTypeKey);
     }
-    public List<String> checkrgd_id(String Acc_id) throws Exception{
-        String sql = " select rgd_id from rgd_acc_xdb where acc_id=?";
-        return StringListQuery.execute(this,sql,Acc_id);
+    public List<TranscriptFeature> getFeatures(int transcriptRgdId) throws Exception {
+        return transcriptDAO.getFeatures(transcriptRgdId);
+    }
+    public List<String> getRgd_id(String Acc_id, int xdbKey) throws Exception{
+        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = ? and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1";
+        List<String> result =  StringListQuery.execute(this,sql,Acc_id, xdbKey);
+        if(result.size() >  0)
+            return result;
+        else return null;
+    }
+
+    public String getEnsemblRgdId(String Acc_id) throws Exception{
+        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 20 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
+                "and rx.src_pipeline = 'Ensembl'";
+        List<String> result =  StringListQuery.execute(this,sql,Acc_id);
+        if(result.size() >  0)
+            return result.get(0);
+        else return null;
     }
 
     public int insertXdbIds(XdbId xdb) throws Exception {
         return xdbDAO.insertXdb(xdb);
     }
 
-    public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome) throws Exception
+    public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome,int mapKey) throws Exception
     {
-        String query="select * from maps_data where map_key=361 and rgd_id=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
+        String query="select * from maps_data where map_key=? and rgd_id=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
         MapDataQuery q=new MapDataQuery(this.getDataSource(),query);
-        List<MapData> mp=execute(q,rgd_id,start_pos,stop_pos,strand,chromosome);
+        List<MapData> mp=execute(q,mapKey,rgd_id,start_pos,stop_pos,strand,chromosome);
         if(!mp.isEmpty())
         {
             return mp.get(0);
@@ -124,10 +124,23 @@ public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
             return null;
         }
     }
-    public MapData checkrecord_rgdid(String start_pos,String stop_pos,String strand,String chromosome) throws Exception {
-     String query="select * from maps_data where map_key=361 and start_pos=? and stop_pos=? and strand=? and chromosome=?";
+    public boolean checkXDBRecord(int rgdId,String ensemblId,String srcPipeline) throws Exception{
+        String sql = "select count(*) from rgd_acc_xdb where rgd_id = ? and acc_id = ? and src_pipeline = ?";
+        CountQuery q = new CountQuery(getDataSource(), sql);
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        q.declareParameter(new SqlParameter(Types.VARCHAR));
+        q.declareParameter(new SqlParameter(Types.VARCHAR));
+        q.compile();
+        List<Integer> result = q.execute(rgdId,ensemblId,srcPipeline);
+        if(result.get(0) > 0)
+            return true;
+        else return false;
+    }
+
+    public MapData checkrecord_rgdid(String start_pos,String stop_pos,String strand,String chromosome, int mapKey) throws Exception {
+     String query="select * from maps_data where map_key=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
         MapDataQuery q=new MapDataQuery(this.getDataSource(),query);
-        List<MapData> mp=execute(q,start_pos,stop_pos,strand,chromosome);
+        List<MapData> mp=execute(q,mapKey,start_pos,stop_pos,strand,chromosome);
         if(!mp.isEmpty())
         {
             return mp.get(0);
@@ -152,5 +165,13 @@ public List<String> getXdbIds(int xdbKey, int rgdId) throws Exception
        return aliasDAO.insertAlias(alias);
     }
 
+    public List<String> getChromosomes(int mapKey) throws Exception {
+
+        String sql = "SELECT DISTINCT chromosome FROM CHROMOSOMES WHERE map_key=? ";
+        StringListQuery q = new StringListQuery(getDataSource(), sql);
+        q.declareParameter(new SqlParameter(Types.INTEGER));
+        q.compile();
+        return q.execute(new Object[]{mapKey});
+    }
 }
 

@@ -4,6 +4,7 @@ import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.FileExternalSort;
 import edu.mcw.rgd.process.PipelineLogger;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,12 +22,14 @@ public class EnsemblDataPuller {
     String websiteUrl; // ensembl biomart url
     String biomartQueryTemplate; // xml config file containing the query template to be POST-ed to biomart
     List<String> biomartQueryAttrsGenes; // list of attributes to be loaded for main genes query
+    List<String> biomartQueryAttrsTranscripts; // list of attributes to be loaded for main transcripts query
     List<String> biomartQueryAttrsRatGenes; // extra attributes to be loaded for rat genes
-    List<String> biomartQueryAttrsNcbiGene; // list of attributes to load all NCBI gene ids for ensembl genes
-    EnsemblDAO ensemblDAO;
+     List<String> biomartQueryAttrsMouseGenes;
+    List<String> biomartQueryAttrsHumanGenes;
+    Logger statuslog = Logger.getLogger("statuscheck");
     int speciesTypeKey;
-    PipelineLogger dbLogger = PipelineLogger.getInstance();
     private String version;
+
     /**
      * download data from Ensembl biomart
      * @return name of the local copy of sorted data file
@@ -39,12 +42,40 @@ public class EnsemblDataPuller {
         List<String> attrs = new ArrayList<String>(this.getBiomartQueryAttrsGenes());
         if( speciesTypeKey== SpeciesType.RAT )
             attrs.addAll(this.getBiomartQueryAttrsRatGenes());
+        else if(speciesTypeKey == SpeciesType.MOUSE)
+            attrs.addAll(this.getBiomartQueryAttrsMouseGenes());
+        else if(speciesTypeKey == SpeciesType.HUMAN)
+            attrs.addAll(this.getBiomartQueryAttrsHumanGenes());
+
         // build biomart url
         // and download the file from biomart given the url
+        statuslog.info("Downloading the genes file for "+ SpeciesType.getCommonName(speciesTypeKey));
         String inputFile = downloadFile(attrs, "genes.txt");
 		// now sort the file using external merge sort
 		return sortFile(inputFile);
     }
+
+    /**
+     * download data from Ensembl biomart
+     * @return name of the local copy of sorted data file
+     * @throws Exception
+     */
+    public String downloadTranscriptsFile() throws Exception {
+
+        // create a list with all attributes needed by biomart query
+        // it consist of attributes shared for any species, and attrs specific to species
+        List<String> attrs = new ArrayList<String>(this.getBiomartQueryAttrsTranscripts());
+
+
+        // build biomart url
+        // and download the file from biomart given the url
+        statuslog.info("Downloading the transcripts file for "+ SpeciesType.getCommonName(speciesTypeKey));
+
+        String inputFile = downloadFile(attrs, "transcripts.txt");
+        // now sort the file using external merge sort
+        return sortFile(inputFile);
+    }
+
     // return the name of output file
     String downloadFile(List<String> attributes, String outFile) throws Exception {
         //System.out.println(attributes);
@@ -143,13 +174,14 @@ public class EnsemblDataPuller {
         this.biomartQueryAttrsGenes = biomartQueryAttrsGenes;
     }
 
-    public List<String> getBiomartQueryAttrsNcbiGene() {
-        return biomartQueryAttrsNcbiGene;
+    public List<String> getBiomartQueryAttrsTranscripts() {
+        return biomartQueryAttrsTranscripts;
     }
 
-    public void setBiomartQueryAttrsNcbiGene(List<String> biomartQueryAttrsNcbiGene) {
-        this.biomartQueryAttrsNcbiGene = biomartQueryAttrsNcbiGene;
+    public void setBiomartQueryAttrsTranscripts(List<String> biomartQueryAttrsTranscripts) {
+        this.biomartQueryAttrsTranscripts = biomartQueryAttrsTranscripts;
     }
+
     public int getSpeciesTypeKey() {
         return speciesTypeKey;
     }
@@ -166,6 +198,21 @@ public class EnsemblDataPuller {
         this.biomartQueryAttrsRatGenes = biomartQueryAttrsRatGenes;
     }
 
+    public List<String> getBiomartQueryAttrsMouseGenes() {
+        return biomartQueryAttrsMouseGenes;
+    }
+
+    public void setBiomartQueryAttrsMouseGenes(List<String> biomartQueryAttrsMouseGenes) {
+        this.biomartQueryAttrsMouseGenes = biomartQueryAttrsMouseGenes;
+    }
+
+    public List<String> getBiomartQueryAttrsHumanGenes() {
+        return biomartQueryAttrsHumanGenes;
+    }
+
+    public void setBiomartQueryAttrsHumanGenes(List<String> biomartQueryAttrsHumanGenes) {
+        this.biomartQueryAttrsHumanGenes = biomartQueryAttrsHumanGenes;
+    }
 
     public void setVersion(String version) {
         this.version = version;

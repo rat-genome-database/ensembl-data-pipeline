@@ -1,9 +1,11 @@
 package edu.mcw.rgd.data;
-import edu.mcw.rgd.process.PipelineLogger;
+import edu.mcw.rgd.datamodel.SpeciesType;
+import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -11,22 +13,21 @@ import java.util.List;
  */
 public class Parser
 {
-    PipelineLogger dbLogger = PipelineLogger.getInstance();
-    EnsemblDAO ensemblDAO = new EnsemblDAO();
-    EnsemblGene gene;
     int speciesTypeKey;
+    Logger statuslog = Logger.getLogger("statuscheck");
     public Parser() throws Exception
     {
     }
     public List<EnsemblGene> parseGene(String inputFile) throws Exception
     {
-        dbLogger.log("  parsing gene file ", inputFile, PipelineLogger.INFO);
+        statuslog.info("Parsing the gene file for "+ SpeciesType.getCommonName(speciesTypeKey));
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
         List<EnsemblGene> genes = new ArrayList<EnsemblGene>();
         String line;
         while ((line = reader.readLine()) != null)
         {
+            EnsemblGene gene = new EnsemblGene();
             String[] cols = line.split("\t", -1);
             if (cols.length < 6) {
                 System.out.println("\n" + cols);
@@ -44,16 +45,10 @@ public class Parser
             String gene_description = cols[8];
             String rgdid = "";
             if (cols.length > 9) {
-                rgdid = cols[9];
+                    rgdid = cols[9];
             }
-            if (gene != null) {
-                genes.add(gene);
-                gene = null;
-            }
-            if (gene == null) {
-                gene = new EnsemblGene();
-                gene.setEnsemblGeneId(ensemblGeneId);
-            }
+              gene.setEnsemblGeneId(ensemblGeneId);
+
             if (rgdid.isEmpty()) {
                 gene.setrgdid("0");
             } else {
@@ -73,7 +68,11 @@ public class Parser
             gene.setStartPos(startPos);
             gene.setStopPos(stopPos);
             if (!gene_description.isEmpty()) {
-                String gene_desc = gene_description.substring(0, gene_description.indexOf('[')).trim();
+                String gene_desc = "";
+                if(gene_description.contains("[")) {
+                    gene_desc = gene_description.substring(0, gene_description.indexOf('[')).trim();
+                }
+                else gene_desc = gene_description;
                 gene.setgene_description(gene_desc);
             } else {
                 gene.setgene_description(gene_description);
@@ -84,23 +83,73 @@ public class Parser
                 gene.setStrand("-");
             else
                 gene.setStrand(strand);
+
+            genes.add(gene);
         }
-        if(!ensemblDAO.getAliasTypes().contains("ensembl_gene_symbol"))
-        {
-            ensemblDAO.insertAliasType("ensembl_gene_symbol", "Created by Ensembl pipeline");
-        }
-        if(!ensemblDAO.getAliasTypes().contains("ensembl_full_name"))
-        {
-            ensemblDAO.insertAliasType("ensembl_full_name", "created by Ensembl pipeline");
-        }
-        if(!ensemblDAO.getAliasTypes().contains("ensembl_gene_type"))
-        {
-            ensemblDAO.insertAliasType("ensembl_gene_type", "created by ensembl pipeline");
-        }
+
         reader.close();
             return genes;
         }
+    public List<EnsemblTranscript> parseTranscript(String inputFile) throws Exception
+    {
+        statuslog.info("Parsing the transcript file for "+ SpeciesType.getCommonName(speciesTypeKey));
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
+        HashMap<String,EnsemblTranscript> transcripts = new HashMap<String,EnsemblTranscript>();
+        String line;
+        while ((line = reader.readLine()) != null)
+        {
+            String[] cols = line.split("\t", -1);
+            if (cols.length < 10) {
+                System.out.println("\n" + cols);
+                throw new Exception("10 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
+                        "  offending line: [" + cols + "]");
+            }
+
+            EnsemblTranscript transcript = new EnsemblTranscript();
+            transcript.setEnsGeneId(cols[0]);
+            transcript.setEnsTranscriptId(cols[1]);
+            transcript.setChromosome(cols[3]);
+            transcript.setStart(Integer.valueOf(cols[4]));
+            transcript.setStop(Integer.valueOf(cols[5]));
+            if(cols[6].equals("1"))
+                transcript.setStrand("+");
+            else if(cols[6].equals("-1"))
+                transcript.setStrand("-");
+
+
+            EnsemblExon exon = new EnsemblExon();
+            exon.setExonChromosome(cols[3]);
+            exon.setExonStart(Integer.valueOf(cols[7]));
+            exon.setExonStop(Integer.valueOf(cols[8]));
+            if(cols[6].equals("1"))
+                exon.setStrand("+");
+            else if(cols[6].equals("-1"))
+                exon.setStrand("-");
+            exon.setExonTranscriptAccId(cols[1]);
+            exon.setExonNumber(cols[9]);
+
+            if(cols[10] != null && cols[11] != null)
+                transcript.setNonCodingInd(false);
+
+            transcript.setProteinId(cols[12]);
+            ArrayList<EnsemblExon> exons = new ArrayList<>();
+
+            if(!transcripts.isEmpty() && transcripts.containsKey(transcript.getEnsTranscriptId())) {
+                transcript = transcripts.get(transcript.getEnsTranscriptId());
+                exons = transcript.getExonList();
+            }
+
+            exons.add(exon);
+            transcript.setExonList(exons);
+            transcripts.put(transcript.getEnsTranscriptId(),transcript);
+        }
+
+        reader.close();
+
+        List<EnsemblTranscript> values = new ArrayList(transcripts.values());
+        return values;
+    }
     public int getSpeciesTypeKey() {
         return speciesTypeKey;
     }
