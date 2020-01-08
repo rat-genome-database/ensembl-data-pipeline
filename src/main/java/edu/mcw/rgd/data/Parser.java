@@ -71,8 +71,6 @@ public class Parser
                 String gene_desc = "";
                 if(gene_description.contains("[")) {
                     gene_desc = gene_description.substring(0, gene_description.indexOf('[')).trim();
-                    if(gene_description.contains("Source:RFAM"))
-                        continue;
                 }
                 else gene_desc = gene_description;
                 gene.setgene_description(gene_desc);
