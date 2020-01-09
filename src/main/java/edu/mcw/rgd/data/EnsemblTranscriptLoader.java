@@ -60,7 +60,7 @@ public class EnsemblTranscriptLoader {
                                 for (EnsemblExon feature : features) {
                                     if (oldPos.getChromosome().equalsIgnoreCase(feature.getExonChromosome()) && oldPos.getStartPos() == feature.getExonStart() && oldPos.getStopPos() == feature.getExonStop()
                                             && oldPos.getStrand().equalsIgnoreCase(feature.getStrand())) {
-                                        System.out.println("feature exists : " + oldPos.getRgdId());
+                                     
                                         matchedPositions.add(feature);
                                     }
                                 }
