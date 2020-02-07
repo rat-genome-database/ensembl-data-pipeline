@@ -14,6 +14,7 @@
                 <value>DOG</value>
                 <value>PIG</value>
                 <value>BONOBO</value>
+                <value>VERVET</value>
             </list>
         </property>
     </bean>
