@@ -6,6 +6,16 @@
         <property name="dataParser" ref="Parser"/>
         <property name="geneLoader" ref="GeneLoader"></property>
         <property name="transcriptLoader" ref="TranscriptLoader"></property>
+        <property name="species">
+            <list>
+                <value>RAT</value>
+                <value>MOUSE</value>
+                <value>HUMAN</value>
+                <value>DOG</value>
+                <value>PIG</value>
+                <value>BONOBO</value>
+            </list>
+        </property>
     </bean>
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">
@@ -38,6 +48,7 @@
                 <value>genomic_coding_start</value>
                 <value>genomic_coding_end</value>
                 <value>ensembl_peptide_id</value>
+                <value>transcript_biotype</value>
             </list>
         </property>
         <property name="biomartQueryAttrsRatGenes"><!-- ensembl gene attributes specific to rat -->

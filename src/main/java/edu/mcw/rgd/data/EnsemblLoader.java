@@ -25,7 +25,7 @@ public class EnsemblLoader {
     Parser dataParser;
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
-
+    List<String> species;
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
      * @param args cmd line arguments, like species
@@ -50,7 +50,9 @@ public class EnsemblLoader {
             throw new Exception("Aborted: please specify the species in cmd line");
         }
         if( speciesTypeKey== SpeciesType.ALL ) {
-            loader.run(SpeciesType.RAT);
+            for(String s:loader.getSpecies()){
+                loader.run(SpeciesType.parse(s));
+            }
         }
         else {
             loader.run(speciesTypeKey);
@@ -71,15 +73,16 @@ public class EnsemblLoader {
           //  Collection<EnsemblGene> genes = pipelinePreprocessor.run();
 
            dataPuller.setSpeciesTypeKey(speciesTypeKey);
-            String dataFile = dataPuller.downloadGenesFile();
+           String dataFile = dataPuller.downloadGenesFile();
             List<EnsemblGene> genes=dataParser.parseGene(dataFile);
             System.out.println("Total genes parsed from file: "+genes.size());
             geneLoader.run(genes,speciesTypeKey);
 
            String transcriptsFile = dataPuller.downloadTranscriptsFile();
            List<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
-            transcriptLoader.run(transcripts,speciesTypeKey);
-           System.out.println("Total transcripts parsed from file: "+transcripts.size());
+            System.out.println("Total transcripts parsed from file: "+transcripts.size());
+           transcriptLoader.run(transcripts,speciesTypeKey);
+
 
        }
         catch(Exception e)
@@ -135,5 +138,13 @@ public class EnsemblLoader {
 
     public void setTranscriptLoader(EnsemblTranscriptLoader transcriptLoader) {
         this.transcriptLoader = transcriptLoader;
+    }
+
+    public List<String> getSpecies() {
+        return species;
+    }
+
+    public void setSpecies(List<String> species) {
+        this.species = species;
     }
 }
