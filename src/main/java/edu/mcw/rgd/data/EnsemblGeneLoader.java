@@ -209,7 +209,7 @@ public class EnsemblGeneLoader {
     public void updateNomenEvents(EnsemblGene gene,int rgdId) throws  Exception{
 
         Gene existing = ensemblDAO.getGene(rgdId);
-        if(existing.getGeneSource().equals("Ensembl")){
+        if(existing.getGeneSource().equals("Ensembl") && (existing.getNomenSource() == null || !existing.getNomenSource().equals("HGNC"))){
 
             if(!existing.getSymbol().equalsIgnoreCase(gene.getgene_name()) || (existing.getName() != null && !existing.getName().equalsIgnoreCase(gene.getgene_description()) )){
 
@@ -249,6 +249,12 @@ public class EnsemblGeneLoader {
                 nomenEvents.add(rgdId);
             }
 
+        } else {
+            if(!existing.getEnsemblGeneSymbol().equalsIgnoreCase(gene.getgene_name()) || (existing.getEnsemblFullName() != null && !existing.getEnsemblFullName().equalsIgnoreCase(gene.getgene_description()) )){
+                existing.setEnsemblGeneSymbol(gene.getgene_name());
+                existing.setEnsemblFullName(gene.getgene_description());
+                ensemblDAO.updateGene(existing);
+            }
         }
     }
     public void createNewEnsemblGene(EnsemblGene gene, int mapKey,String rgdId) throws Exception {
@@ -269,6 +275,7 @@ public class EnsemblGeneLoader {
                 newGene.setType(geneTypeLc);
                 newGene.setName(gene.getgene_description());
                 newGene.setGeneSource("Ensembl");
+                newGene.setNomenSource("Ensembl");
                 newGene.setEnsemblFullName(gene.getgene_description());
                 newGene.setEnsemblGeneSymbol(gene.getgene_name());
                 newGene.setEnsemblGeneType(gene.getgene_biotype());
