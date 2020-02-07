@@ -30,16 +30,13 @@ public class EnsemblTranscriptLoader {
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
-        if(speciesTypeKey == SpeciesType.RAT || speciesTypeKey == SpeciesType.DOG || speciesTypeKey == SpeciesType.PIG || speciesTypeKey == SpeciesType.BONOBO
-                || speciesTypeKey == SpeciesType.CHINCHILLA || speciesTypeKey == SpeciesType.SQUIRREL) {
-            mapKey = referenceAssembly.getKey() + 1;
-        }
-        else if(speciesTypeKey == SpeciesType.MOUSE) {
+        if(speciesTypeKey == SpeciesType.MOUSE) {
             mapKey =  referenceAssembly.getKey() + 4;
         }
         else if(speciesTypeKey == SpeciesType.HUMAN){
             mapKey = referenceAssembly.getKey() + 2;
-        }
+        }else mapKey = referenceAssembly.getKey() + 1;
+
         TranscriptDAO transcriptDAO = new TranscriptDAO();
 
         for (EnsemblTranscript transcript : transcripts) {
