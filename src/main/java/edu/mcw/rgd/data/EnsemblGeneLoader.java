@@ -33,17 +33,12 @@ public class EnsemblGeneLoader {
         edu.mcw.rgd.datamodel.Map reference = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<String> chromosomes = ensemblDAO.getChromosomes(reference.getKey());
 
-
-        if(speciesTypeKey == SpeciesType.RAT || speciesTypeKey == SpeciesType.DOG || speciesTypeKey == SpeciesType.PIG || speciesTypeKey == SpeciesType.BONOBO
-                || speciesTypeKey == SpeciesType.CHINCHILLA || speciesTypeKey == SpeciesType.SQUIRREL) {
-            mapKey = reference.getKey() + 1;
-        }
-        else if(speciesTypeKey == SpeciesType.MOUSE) {
+        if(speciesTypeKey == SpeciesType.MOUSE) {
             mapKey =  reference.getKey() + 4;
         }
         else if(speciesTypeKey == SpeciesType.HUMAN){
             mapKey = reference.getKey() + 2;
-        }
+        }else mapKey = reference.getKey() + 1;
 
         for (EnsemblGene gene : genes) {
             if(chromosomes.contains(gene.getChromosome())) {
@@ -230,6 +225,20 @@ public class EnsemblGeneLoader {
                 event.setPreviousName(existing.getName());
                 event.setPreviousSymbol(existing.getSymbol());
                 ensemblDAO.insertNomenclatureEvent(event);
+
+                Alias aliasData = new Alias();
+                aliasData.setNotes("Added by Ensembl pipeline");
+                aliasData.setRgdId(rgdId);
+                if(!existing.getSymbol().equalsIgnoreCase(gene.getgene_name())){
+                    aliasData.setValue(existing.getSymbol());
+                    aliasData.setTypeName("old_gene_symbol");
+                    ensemblDAO.insertAlias(aliasData);
+                }
+                if(existing.getName() != null && !existing.getName().equalsIgnoreCase(gene.getgene_description())) {
+                    aliasData.setValue(existing.getName());
+                    aliasData.setTypeName("old_gene_name");
+                    ensemblDAO.insertAlias(aliasData);
+                }
 
                 existing.setSymbol(gene.getgene_name());
                 existing.setName(gene.getgene_description());
