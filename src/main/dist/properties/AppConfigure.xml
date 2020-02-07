@@ -38,6 +38,7 @@
                 <value>genomic_coding_start</value>
                 <value>genomic_coding_end</value>
                 <value>ensembl_peptide_id</value>
+                <value>transcript_biotype</value>
             </list>
         </property>
         <property name="biomartQueryAttrsRatGenes"><!-- ensembl gene attributes specific to rat -->

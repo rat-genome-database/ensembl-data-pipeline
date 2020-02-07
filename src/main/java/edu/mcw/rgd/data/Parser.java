@@ -84,7 +84,8 @@ public class Parser
             else
                 gene.setStrand(strand);
 
-            genes.add(gene);
+            if(!gene.getgene_name().isEmpty())
+                genes.add(gene);
         }
 
         reader.close();
@@ -133,6 +134,7 @@ public class Parser
                 transcript.setNonCodingInd(false);
 
             transcript.setProteinId(cols[12]);
+            transcript.setType(cols[13]);
             ArrayList<EnsemblExon> exons = new ArrayList<>();
 
             if(!transcripts.isEmpty() && transcripts.containsKey(transcript.getEnsTranscriptId())) {

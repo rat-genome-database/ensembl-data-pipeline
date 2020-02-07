@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class EnsemblTranscriptLoader {
     EnsemblDAO ensemblDAO;
-    MapDAO mapDAO = new MapDAO();
+
     static Logger statuslog = Logger.getLogger("statuscheck");
 
 
@@ -27,18 +27,19 @@ public class EnsemblTranscriptLoader {
     {
         System.out.println("Loading the transcripts file");
         int mapKey = 0;
-        List<String> chromosomes = ensemblDAO.getChromosomes(MapManager.getInstance().getReferenceAssembly(speciesTypeKey).getKey());
+        edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
+        List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
-        if(speciesTypeKey == SpeciesType.RAT) {
-            mapKey = 361;
+        if(speciesTypeKey == SpeciesType.RAT || speciesTypeKey == SpeciesType.DOG || speciesTypeKey == SpeciesType.PIG || speciesTypeKey == SpeciesType.BONOBO
+                || speciesTypeKey == SpeciesType.CHINCHILLA || speciesTypeKey == SpeciesType.SQUIRREL) {
+            mapKey = referenceAssembly.getKey() + 1;
         }
         else if(speciesTypeKey == SpeciesType.MOUSE) {
-            mapKey =  39;
+            mapKey =  referenceAssembly.getKey() + 4;
         }
         else if(speciesTypeKey == SpeciesType.HUMAN){
-            mapKey = 40;
+            mapKey = referenceAssembly.getKey() + 2;
         }
-
         TranscriptDAO transcriptDAO = new TranscriptDAO();
 
         for (EnsemblTranscript transcript : transcripts) {
@@ -60,7 +61,7 @@ public class EnsemblTranscriptLoader {
                                 for (EnsemblExon feature : features) {
                                     if (oldPos.getChromosome().equalsIgnoreCase(feature.getExonChromosome()) && oldPos.getStartPos() == feature.getExonStart() && oldPos.getStopPos() == feature.getExonStop()
                                             && oldPos.getStrand().equalsIgnoreCase(feature.getStrand())) {
-                                        System.out.println("feature exists : " + oldPos.getRgdId());
+                                     
                                         matchedPositions.add(feature);
                                     }
                                 }
@@ -69,21 +70,26 @@ public class EnsemblTranscriptLoader {
                             features.removeAll(matchedPositions);
                         }
                     }
-                    if (transcriptMatch)
+                    if (transcriptMatch) {
                         updateTranscriptData(transcript.getRgdId(), features, mapKey);
-                    else createNewEnsemblTranscript(transcript, mapKey);
+                        updateTranscriptType(transcript);
+                    }else createNewEnsemblTranscript(transcript, mapKey);
 
                 }else genesNotFound.add(transcript.getEnsGeneId());
             }
         }
 
-        statuslog.info("Total loaded: "+loaded.size());
-        statuslog.info("Total genes not found: "+genesNotFound.size());
-        statuslog.info("Total in file: "+ transcripts.size());
+        statuslog.info("Total loaded: "+loaded.size()+"\n");
+        statuslog.info("Total genes not found: "+genesNotFound.size()+"\n");
+        statuslog.info("Total in file: "+ transcripts.size()+"\n");
 
     }
 
-
+public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
+    Transcript t = ensemblDAO.getTranscript(transcript.getRgdId());
+    t.setType(transcript.getType());
+    ensemblDAO.updateTranscript(t);
+}
    public void updateTranscriptData(int transcriptRgdId,List<EnsemblExon> features,int mapKey) throws Exception{
        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
        for(EnsemblExon feature: features) {
@@ -111,6 +117,7 @@ public class EnsemblTranscriptLoader {
         newTranscript.setGeneRgdId(geneRgdId);
         newTranscript.setNonCoding(transcript.isNonCodingInd());
         newTranscript.setProteinAccId(transcript.getProteinId());
+        newTranscript.setType(transcript.getType());
 
         MapData mapData = new MapData();
         mapData.setSrcPipeline("Ensembl");

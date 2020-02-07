@@ -23,6 +23,7 @@ public class EnsemblDAO extends AbstractDAO {
     GeneDAO geneDAO = new GeneDAO();
     TranscriptDAO transcriptDAO = new TranscriptDAO();
     RGDManagementDAO managementDAO = new RGDManagementDAO();
+    NomenclatureDAO nomenclatureDAO = new NomenclatureDAO();
     MapDAO mapDAO = new MapDAO();
     int[] primaryMapKey = new int[4];
 
@@ -80,12 +81,26 @@ public class EnsemblDAO extends AbstractDAO {
     public void insertGene(Gene gene) throws Exception {
         geneDAO.insertGene(gene);
     }
+    public void updateGene(Gene gene) throws Exception {
+        geneDAO.updateGene(gene);
+    }
+    public Gene getGene(int rgdId) throws Exception {
+        return  geneDAO.getGene(rgdId);
+    }
     public void insertTranscript(Transcript transcript,int speciesTypeKey) throws Exception {
         transcriptDAO.createTranscript(transcript,speciesTypeKey);
     }
-
+    public void updateTranscript(Transcript transcript) throws Exception {
+        transcriptDAO.updateTranscript(transcript);
+    }
+    public Transcript getTranscript(int rgdId) throws Exception {
+        return transcriptDAO.getTranscript(rgdId);
+    }
     public void insertTranscriptFeature(TranscriptFeature transcriptFeature,int speciesTypeKey) throws Exception {
         transcriptDAO.createFeature(transcriptFeature,speciesTypeKey);
+    }
+    public void insertNomenclatureEvent(NomenclatureEvent event) throws Exception {
+        nomenclatureDAO.createNomenEvent(event);
     }
     public List<TranscriptFeature> getFeatures(int transcriptRgdId) throws Exception {
         return transcriptDAO.getFeatures(transcriptRgdId);
@@ -97,7 +112,12 @@ public class EnsemblDAO extends AbstractDAO {
             return result;
         else return null;
     }
-
+    public List<String> getNcbiRgdId(String Acc_id) throws Exception{
+        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 3 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
+                "and rx.src_pipeline = 'ENTREZGENE'";
+        List<String> result =  StringListQuery.execute(this,sql,Acc_id);
+        return result;
+    }
     public String getEnsemblRgdId(String Acc_id) throws Exception{
         String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 20 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
                 "and rx.src_pipeline = 'Ensembl'";

@@ -18,6 +18,8 @@ public class EnsemblTranscript {
     int stop;
     String strand;
     boolean nonCodingInd;
+    String type;
+
     ArrayList<EnsemblExon> exonList = new ArrayList<EnsemblExon>();
 
     public int getRgdId() {
@@ -91,6 +93,14 @@ public class EnsemblTranscript {
     public void setNonCodingInd(boolean nonCodingInd) {
         this.nonCodingInd = nonCodingInd;
     }
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
 
     public ArrayList<EnsemblExon> getExonList() {
         return exonList;
