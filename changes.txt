@@ -1,0 +1,2 @@
+2020-03-05
+  new genes: when added, a nomenclature event (status='PROVISIONAL') with ref_key=20683 is automatically generated

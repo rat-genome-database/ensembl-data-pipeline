@@ -1,13 +1,11 @@
 package edu.mcw.rgd.data;
 
-import edu.mcw.rgd.dao.impl.MapDAO;
 import edu.mcw.rgd.dao.impl.TranscriptDAO;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
 import java.util.*;
-import java.util.Map;
 
 /**
  * Created by hsnalabolu on 12/4/2019.

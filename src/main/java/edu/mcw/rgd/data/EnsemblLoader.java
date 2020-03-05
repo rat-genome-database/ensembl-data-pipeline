@@ -1,16 +1,10 @@
 package edu.mcw.rgd.data;
-import edu.mcw.rgd.dao.impl.RGDManagementDAO;
+
 import edu.mcw.rgd.datamodel.SpeciesType;
-import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.PipelineLogFlagManager;
-import edu.mcw.rgd.process.PipelineLogger;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
-import java.util.Collection;
 import java.util.List;
 
 /**

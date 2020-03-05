@@ -3,7 +3,6 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.FileExternalSort;
-import edu.mcw.rgd.process.PipelineLogger;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;

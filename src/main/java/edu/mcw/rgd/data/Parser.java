@@ -15,9 +15,10 @@ public class Parser
 {
     int speciesTypeKey;
     Logger statuslog = Logger.getLogger("statuscheck");
-    public Parser() throws Exception
-    {
+
+    public Parser() throws Exception {
     }
+
     public List<EnsemblGene> parseGene(String inputFile) throws Exception
     {
         statuslog.info("Parsing the gene file for "+ SpeciesType.getCommonName(speciesTypeKey));
@@ -152,21 +153,12 @@ public class Parser
         List<EnsemblTranscript> values = new ArrayList(transcripts.values());
         return values;
     }
+
     public int getSpeciesTypeKey() {
         return speciesTypeKey;
     }
 
-    public void setSpeciesTypeKey(int speciesTypeKey)
-    {
+    public void setSpeciesTypeKey(int speciesTypeKey) {
         this.speciesTypeKey = speciesTypeKey;
-
     }
-    }
-
-
-
-
-
-
-
-
+}

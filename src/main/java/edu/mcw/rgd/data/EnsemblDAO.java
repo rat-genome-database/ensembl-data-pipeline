@@ -170,28 +170,22 @@ public class EnsemblDAO extends AbstractDAO {
         }
     }
 
-    public int insertAliasType(String aliasType,String notes) throws Exception
-    {
+    public int insertAliasType(String aliasType,String notes) throws Exception {
         return aliasDAO.insertAliasType(aliasType,notes);
     }
-    public List<String> getAliasTypes() throws Exception
-    {
-        return aliasDAO.getAliasTypes();
 
+    public List<String> getAliasTypes() throws Exception {
+        return aliasDAO.getAliasTypes();
     }
 
-    public int insertAlias(Alias alias) throws Exception
-    {
+    public int insertAlias(Alias alias) throws Exception {
        return aliasDAO.insertAlias(alias);
     }
 
     public List<String> getChromosomes(int mapKey) throws Exception {
 
         String sql = "SELECT DISTINCT chromosome FROM CHROMOSOMES WHERE map_key=? ";
-        StringListQuery q = new StringListQuery(getDataSource(), sql);
-        q.declareParameter(new SqlParameter(Types.INTEGER));
-        q.compile();
-        return q.execute(new Object[]{mapKey});
+        return StringListQuery.execute(mapDAO, sql, mapKey);
     }
 }
 

@@ -3,11 +3,12 @@
 APPNAME=EnsemblDataPipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
-EMAILLIST=hsnalabolu@mcw.edu,mtutaj@mcw.edu,jrsmith@mcw.edu,jdepons@mcw.edu
 
+EMAILLIST=hsnalabolu@mcw.edu,mtutaj@mcw.edu
 if [ "$SERVER" == "REED" ]; then
   EMAILLIST=hsnalabolu@mcw.edu,mtutaj@mcw.edu,jrsmith@mcw.edu,jdepons@mcw.edu
 fi
+
 cd $APPDIR
 java -jar -Dspring.config=$APPDIR/../properties/default_db.xml \
     -Dlog4j.configuration=file://$APPDIR/properties/log4j.properties \

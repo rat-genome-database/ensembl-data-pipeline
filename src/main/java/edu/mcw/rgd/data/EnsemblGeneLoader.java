@@ -1,15 +1,12 @@
 package edu.mcw.rgd.data;
 
-import edu.mcw.rgd.dao.impl.GeneDAO;
 import edu.mcw.rgd.dao.impl.MapDAO;
-import edu.mcw.rgd.dao.impl.RGDManagementDAO;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by sellanki on 10/18/2019.
@@ -21,13 +18,14 @@ public class EnsemblGeneLoader {
 
     Map<String,String> matches=new HashMap<String,String>();
     List mismatches=new ArrayList();
-    List newGenes = new ArrayList<>();
+    List<EnsemblGene> newGenes = new ArrayList<>();
     List nomenEvents = new ArrayList<>();
+
     public EnsemblGeneLoader() throws Exception {
         ensemblDAO = new EnsemblDAO();
     }
-    public void run(Collection<EnsemblGene> genes,int speciesTypeKey) throws Exception
-    {
+
+    public void run(Collection<EnsemblGene> genes,int speciesTypeKey) throws Exception {
         System.out.println("Loading the file");
         int mapKey = 0;
         edu.mcw.rgd.datamodel.Map reference = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
@@ -38,7 +36,9 @@ public class EnsemblGeneLoader {
         }
         else if(speciesTypeKey == SpeciesType.HUMAN){
             mapKey = reference.getKey() + 2;
-        }else mapKey = reference.getKey() + 1;
+        } else {
+            mapKey = reference.getKey() + 1;
+        }
 
         for (EnsemblGene gene : genes) {
             if(chromosomes.contains(gene.getChromosome())) {
@@ -152,7 +152,8 @@ public class EnsemblGeneLoader {
         statuslog.info("Total genes in file: "+genes.size()+"\n");
         statuslog.info("Total nomenEvents in file: "+nomenEvents.size()+"\n");
     }
-   public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
+
+    public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
         List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
         String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
         Alias aliasData = new Alias();
@@ -259,12 +260,15 @@ public class EnsemblGeneLoader {
     }
     public void createNewEnsemblGene(EnsemblGene gene, int mapKey,String rgdId) throws Exception {
 
-
         int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
+
         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
+
             String geneTypeLc = gene.getgene_biotype().toLowerCase();
-            if (!ensemblDAO.existsGeneType(geneTypeLc))
+            if (!ensemblDAO.existsGeneType(geneTypeLc)) {
                 ensemblDAO.createGeneType(geneTypeLc);
+            }
+
             if(rgdId == null) {
                 newGenes.add(gene);
                 RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, speciesTypeKey);
@@ -280,7 +284,22 @@ public class EnsemblGeneLoader {
                 newGene.setEnsemblGeneSymbol(gene.getgene_name());
                 newGene.setEnsemblGeneType(gene.getgene_biotype());
                 ensemblDAO.insertGene(newGene);
-            } else aliasesinsert(Integer.parseInt(rgdId), gene);
+
+                // always create PROVISIONAL nomenclature event for newly created gene
+                NomenclatureEvent event = new NomenclatureEvent();
+                event.setRgdId(newRgdId.getRgdId());
+                event.setSymbol(newGene.getSymbol());
+                event.setName(newGene.getName());
+                event.setRefKey("20683");
+                event.setNomenStatusType("PROVISIONAL");
+                event.setDesc("Symbol and Name status set to provisional");
+                event.setEventDate(new Date());
+                event.setOriginalRGDId(newRgdId.getRgdId());
+                ensemblDAO.insertNomenclatureEvent(event);
+
+            } else {
+                aliasesinsert(Integer.parseInt(rgdId), gene);
+            }
 
 
             MapData mapData = new MapData();

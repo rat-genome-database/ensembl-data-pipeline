@@ -1,11 +1,11 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Pipeline  build 2019-07-17"/>
+        <property name="version" value="Ensembl Pipeline  build 2020-03-05"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
-        <property name="geneLoader" ref="GeneLoader"></property>
-        <property name="transcriptLoader" ref="TranscriptLoader"></property>
+        <property name="geneLoader" ref="GeneLoader"/>
+        <property name="transcriptLoader" ref="TranscriptLoader"/>
         <property name="species">
             <list>
                 <value>RAT</value>
