@@ -5,22 +5,20 @@ import org.apache.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by sellanki on 8/6/2019.
  */
-public class Parser
-{
+public class Parser {
+
     int speciesTypeKey;
     Logger statuslog = Logger.getLogger("statuscheck");
 
-    public Parser() throws Exception {
-    }
+    public List<EnsemblGene> parseGene(String inputFile) throws Exception {
 
-    public List<EnsemblGene> parseGene(String inputFile) throws Exception
-    {
         statuslog.info("Parsing the gene file for "+ SpeciesType.getCommonName(speciesTypeKey));
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
@@ -65,7 +63,7 @@ public class Parser
                 gene.setgene_biotype("protein-coding");
             else
                 gene.setgene_biotype(gene_biotype);
-            gene.setgene_name(gene_name);
+            gene.setGeneSymbol(gene_name);
             gene.setStartPos(startPos);
             gene.setStopPos(stopPos);
             if (!gene_description.isEmpty()) {
@@ -85,15 +83,16 @@ public class Parser
             else
                 gene.setStrand(strand);
 
-            if(!gene.getgene_name().isEmpty())
+            if(!gene.getGeneSymbol().isEmpty())
                 genes.add(gene);
         }
 
         reader.close();
-            return genes;
-        }
-    public List<EnsemblTranscript> parseTranscript(String inputFile) throws Exception
-    {
+        return genes;
+    }
+
+    public Collection<EnsemblTranscript> parseTranscript(String inputFile) throws Exception {
+
         statuslog.info("Parsing the transcript file for "+ SpeciesType.getCommonName(speciesTypeKey));
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
@@ -150,8 +149,7 @@ public class Parser
 
         reader.close();
 
-        List<EnsemblTranscript> values = new ArrayList(transcripts.values());
-        return values;
+        return transcripts.values();
     }
 
     public int getSpeciesTypeKey() {

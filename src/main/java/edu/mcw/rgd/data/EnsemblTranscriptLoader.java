@@ -11,6 +11,7 @@ import java.util.*;
  * Created by hsnalabolu on 12/4/2019.
  */
 public class EnsemblTranscriptLoader {
+
     EnsemblDAO ensemblDAO;
 
     static Logger statuslog = Logger.getLogger("statuscheck");
@@ -18,22 +19,18 @@ public class EnsemblTranscriptLoader {
 
     List loaded=new ArrayList();
     List genesNotFound=new ArrayList();
+
     public EnsemblTranscriptLoader() throws Exception {
         ensemblDAO = new EnsemblDAO();
     }
-    public void run(Collection<EnsemblTranscript> transcripts,int speciesTypeKey) throws Exception
-    {
+
+    public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
+
         System.out.println("Loading the transcripts file");
-        int mapKey = 0;
+
+        // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
-
-        if(speciesTypeKey == SpeciesType.MOUSE) {
-            mapKey =  referenceAssembly.getKey() + 4;
-        }
-        else if(speciesTypeKey == SpeciesType.HUMAN){
-            mapKey = referenceAssembly.getKey() + 2;
-        }else mapKey = referenceAssembly.getKey() + 1;
 
         TranscriptDAO transcriptDAO = new TranscriptDAO();
 
@@ -66,11 +63,15 @@ public class EnsemblTranscriptLoader {
                         }
                     }
                     if (transcriptMatch) {
-                        updateTranscriptData(transcript.getRgdId(), features, mapKey);
+                        updateTranscriptData(transcript.getRgdId(), features, ensemblMapKey);
                         updateTranscriptType(transcript);
-                    }else createNewEnsemblTranscript(transcript, mapKey);
+                    } else {
+                        createNewEnsemblTranscript(transcript, ensemblMapKey);
+                    }
 
-                }else genesNotFound.add(transcript.getEnsGeneId());
+                } else {
+                    genesNotFound.add(transcript.getEnsGeneId());
+                }
             }
         }
 
@@ -80,28 +81,27 @@ public class EnsemblTranscriptLoader {
 
     }
 
-public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
-    Transcript t = ensemblDAO.getTranscript(transcript.getRgdId());
-    t.setType(transcript.getType());
-    ensemblDAO.updateTranscript(t);
-}
-   public void updateTranscriptData(int transcriptRgdId,List<EnsemblExon> features,int mapKey) throws Exception{
-       int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
-       for(EnsemblExon feature: features) {
-           TranscriptFeature newFeature = new TranscriptFeature();
-           newFeature.setTranscriptRgdId(transcriptRgdId);
-           newFeature.setChromosome(feature.getExonChromosome());
-           newFeature.setStartPos(feature.getExonStart());
-           newFeature.setStopPos(feature.getExonStop());
-           newFeature.setStrand(feature.getStrand());
-           newFeature.setSrcPipeline("Ensembl");
-           newFeature.setMapKey(mapKey);
-           newFeature.setFeatureType(TranscriptFeature.FeatureType.EXON);
-           ensemblDAO.insertTranscriptFeature(newFeature,speciesTypeKey);
-       }
+    public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
+        Transcript t = ensemblDAO.getTranscript(transcript.getRgdId());
+        t.setType(transcript.getType());
+        ensemblDAO.updateTranscript(t);
+    }
 
-   }
-
+    public void updateTranscriptData(int transcriptRgdId,List<EnsemblExon> features,int mapKey) throws Exception{
+        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
+        for(EnsemblExon feature: features) {
+            TranscriptFeature newFeature = new TranscriptFeature();
+            newFeature.setTranscriptRgdId(transcriptRgdId);
+            newFeature.setChromosome(feature.getExonChromosome());
+            newFeature.setStartPos(feature.getExonStart());
+            newFeature.setStopPos(feature.getExonStop());
+            newFeature.setStrand(feature.getStrand());
+            newFeature.setSrcPipeline("Ensembl");
+            newFeature.setMapKey(mapKey);
+            newFeature.setFeatureType(TranscriptFeature.FeatureType.EXON);
+            ensemblDAO.insertTranscriptFeature(newFeature,speciesTypeKey);
+        }
+    }
 
     public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey) throws Exception {
         loaded.add(transcript);
@@ -131,5 +131,4 @@ public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
 
         updateTranscriptData(newTranscript.getRgdId(),transcript.getExonList(),mapKey);
     }
-
 }

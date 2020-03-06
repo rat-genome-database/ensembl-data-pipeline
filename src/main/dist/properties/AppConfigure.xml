@@ -6,16 +6,16 @@
         <property name="dataParser" ref="Parser"/>
         <property name="geneLoader" ref="GeneLoader"/>
         <property name="transcriptLoader" ref="TranscriptLoader"/>
-        <property name="species">
-            <list>
-                <value>RAT</value>
-                <value>MOUSE</value>
-                <value>HUMAN</value>
-                <value>DOG</value>
-                <value>PIG</value>
-                <value>BONOBO</value>
-                <value>VERVET</value>
-            </list>
+        <property name="ensemblAssemblyMap">
+            <map>
+                <entry key="Rat" value="361"/>
+                <entry key="Mouse" value="39"/>
+                <entry key="Human" value="40"/>
+                <entry key="Dog" value="632"/>
+                <entry key="Pig" value="912" />
+                <entry key="Bonobo" value="512"/>
+                <entry key="Vervet" value="1312" />
+            </map>
         </property>
     </bean>
 
@@ -68,10 +68,14 @@
             </list>
         </property>
 
-
     </bean>
-    <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader"></bean>
-    <bean id="TranscriptLoader" class="edu.mcw.rgd.data.EnsemblTranscriptLoader"></bean>
+
+    <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader">
+    </bean>
+
+    <bean id="TranscriptLoader" class="edu.mcw.rgd.data.EnsemblTranscriptLoader">
+    </bean>
+
     <bean id="Parser" class="edu.mcw.rgd.data.Parser">
     </bean>
 

@@ -25,14 +25,6 @@ public class EnsemblDAO extends AbstractDAO {
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     NomenclatureDAO nomenclatureDAO = new NomenclatureDAO();
     MapDAO mapDAO = new MapDAO();
-    int[] primaryMapKey = new int[4];
-
-    public EnsemblDAO() throws Exception {
-        primaryMapKey[1] = mapDAO.getPrimaryRefAssembly(SpeciesType.HUMAN).getKey();
-        primaryMapKey[2] = mapDAO.getPrimaryRefAssembly(SpeciesType.MOUSE).getKey();
-        primaryMapKey[3] = mapDAO.getPrimaryRefAssembly(SpeciesType.RAT).getKey();
-    }
-
 
     public void insertGeneType(int rgdId,String gene_type) throws Exception
     {
@@ -186,6 +178,10 @@ public class EnsemblDAO extends AbstractDAO {
 
         String sql = "SELECT DISTINCT chromosome FROM CHROMOSOMES WHERE map_key=? ";
         return StringListQuery.execute(mapDAO, sql, mapKey);
+    }
+
+    public void insertMapData(MapData md) throws Exception {
+        mapDAO.insertMapData(md);
     }
 }
 
