@@ -48,9 +48,7 @@ public class EnsemblTranscriptLoader {
                             List<EnsemblExon> matchedPositions = new ArrayList<>();
                             for (TranscriptFeature oldPos : positions) {
                                 for (EnsemblExon feature : features) {
-                                    if (oldPos.getChromosome().equalsIgnoreCase(feature.getExonChromosome()) && oldPos.getStartPos() == feature.getExonStart() && oldPos.getStopPos() == feature.getExonStop()
-                                            && oldPos.getStrand().equalsIgnoreCase(feature.getStrand())) {
-                                     
+                                    if( feature.matchesByPos(oldPos) ) {
                                         matchedPositions.add(feature);
                                     }
                                 }
