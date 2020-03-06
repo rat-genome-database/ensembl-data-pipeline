@@ -3,7 +3,6 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.FileExternalSort;
-import edu.mcw.rgd.process.PipelineLogger;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -24,7 +23,7 @@ public class EnsemblDataPuller {
     List<String> biomartQueryAttrsGenes; // list of attributes to be loaded for main genes query
     List<String> biomartQueryAttrsTranscripts; // list of attributes to be loaded for main transcripts query
     List<String> biomartQueryAttrsRatGenes; // extra attributes to be loaded for rat genes
-     List<String> biomartQueryAttrsMouseGenes;
+    List<String> biomartQueryAttrsMouseGenes;
     List<String> biomartQueryAttrsHumanGenes;
     Logger statuslog = Logger.getLogger("statuscheck");
     int speciesTypeKey;
@@ -93,8 +92,7 @@ public class EnsemblDataPuller {
     }
 
     // return url encoded biomart xml query
-    String buildBiomartQuery(List<String> attributes) throws Exception
-    {
+    String buildBiomartQuery(List<String> attributes) throws Exception {
 
         // load the biomart config file and remove all new lines
         BufferedReader fileReader = new BufferedReader(new FileReader(this.getBiomartQueryTemplate()));
@@ -134,8 +132,7 @@ public class EnsemblDataPuller {
         return "query="+URLEncoder.encode(buf.toString(), "UTF-8");
     }
 
-   String sortFile(String inputFile) throws IOException
-    {
+    String sortFile(String inputFile) throws IOException {
         // now sort the file using external merge sort
         String outputFile = inputFile + ".sorted";
         Comparator<String> comparator = new Comparator<String>() {

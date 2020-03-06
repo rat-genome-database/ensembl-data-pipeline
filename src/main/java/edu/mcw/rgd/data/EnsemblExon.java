@@ -1,18 +1,28 @@
 package edu.mcw.rgd.data;
 
 
+import edu.mcw.rgd.datamodel.TranscriptFeature;
+import edu.mcw.rgd.process.Utils;
+
 /**
  * Created by hsnalabolu on 12/4/2019.
  */
 public class EnsemblExon {
 
-    int rgdId;
+    private int rgdId;
     int exonStart;
     int exonStop;
     String strand;
     String exonChromosome;
     String exonNumber;
     String exonTranscriptAccId;
+
+    public boolean matchesByPos(TranscriptFeature tf) {
+        return Utils.intsAreEqual(this.exonStart, tf.getStartPos())
+        && Utils.intsAreEqual(this.exonStop, tf.getStopPos())
+        && Utils.stringsAreEqual(this.strand, tf.getStrand())
+        && Utils.stringsAreEqual(this.exonChromosome, tf.getChromosome());
+    }
 
     public int getRgdId() {
         return rgdId;

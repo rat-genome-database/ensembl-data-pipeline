@@ -4,7 +4,6 @@ package edu.mcw.rgd.data;
  */
 public class EnsemblGene {
 
-    int recNo;
     String rgdid;
     String entrezgene_id;
     // incoming data from Ensembl
@@ -14,19 +13,20 @@ public class EnsemblGene {
     String startPos, stopPos;
     String strand;
     String Map_key="361";
-    String gene_name;
+    String geneSymbol;
     String gene_biotype;
     String gene_description;
+
     public String getgene_description(){return gene_description;}
     public void setgene_description(String gene_description){this.gene_description=gene_description;}
 
-    public String getgene_name()
+    public String getGeneSymbol()
     {
-        return gene_name;
+        return geneSymbol;
     }
-    public void setgene_name(String gene_name)
+    public void setGeneSymbol(String geneSymbol)
     {
-        this.gene_name=gene_name;
+        this.geneSymbol=geneSymbol;
     }
 
     public String getgene_biotype()

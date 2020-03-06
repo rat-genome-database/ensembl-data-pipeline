@@ -1,23 +1,19 @@
 package edu.mcw.rgd.data;
-import edu.mcw.rgd.dao.impl.RGDManagementDAO;
+
 import edu.mcw.rgd.datamodel.SpeciesType;
-import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.PipelineLogFlagManager;
-import edu.mcw.rgd.process.PipelineLogger;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by sellanki on 8/6/2019.
  */
 public class EnsemblLoader {
-
 
     private String version;
     static Logger log = Logger.getLogger("statuscheck");
@@ -25,7 +21,8 @@ public class EnsemblLoader {
     Parser dataParser;
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
-    List<String> species;
+    private Map<String, Integer> ensemblAssemblyMap;
+
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
      * @param args cmd line arguments, like species
@@ -50,7 +47,7 @@ public class EnsemblLoader {
             throw new Exception("Aborted: please specify the species in cmd line");
         }
         if( speciesTypeKey== SpeciesType.ALL ) {
-            for(String s:loader.getSpecies()){
+            for( String s:loader.getEnsemblAssemblyMap().keySet() ){
                 loader.run(SpeciesType.parse(s));
             }
         }
@@ -58,6 +55,7 @@ public class EnsemblLoader {
             loader.run(speciesTypeKey);
         }
     }
+
     /**
      * run the Ensembl pipeline in download+process mode;
      * <ol>
@@ -68,25 +66,24 @@ public class EnsemblLoader {
      * @throws Exception
      */
     public void run(int speciesTypeKey) throws Exception {
-        log.info(SpeciesType.getCommonName(speciesTypeKey)+" " +getVersion());
+        String speciesName = SpeciesType.getCommonName(speciesTypeKey);
+        int ensemblMapKey = getEnsemblAssemblyMap().get(speciesName);
+        log.info(speciesName+" " +getVersion());
         try {
-          //  Collection<EnsemblGene> genes = pipelinePreprocessor.run();
 
-           dataPuller.setSpeciesTypeKey(speciesTypeKey);
-           String dataFile = dataPuller.downloadGenesFile();
+            dataPuller.setSpeciesTypeKey(speciesTypeKey);
+            String dataFile = dataPuller.downloadGenesFile();
             List<EnsemblGene> genes=dataParser.parseGene(dataFile);
             System.out.println("Total genes parsed from file: "+genes.size());
-            geneLoader.run(genes,speciesTypeKey);
+            geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
 
-           String transcriptsFile = dataPuller.downloadTranscriptsFile();
-           List<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
+            String transcriptsFile = dataPuller.downloadTranscriptsFile();
+            Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
             System.out.println("Total transcripts parsed from file: "+transcripts.size());
-           transcriptLoader.run(transcripts,speciesTypeKey);
+            transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
 
-
-       }
-        catch(Exception e)
-        {
+        }
+        catch(Exception e) {
             e.printStackTrace();
             throw e;
         }
@@ -140,11 +137,11 @@ public class EnsemblLoader {
         this.transcriptLoader = transcriptLoader;
     }
 
-    public List<String> getSpecies() {
-        return species;
+    public void setEnsemblAssemblyMap(Map<String, Integer> ensemblAssemblyMap) {
+        this.ensemblAssemblyMap = ensemblAssemblyMap;
     }
 
-    public void setSpecies(List<String> species) {
-        this.species = species;
+    public Map<String, Integer> getEnsemblAssemblyMap() {
+        return ensemblAssemblyMap;
     }
 }
