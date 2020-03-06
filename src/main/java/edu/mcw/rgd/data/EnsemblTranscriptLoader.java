@@ -1,6 +1,5 @@
 package edu.mcw.rgd.data;
 
-import edu.mcw.rgd.dao.impl.TranscriptDAO;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
@@ -32,8 +31,6 @@ public class EnsemblTranscriptLoader {
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
-        TranscriptDAO transcriptDAO = new TranscriptDAO();
-
         for (EnsemblTranscript transcript : transcripts) {
             if(chromosomes.contains(transcript.getChromosome())) {
                 boolean transcriptMatch = false;
@@ -41,7 +38,7 @@ public class EnsemblTranscriptLoader {
                 if (rgdId != null) {
                     int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
                     List<EnsemblExon> features = transcript.getExonList();
-                    List<Transcript> transcriptsForGene = transcriptDAO.getTranscriptsForGene(geneRgdId);
+                    List<Transcript> transcriptsForGene = ensemblDAO.getTranscriptsForGene(geneRgdId);
                     for (Transcript oldTranscript : transcriptsForGene) {
                         if (oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
                                 oldTranscript.isNonCoding() == transcript.isNonCodingInd()) {
@@ -63,10 +60,10 @@ public class EnsemblTranscriptLoader {
                         }
                     }
                     if (transcriptMatch) {
-                        updateTranscriptData(transcript.getRgdId(), features, ensemblMapKey);
+                        updateTranscriptData(transcript.getRgdId(), features, ensemblMapKey, speciesTypeKey);
                         updateTranscriptType(transcript);
                     } else {
-                        createNewEnsemblTranscript(transcript, ensemblMapKey);
+                        createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey);
                     }
 
                 } else {
@@ -87,8 +84,7 @@ public class EnsemblTranscriptLoader {
         ensemblDAO.updateTranscript(t);
     }
 
-    public void updateTranscriptData(int transcriptRgdId,List<EnsemblExon> features,int mapKey) throws Exception{
-        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
+    public void updateTranscriptData(int transcriptRgdId, List<EnsemblExon> features, int mapKey, int speciesTypeKey) throws Exception{
         for(EnsemblExon feature: features) {
             TranscriptFeature newFeature = new TranscriptFeature();
             newFeature.setTranscriptRgdId(transcriptRgdId);
@@ -103,9 +99,8 @@ public class EnsemblTranscriptLoader {
         }
     }
 
-    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey) throws Exception {
+    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey, int speciesTypeKey) throws Exception {
         loaded.add(transcript);
-        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
         Transcript newTranscript = new Transcript();
         newTranscript.setAccId(transcript.getEnsTranscriptId());
         int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
@@ -127,8 +122,8 @@ public class EnsemblTranscriptLoader {
 
         newTranscript.setGenomicPositions(genomicPos);
 
-        ensemblDAO.insertTranscript(newTranscript,speciesTypeKey);
+        ensemblDAO.insertTranscript(newTranscript, speciesTypeKey);
 
-        updateTranscriptData(newTranscript.getRgdId(),transcript.getExonList(),mapKey);
+        updateTranscriptData(newTranscript.getRgdId(), transcript.getExonList(), mapKey, speciesTypeKey);
     }
 }

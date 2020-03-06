@@ -88,6 +88,9 @@ public class EnsemblDAO extends AbstractDAO {
     public Transcript getTranscript(int rgdId) throws Exception {
         return transcriptDAO.getTranscript(rgdId);
     }
+    List<Transcript> getTranscriptsForGene(int geneRgdId) throws Exception {
+        return transcriptDAO.getTranscriptsForGene(geneRgdId);
+    }
     public void insertTranscriptFeature(TranscriptFeature transcriptFeature,int speciesTypeKey) throws Exception {
         transcriptDAO.createFeature(transcriptFeature,speciesTypeKey);
     }
