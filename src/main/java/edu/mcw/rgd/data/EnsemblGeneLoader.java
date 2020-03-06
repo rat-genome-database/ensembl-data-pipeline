@@ -209,7 +209,7 @@ public class EnsemblGeneLoader {
                 event.setRgdId(rgdId);
                 event.setSymbol(gene.getGeneSymbol());
                 event.setName(gene.getgene_description());
-                event.setRefKey("133498");
+                event.setRefKey("133850");
                 event.setNomenStatusType("PROVISIONAL");
                 event.setDesc("Symbol and/or name change");
                 event.setEventDate(new Date());
