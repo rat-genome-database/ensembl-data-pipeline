@@ -279,18 +279,19 @@ public class EnsemblGeneLoader {
                 newGene.setEnsemblGeneType(gene.getgene_biotype());
                 ensemblDAO.insertGene(newGene);
 
-                // always create PROVISIONAL nomenclature event for newly created gene
-                NomenclatureEvent event = new NomenclatureEvent();
-                event.setRgdId(newRgdId.getRgdId());
-                event.setSymbol(newGene.getSymbol());
-                event.setName(newGene.getName());
-                event.setRefKey("20683");
-                event.setNomenStatusType("PROVISIONAL");
-                event.setDesc("Symbol and Name status set to provisional");
-                event.setEventDate(new Date());
-                event.setOriginalRGDId(newRgdId.getRgdId());
-                ensemblDAO.insertNomenclatureEvent(event);
-
+                // always create PROVISIONAL nomenclature event for newly created rat gene
+                if( speciesTypeKey==SpeciesType.RAT ) {
+                    NomenclatureEvent event = new NomenclatureEvent();
+                    event.setRgdId(newRgdId.getRgdId());
+                    event.setSymbol(newGene.getSymbol());
+                    event.setName(newGene.getName());
+                    event.setRefKey("20683");
+                    event.setNomenStatusType("PROVISIONAL");
+                    event.setDesc("Symbol and Name status set to provisional");
+                    event.setEventDate(new Date());
+                    event.setOriginalRGDId(newRgdId.getRgdId());
+                    ensemblDAO.insertNomenclatureEvent(event);
+                }
             } else {
                 aliasesinsert(Integer.parseInt(rgdId), gene);
             }
