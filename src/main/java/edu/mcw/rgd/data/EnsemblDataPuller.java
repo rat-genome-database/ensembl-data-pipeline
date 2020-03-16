@@ -25,9 +25,8 @@ public class EnsemblDataPuller {
     List<String> biomartQueryAttrsRatGenes; // extra attributes to be loaded for rat genes
     List<String> biomartQueryAttrsMouseGenes;
     List<String> biomartQueryAttrsHumanGenes;
-    Logger statuslog = Logger.getLogger("statuscheck");
+    Logger statuslog = Logger.getLogger("status");
     int speciesTypeKey;
-    private String version;
 
     /**
      * download data from Ensembl biomart
@@ -214,13 +213,4 @@ public class EnsemblDataPuller {
     public void setBiomartQueryAttrsHumanGenes(List<String> biomartQueryAttrsHumanGenes) {
         this.biomartQueryAttrsHumanGenes = biomartQueryAttrsHumanGenes;
     }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
 }

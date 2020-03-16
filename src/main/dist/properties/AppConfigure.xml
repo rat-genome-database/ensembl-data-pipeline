@@ -20,7 +20,6 @@
     </bean>
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">
-        <property name="version" value="EnsemblDataPuller  build 2019-07-17" />
         <property name="websiteUrl" value="http://www.ensembl.org/biomart/martservice"/>
         <property name="biomartQueryTemplate" value="properties/biomart.xml"/>
         <property name="biomartQueryAttrsGenes"><!-- ensembl gene attributes common to all species -->

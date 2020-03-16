@@ -14,24 +14,25 @@ import java.util.List;
  */
 public class Parser {
 
-    int speciesTypeKey;
-    Logger statuslog = Logger.getLogger("statuscheck");
+    private int speciesTypeKey;
+    Logger log = Logger.getLogger("status");
 
     public List<EnsemblGene> parseGene(String inputFile) throws Exception {
 
-        statuslog.info("Parsing the gene file for "+ SpeciesType.getCommonName(speciesTypeKey));
+        log.info(SpeciesType.getCommonName(speciesTypeKey)+": parsing gene file");
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
-        List<EnsemblGene> genes = new ArrayList<EnsemblGene>();
+        List<EnsemblGene> genes = new ArrayList<>();
         String line;
-        while ((line = reader.readLine()) != null)
-        {
+        while( (line = reader.readLine()) != null ) {
+
             EnsemblGene gene = new EnsemblGene();
             String[] cols = line.split("\t", -1);
             if (cols.length < 6) {
-                System.out.println("\n" + cols);
-                throw new Exception("5 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
-                        "  offending line: [" + line + "]");
+                String msg = "5 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
+                        "  offending line: [" + line + "]";
+                log.warn(msg);
+                throw new Exception(msg);
             }
             String ensemblGeneId = cols[0];
             String chromosome = cols[1];
@@ -46,7 +47,7 @@ public class Parser {
             if (cols.length > 9) {
                     rgdid = cols[9];
             }
-              gene.setEnsemblGeneId(ensemblGeneId);
+            gene.setEnsemblGeneId(ensemblGeneId);
 
             if (rgdid.isEmpty()) {
                 gene.setrgdid("0");
@@ -93,7 +94,7 @@ public class Parser {
 
     public Collection<EnsemblTranscript> parseTranscript(String inputFile) throws Exception {
 
-        statuslog.info("Parsing the transcript file for "+ SpeciesType.getCommonName(speciesTypeKey));
+        log.info(SpeciesType.getCommonName(speciesTypeKey)+": parsing transcript file");
         BufferedReader reader = new BufferedReader(new FileReader(inputFile));
 
         HashMap<String,EnsemblTranscript> transcripts = new HashMap<String,EnsemblTranscript>();
@@ -102,9 +103,10 @@ public class Parser {
         {
             String[] cols = line.split("\t", -1);
             if (cols.length < 10) {
-                System.out.println("\n" + cols);
-                throw new Exception("10 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
-                        "  offending line: [" + cols + "]");
+                String msg = "10 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
+                        "  offending line: [" + cols + "]";
+                log.warn(msg);
+                throw new Exception(msg);
             }
 
             EnsemblTranscript transcript = new EnsemblTranscript();
