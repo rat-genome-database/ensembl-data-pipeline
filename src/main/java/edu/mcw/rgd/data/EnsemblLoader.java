@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class EnsemblLoader {
 
     private String version;
-    static Logger log = Logger.getLogger("statuscheck");
+    Logger log = Logger.getLogger("status");
     EnsemblDataPuller dataPuller;
     Parser dataParser;
     EnsemblGeneLoader geneLoader;
@@ -74,17 +75,17 @@ public class EnsemblLoader {
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
             String dataFile = dataPuller.downloadGenesFile();
             List<EnsemblGene> genes=dataParser.parseGene(dataFile);
-            System.out.println("Total genes parsed from file: "+genes.size());
+            log.info("Total genes parsed from file: "+genes.size());
             geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
 
             String transcriptsFile = dataPuller.downloadTranscriptsFile();
             Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
-            System.out.println("Total transcripts parsed from file: "+transcripts.size());
+            log.info("Total transcripts parsed from file: "+transcripts.size());
             transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
 
         }
         catch(Exception e) {
-            e.printStackTrace();
+            Utils.printStackTrace(e, log);
             throw e;
         }
 
@@ -93,8 +94,8 @@ public class EnsemblLoader {
      * print to stdout the information about command line parameters
      */
     static public void usage() {
-        log.info("Command line parameters required:");
-        log.info(" -species 0|1|2|3|Rat|Mouse|Human|All");
+        System.out.println("Command line parameters required:");
+        System.out.println(" -species 0|1|2|3|Rat|Mouse|Human|All");
     }
 
     public void setVersion(String version) {

@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class EnsemblGeneLoader {
     EnsemblDAO ensemblDAO;
-    static Logger statuslog = Logger.getLogger("statuscheck");
+    Logger statuslog = Logger.getLogger("status");
 
     Map<String,String> matches=new HashMap<String,String>();
     List mismatches=new ArrayList();
@@ -25,7 +25,6 @@ public class EnsemblGeneLoader {
     }
 
     public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey) throws Exception {
-        System.out.println("Loading the file");
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
@@ -83,7 +82,7 @@ public class EnsemblGeneLoader {
                             statuslog.info("Check this out: Multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId()+"\n");
                         else {
                             if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
-                                createNewEnsemblGene(gene, ensemblMapKey, null);
+                                createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
                             else
                                 updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
 
@@ -102,7 +101,7 @@ public class EnsemblGeneLoader {
                                         mismatches.add(gene.getEnsemblGeneId());
                                         statuslog.info(" Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId()+"\n");
                                     } else {
-                                        createNewEnsemblGene(gene, ensemblMapKey, rgdId);
+                                        createNewEnsemblGene(gene, ensemblMapKey, rgdId, speciesTypeKey);
                                     }
                                 }
                             }
@@ -117,7 +116,7 @@ public class EnsemblGeneLoader {
                     } else {
                         // Check if ncbi rgdId and rgdId from file matches
                         if (ensembleRgdIds == null && rgdId == null) {
-                            createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId);
+                            createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
                         } else {
                             if (rgdId == null) {
                                 if (matches.containsKey(gene.getEnsemblGeneId()))
@@ -252,9 +251,7 @@ public class EnsemblGeneLoader {
         }
     }
 
-    public void createNewEnsemblGene(EnsemblGene gene, int mapKey,String rgdId) throws Exception {
-
-        int speciesTypeKey = MapManager.getInstance().getMap(mapKey).getSpeciesTypeKey();
+    public void createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
 
         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
 

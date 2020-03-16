@@ -13,7 +13,7 @@ public class EnsemblTranscriptLoader {
 
     EnsemblDAO ensemblDAO;
 
-    static Logger statuslog = Logger.getLogger("statuscheck");
+    Logger log = Logger.getLogger("status");
 
 
     List loaded=new ArrayList();
@@ -25,7 +25,7 @@ public class EnsemblTranscriptLoader {
 
     public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
 
-        System.out.println("Loading the transcripts file");
+        log.debug("Loading the transcripts file");
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
@@ -70,10 +70,9 @@ public class EnsemblTranscriptLoader {
             }
         }
 
-        statuslog.info("Total loaded: "+loaded.size()+"\n");
-        statuslog.info("Total genes not found: "+genesNotFound.size()+"\n");
-        statuslog.info("Total in file: "+ transcripts.size()+"\n");
-
+        log.info("Total loaded: "+loaded.size()+"\n");
+        log.info("Total genes not found: "+genesNotFound.size()+"\n");
+        log.info("Total in file: "+ transcripts.size()+"\n");
     }
 
     public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{

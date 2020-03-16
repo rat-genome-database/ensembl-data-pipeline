@@ -2,20 +2,16 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.dao.AbstractDAO;
 import edu.mcw.rgd.dao.impl.*;
-import edu.mcw.rgd.dao.spring.CountQuery;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
-import org.springframework.jdbc.core.SqlParameter;
 
-import java.sql.Types;
 import java.util.List;
 
 
 /**
  * Created by sellanki on 8/6/2019.
  */
-
 public class EnsemblDAO extends AbstractDAO {
 
     XdbIdDAO xdbDAO = new XdbIdDAO();
@@ -52,8 +48,7 @@ public class EnsemblDAO extends AbstractDAO {
         update(sql,gene_name,rgdId);
     }
 
-    public String getGeneStringName(List<String> gene_name) throws Exception
-    {
+    public String getGeneStringName(List<String> gene_name) throws Exception {
         String result=String.join(" ",gene_name);
         return result;
 
@@ -139,17 +134,10 @@ public class EnsemblDAO extends AbstractDAO {
             return null;
         }
     }
-    public boolean checkXDBRecord(int rgdId,String ensemblId,String srcPipeline) throws Exception{
+
+    public boolean checkXDBRecord(int rgdId, String ensemblId, String srcPipeline) throws Exception{
         String sql = "select count(*) from rgd_acc_xdb where rgd_id = ? and acc_id = ? and src_pipeline = ?";
-        CountQuery q = new CountQuery(getDataSource(), sql);
-        q.declareParameter(new SqlParameter(Types.INTEGER));
-        q.declareParameter(new SqlParameter(Types.VARCHAR));
-        q.declareParameter(new SqlParameter(Types.VARCHAR));
-        q.compile();
-        List<Integer> result = q.execute(rgdId,ensemblId,srcPipeline);
-        if(result.get(0) > 0)
-            return true;
-        else return false;
+        return xdbDAO.getCount(sql, rgdId, ensemblId, srcPipeline) != 0;
     }
 
     public MapData checkrecord_rgdid(String start_pos,String stop_pos,String strand,String chromosome, int mapKey) throws Exception {
@@ -163,14 +151,6 @@ public class EnsemblDAO extends AbstractDAO {
         else{
             return null;
         }
-    }
-
-    public int insertAliasType(String aliasType,String notes) throws Exception {
-        return aliasDAO.insertAliasType(aliasType,notes);
-    }
-
-    public List<String> getAliasTypes() throws Exception {
-        return aliasDAO.getAliasTypes();
     }
 
     public int insertAlias(Alias alias) throws Exception {
