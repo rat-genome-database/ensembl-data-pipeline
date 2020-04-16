@@ -12,17 +12,13 @@ import java.util.Map;
  * Created by sellanki on 10/18/2019.
  */
 public class EnsemblGeneLoader {
-    EnsemblDAO ensemblDAO;
+    EnsemblDAO ensemblDAO = new EnsemblDAO();
     Logger statuslog = Logger.getLogger("status");
 
     Map<String,String> matches=new HashMap<String,String>();
     List mismatches=new ArrayList();
     List<EnsemblGene> newGenes = new ArrayList<>();
     List nomenEvents = new ArrayList<>();
-
-    public EnsemblGeneLoader() throws Exception {
-        ensemblDAO = new EnsemblDAO();
-    }
 
     public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey) throws Exception {
 
@@ -143,31 +139,31 @@ public class EnsemblGeneLoader {
         statuslog.info("Total nomenEvents in file: "+nomenEvents.size()+"\n");
     }
 
-    public void aliasesinsert(int rgdid_new, EnsemblGene gene) throws Exception {
-        List<String> gene_name = ensemblDAO.getGeneName(rgdid_new);
-        String gene_name_str = ensemblDAO.getGeneStringName(gene_name);
+    public void aliasesinsert(int newRgdId, EnsemblGene gene) throws Exception {
+
+        String geneName = ensemblDAO.getGeneName(newRgdId);
+
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
 
 
-        if (!ensemblDAO.getGeneSymbol(rgdid_new).contains(gene.getGeneSymbol())) {
-            aliasData.setRgdId(rgdid_new);
+        if (!ensemblDAO.getGeneSymbol(newRgdId).contains(gene.getGeneSymbol())) {
+            aliasData.setRgdId(newRgdId);
             aliasData.setValue(gene.getGeneSymbol());
             aliasData.setTypeName("ensembl_gene_symbol");
             ensemblDAO.insertAlias(aliasData);
-
         }
-        if (gene.getgene_description() != null && !gene.getgene_description().isEmpty() && !gene.getgene_description().contains(gene_name_str)) {
-            aliasData.setRgdId(rgdid_new);
+
+        if (gene.getgene_description() != null && !gene.getgene_description().isEmpty() && !gene.getgene_description().contains(geneName)) {
+            aliasData.setRgdId(newRgdId);
             aliasData.setValue(gene.getgene_description());
             aliasData.setTypeName("ensembl_full_name");
             ensemblDAO.insertAlias(aliasData);
-
         }
 
-        ensemblDAO.insertGeneType(rgdid_new, gene.getgene_biotype());
-        ensemblDAO.insertGeneSymbol(rgdid_new, gene.getGeneSymbol());
-        ensemblDAO.insertGeneName(rgdid_new, gene.getgene_description());
+        ensemblDAO.updateGeneType(newRgdId, gene.getgene_biotype());
+        ensemblDAO.insertGeneSymbol(newRgdId, gene.getGeneSymbol());
+        ensemblDAO.insertGeneName(newRgdId, gene.getgene_description());
     }
 
    public void updateData(EnsemblGene gene,String rgdId, int mapKey) throws Exception{

@@ -1,3 +1,6 @@
+2020-04-16
+  added logging of xdb ids
+
 2020-03-16
   tuned up logging
   
