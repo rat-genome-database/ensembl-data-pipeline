@@ -5,6 +5,7 @@ import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ import java.util.List;
  */
 public class EnsemblDAO extends AbstractDAO {
 
+    Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
+
     XdbIdDAO xdbDAO = new XdbIdDAO();
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -22,11 +25,11 @@ public class EnsemblDAO extends AbstractDAO {
     NomenclatureDAO nomenclatureDAO = new NomenclatureDAO();
     MapDAO mapDAO = new MapDAO();
 
-    public void insertGeneType(int rgdId,String gene_type) throws Exception
-    {
-     String sql="update genes set ensembl_gene_type=? where rgd_id=?";
+    public void updateGeneType(int rgdId,String gene_type) throws Exception {
+        String sql="UPDATE genes SET ensembl_gene_type=? WHERE rgd_id=?";
         update(sql,gene_type,rgdId);
     }
+
     public List<String> getGeneSymbol(int rgdId) throws Exception
     {
         String sql="select gene_symbol from genes where rgd_id=?";
@@ -37,27 +40,22 @@ public class EnsemblDAO extends AbstractDAO {
         String sql="update genes set ensembl_gene_symbol=? where rgd_id=?";
         update(sql,gene_symbol,rgdId);
     }
-    public List<String> getGeneName(int rgdId) throws Exception
-    {
-        String sql="select full_name from genes where rgd_id=?";
-        return StringListQuery.execute(this,sql,rgdId);
+
+    public String getGeneName(int rgdId) throws Exception {
+        String sql = "SELECT full_name FROM genes WHERE rgd_id=?";
+        return getStringResult(sql, rgdId);
     }
+
     public void insertGeneName(int rgdId,String gene_name) throws Exception
     {
         String sql="update genes set ensembl_full_name=? where rgd_id=?";
         update(sql,gene_name,rgdId);
     }
 
-    public String getGeneStringName(List<String> gene_name) throws Exception {
-        String result=String.join(" ",gene_name);
-        return result;
-
-    }
-
-
     RgdId createRgdId(int objectKey, int speciesTypeKey) throws Exception {
         return managementDAO.createRgdId(objectKey, "ACTIVE", "created by Ensembl pipeline", speciesTypeKey);
     }
+
     public boolean existsGeneType(String geneType) throws Exception {
         return geneDAO.existsGeneType(geneType);
     }
@@ -102,6 +100,7 @@ public class EnsemblDAO extends AbstractDAO {
             return result;
         else return null;
     }
+
     public List<String> getNcbiRgdId(String Acc_id) throws Exception{
         String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 3 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
                 "and rx.src_pipeline = 'ENTREZGENE'";
@@ -117,17 +116,16 @@ public class EnsemblDAO extends AbstractDAO {
         else return null;
     }
 
-    public int insertXdbIds(XdbId xdb) throws Exception {
-        return xdbDAO.insertXdb(xdb);
+    public int insertXdbIds(XdbId id) throws Exception {
+        logInsertedXdbs.debug(id.dump("|"));
+        return xdbDAO.insertXdb(id);
     }
 
-    public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome,int mapKey) throws Exception
-    {
+    public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome,int mapKey) throws Exception {
         String query="select * from maps_data where map_key=? and rgd_id=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
         MapDataQuery q=new MapDataQuery(this.getDataSource(),query);
         List<MapData> mp=execute(q,mapKey,rgd_id,start_pos,stop_pos,strand,chromosome);
-        if(!mp.isEmpty())
-        {
+        if(!mp.isEmpty()) {
             return mp.get(0);
         }
         else{

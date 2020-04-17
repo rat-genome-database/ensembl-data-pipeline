@@ -1,2 +1,6 @@
 # ensembl-data-pipeline
-Load rat genes from Ensembl into RGD.
+Load genes from Ensembl into RGD.
+
+XDB_IDS (external database ids)
+
+    1. genes: only Ensembl Gene Ids are loaded 
