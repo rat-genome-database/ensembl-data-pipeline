@@ -97,12 +97,10 @@ public class EnsemblDataPuller {
         BufferedReader fileReader = new BufferedReader(new FileReader(this.getBiomartQueryTemplate()));
         String line;
         StringBuilder buf = new StringBuilder();
-        while( (line=fileReader.readLine())!=null )
-        {
+        while( (line=fileReader.readLine())!=null ) {
             line = line.trim();
             // replace any line with '#SPECIES#' tag
-            if( line.contains("#SPECIES#") )
-            {
+            if( line.contains("#SPECIES#") ) {
                 // from species taxonomic name take first letter of 1st word and entire second word
                 // f.e. 'Homo sapiens' --> 'hsapiens'
 
@@ -110,7 +108,7 @@ public class EnsemblDataPuller {
                 String[] taxoNameWords = SpeciesType.getTaxonomicName(speciesTypeKey).split(" ");
                 String taxoName = taxoNameWords[0].substring(0, 1).toLowerCase() + taxoNameWords[1];
                 if(speciesTypeKey == SpeciesType.DOG)
-                    taxoName = "cfamiliaris";
+                    taxoName = "clfamiliaris";
                 line = line.replaceAll("\\#SPECIES\\#", taxoName);
             }
             buf.append(line);

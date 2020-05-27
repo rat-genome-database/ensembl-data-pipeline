@@ -7,6 +7,7 @@ import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -93,11 +94,16 @@ public class EnsemblDAO extends AbstractDAO {
     public List<TranscriptFeature> getFeatures(int transcriptRgdId) throws Exception {
         return transcriptDAO.getFeatures(transcriptRgdId);
     }
-    public List<String> getRgd_id(String Acc_id, int xdbKey) throws Exception{
-        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = ? and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1";
-        List<String> result =  StringListQuery.execute(this,sql,Acc_id, xdbKey);
-        if(result.size() >  0)
-            return result;
+
+    public List<String> getRgd_id(String accId, int xdbKey) throws Exception{
+        List<String> rgdIds = new ArrayList<>();
+        List<Gene> genes = xdbDAO.getActiveGenesByXdbId(xdbKey, accId);
+        for( Gene g: genes ) {
+            rgdIds.add(Integer.toString(g.getRgdId()));
+        }
+
+        if( rgdIds.size()> 0 )
+            return rgdIds;
         else return null;
     }
 

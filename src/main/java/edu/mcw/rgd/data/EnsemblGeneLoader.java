@@ -75,7 +75,7 @@ public class EnsemblGeneLoader {
                     if (rgdId == null) {
                         // Case 1: No rgdid and no ncbi id in the file.
                         if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
-                            statuslog.info("Check this out: Multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId()+"\n");
+                            statuslog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
                         else {
                             if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
                                 createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
