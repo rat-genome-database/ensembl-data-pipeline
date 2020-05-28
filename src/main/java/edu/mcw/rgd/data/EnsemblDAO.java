@@ -26,33 +26,6 @@ public class EnsemblDAO extends AbstractDAO {
     NomenclatureDAO nomenclatureDAO = new NomenclatureDAO();
     MapDAO mapDAO = new MapDAO();
 
-    public void updateGeneType(int rgdId,String gene_type) throws Exception {
-        String sql="UPDATE genes SET ensembl_gene_type=? WHERE rgd_id=?";
-        update(sql,gene_type,rgdId);
-    }
-
-    public List<String> getGeneSymbol(int rgdId) throws Exception
-    {
-        String sql="select gene_symbol from genes where rgd_id=?";
-        return StringListQuery.execute(this,sql,rgdId);
-    }
-    public void insertGeneSymbol(int rgdId,String gene_symbol) throws Exception
-    {
-        String sql="update genes set ensembl_gene_symbol=? where rgd_id=?";
-        update(sql,gene_symbol,rgdId);
-    }
-
-    public String getGeneName(int rgdId) throws Exception {
-        String sql = "SELECT full_name FROM genes WHERE rgd_id=?";
-        return getStringResult(sql, rgdId);
-    }
-
-    public void insertGeneName(int rgdId,String gene_name) throws Exception
-    {
-        String sql="update genes set ensembl_full_name=? where rgd_id=?";
-        update(sql,gene_name,rgdId);
-    }
-
     RgdId createRgdId(int objectKey, int speciesTypeKey) throws Exception {
         return managementDAO.createRgdId(objectKey, "ACTIVE", "created by Ensembl pipeline", speciesTypeKey);
     }
@@ -64,15 +37,19 @@ public class EnsemblDAO extends AbstractDAO {
     public void createGeneType(String geneType) throws Exception {
         geneDAO.createGeneType(geneType, geneType, geneType);
     }
+
     public void insertGene(Gene gene) throws Exception {
         geneDAO.insertGene(gene);
     }
+
     public void updateGene(Gene gene) throws Exception {
         geneDAO.updateGene(gene);
     }
+
     public Gene getGene(int rgdId) throws Exception {
-        return  geneDAO.getGene(rgdId);
+        return geneDAO.getGene(rgdId);
     }
+
     public void insertTranscript(Transcript transcript,int speciesTypeKey) throws Exception {
         transcriptDAO.createTranscript(transcript,speciesTypeKey);
     }

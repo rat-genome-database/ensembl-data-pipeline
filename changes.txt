@@ -1,3 +1,6 @@
+2020-05-28
+  replaced some custom sql queries with rgdcore equivalents for better code maintainability
+
 2020-05-27
   fixed Ensembl query for dog
 

@@ -141,13 +141,13 @@ public class EnsemblGeneLoader {
 
     public void aliasesinsert(int newRgdId, EnsemblGene gene) throws Exception {
 
-        String geneName = ensemblDAO.getGeneName(newRgdId);
+        Gene geneInRgd = ensemblDAO.getGene(newRgdId);
+        String geneName = geneInRgd.getName();
 
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
 
-
-        if (!ensemblDAO.getGeneSymbol(newRgdId).contains(gene.getGeneSymbol())) {
+        if (!geneInRgd.getSymbol().contains(gene.getGeneSymbol())) {
             aliasData.setRgdId(newRgdId);
             aliasData.setValue(gene.getGeneSymbol());
             aliasData.setTypeName("ensembl_gene_symbol");
@@ -161,9 +161,10 @@ public class EnsemblGeneLoader {
             ensemblDAO.insertAlias(aliasData);
         }
 
-        ensemblDAO.updateGeneType(newRgdId, gene.getgene_biotype());
-        ensemblDAO.insertGeneSymbol(newRgdId, gene.getGeneSymbol());
-        ensemblDAO.insertGeneName(newRgdId, gene.getgene_description());
+        geneInRgd.setEnsemblFullName(gene.getgene_description());
+        geneInRgd.setEnsemblGeneSymbol(gene.getGeneSymbol());
+        geneInRgd.setEnsemblGeneType(gene.getgene_biotype());
+        ensemblDAO.updateGene(geneInRgd);
     }
 
    public void updateData(EnsemblGene gene,String rgdId, int mapKey) throws Exception{
