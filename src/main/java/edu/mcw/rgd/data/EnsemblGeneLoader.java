@@ -147,7 +147,7 @@ public class EnsemblGeneLoader {
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
 
-        if (!geneInRgd.getSymbol().contains(gene.getGeneSymbol())) {
+        if( !geneInRgd.getSymbol().equals(gene.getGeneSymbol()) ) {
             aliasData.setRgdId(newRgdId);
             aliasData.setValue(gene.getGeneSymbol());
             aliasData.setTypeName("ensembl_gene_symbol");
