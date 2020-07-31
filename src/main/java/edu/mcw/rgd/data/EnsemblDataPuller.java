@@ -19,6 +19,7 @@ import java.util.List;
  */
 public class EnsemblDataPuller {
     String websiteUrl; // ensembl biomart url
+    String restGenomeUrl;
     String biomartQueryTemplate; // xml config file containing the query template to be POST-ed to biomart
     List<String> biomartQueryAttrsGenes; // list of attributes to be loaded for main genes query
     List<String> biomartQueryAttrsTranscripts; // list of attributes to be loaded for main transcripts query
@@ -147,6 +148,27 @@ public class EnsemblDataPuller {
         return outputFile;
     }
 
+    String getAssemblyNameFromEnsemblRest() throws Exception {
+
+        FileDownloader fd = new FileDownloader();
+        String url = getRestGenomeUrl() + SpeciesType.getTaxonomicName(speciesTypeKey).replace(" ", "_");
+        fd.setExternalFile(url);
+        fd.setLocalFile(null);
+        String content = fd.download();
+
+        // sexample line that interests us: "assembly_name: Sscrofa11.1"
+        String[] lines = content.split("[\\n\\r]");
+        String pattern = "assembly_name:";
+        for( String line: lines ) {
+            int pos = line.indexOf(pattern);
+            if( pos>=0 ) {
+                String assemblyName = line.substring(pos+pattern.length()).trim();
+                return assemblyName;
+            }
+        }
+
+        throw new Exception("Cannot retrieve an assembly name from "+url);
+    }
 
     public String getWebsiteUrl() {
         return websiteUrl;
@@ -210,5 +232,13 @@ public class EnsemblDataPuller {
 
     public void setBiomartQueryAttrsHumanGenes(List<String> biomartQueryAttrsHumanGenes) {
         this.biomartQueryAttrsHumanGenes = biomartQueryAttrsHumanGenes;
+    }
+
+    public String getRestGenomeUrl() {
+        return restGenomeUrl;
+    }
+
+    public void setRestGenomeUrl(String restGenomeUrl) {
+        this.restGenomeUrl = restGenomeUrl;
     }
 }

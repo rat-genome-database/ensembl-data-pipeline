@@ -1,3 +1,7 @@
+2020-07-31
+  added assembly map verification for all species
+  added chinchilla to list of processed species
+
 2020-05-28
   replaced some custom sql queries with rgdcore equivalents for better code maintainability
 

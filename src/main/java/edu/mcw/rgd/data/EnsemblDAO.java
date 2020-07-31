@@ -147,5 +147,9 @@ public class EnsemblDAO extends AbstractDAO {
     public void insertMapData(MapData md) throws Exception {
         mapDAO.insertMapData(md);
     }
+
+    public Map getAssemblyMap(int mapKey) throws Exception {
+        return mapDAO.getMapByKey(mapKey);
+    }
 }
 

@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Pipeline  -- build 2020-05-28"/>
+        <property name="version" value="Ensembl Pipeline  -- build 2020-07-31"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="geneLoader" ref="GeneLoader"/>
@@ -11,6 +11,7 @@
                 <entry key="Rat" value="361"/>
                 <entry key="Mouse" value="39"/>
                 <entry key="Human" value="40"/>
+                <entry key="Chinchilla" value="45"/>
                 <entry key="Dog" value="632"/>
                 <entry key="Pig" value="912" />
                 <entry key="Bonobo" value="512"/>
@@ -21,6 +22,7 @@
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">
         <property name="websiteUrl" value="http://www.ensembl.org/biomart/martservice"/>
+        <property name="restGenomeUrl" value="http://rest.ensembl.org/info/genomes/"/><!-- append species, f.e. http://rest.ensembl.org/info/genomes/Sus_scrofa -->
         <property name="biomartQueryTemplate" value="properties/biomart.xml"/>
         <property name="biomartQueryAttrsGenes"><!-- ensembl gene attributes common to all species -->
             <list>

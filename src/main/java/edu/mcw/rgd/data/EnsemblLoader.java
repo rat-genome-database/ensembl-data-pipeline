@@ -73,6 +73,7 @@ public class EnsemblLoader {
         try {
 
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
+            validateAssemblyName(ensemblMapKey);
             String dataFile = dataPuller.downloadGenesFile();
             List<EnsemblGene> genes=dataParser.parseGene(dataFile);
             log.info("Total genes parsed from file: "+genes.size());
@@ -90,6 +91,21 @@ public class EnsemblLoader {
         }
 
     }
+
+    void validateAssemblyName(int ensemblMapKey) throws Exception {
+
+        String assemblyName = dataPuller.getAssemblyNameFromEnsemblRest();
+        log.info("Ensembl Rest service: assembly name: "+assemblyName);
+        String expectedAssemblyNameInRgd = assemblyName+" Ensembl";
+
+        edu.mcw.rgd.datamodel.Map ensemblMap = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
+        log.info("Ensembl Rest service: assembly name: "+assemblyName);
+
+        if( !expectedAssemblyNameInRgd.equalsIgnoreCase(ensemblMap.getName()) ) {
+            throw new Exception("Assembly map mismatch: expected ["+ensemblMap.getName()+"] found ["+assemblyName+"]");
+        }
+    }
+
     /**
      * print to stdout the information about command line parameters
      */
