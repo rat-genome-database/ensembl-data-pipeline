@@ -26,6 +26,7 @@ public class EnsemblTranscriptLoader {
     public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
 
         log.debug("Loading the transcripts file");
+        int transcriptsInserted = 0;
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
@@ -62,6 +63,7 @@ public class EnsemblTranscriptLoader {
                         updateTranscriptType(transcript);
                     } else {
                         createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey);
+                        transcriptsInserted++;
                     }
 
                 } else {
@@ -70,9 +72,12 @@ public class EnsemblTranscriptLoader {
             }
         }
 
-        log.info("Total loaded: "+loaded.size()+"\n");
-        log.info("Total genes not found: "+genesNotFound.size()+"\n");
-        log.info("Total in file: "+ transcripts.size()+"\n");
+        log.info("Total loaded: "+loaded.size());
+        log.info("Total genes not found: "+genesNotFound.size());
+        log.info("Total in file: "+ transcripts.size());
+        if( transcriptsInserted>0 ) {
+            log.info("Transcripts inserted: "+transcriptsInserted);
+        }
     }
 
     public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{

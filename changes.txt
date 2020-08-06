@@ -1,3 +1,6 @@
+2020-08-06
+  transcripts loader summary: shows count of inserted transcripts
+
 2020-07-31
   added assembly map verification for all species
   added chinchilla to list of processed species
