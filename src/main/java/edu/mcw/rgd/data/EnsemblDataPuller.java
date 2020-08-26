@@ -147,7 +147,7 @@ public class EnsemblDataPuller {
         return compressFile(outputFile);
     }
 
-    String compressFile(String fileName) {
+    String compressFile(String fileName) throws IOException {
         String outFileName = fileName + ".gz";
         BufferedReader in = Utils.openReader(fileName);
         BufferedWriter out = Utils.openWriter(outFileName);
