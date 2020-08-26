@@ -11,17 +11,13 @@ import java.util.*;
  */
 public class EnsemblTranscriptLoader {
 
-    EnsemblDAO ensemblDAO;
+    EnsemblDAO ensemblDAO = new EnsemblDAO();
 
     Logger log = Logger.getLogger("status");
 
 
     List loaded=new ArrayList();
     List genesNotFound=new ArrayList();
-
-    public EnsemblTranscriptLoader() throws Exception {
-        ensemblDAO = new EnsemblDAO();
-    }
 
     public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
 

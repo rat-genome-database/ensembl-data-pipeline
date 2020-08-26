@@ -1,3 +1,6 @@
+2020-08-26
+  downloads the files in compressed format
+
 2020-08-06
   transcripts loader summary: shows count of inserted transcripts
 

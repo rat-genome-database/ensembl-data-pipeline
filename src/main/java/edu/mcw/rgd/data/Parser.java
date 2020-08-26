@@ -1,5 +1,6 @@
 package edu.mcw.rgd.data;
 import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -20,7 +21,7 @@ public class Parser {
     public List<EnsemblGene> parseGene(String inputFile) throws Exception {
 
         log.info(SpeciesType.getCommonName(speciesTypeKey)+": parsing gene file");
-        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader reader = Utils.openReader(inputFile);
 
         List<EnsemblGene> genes = new ArrayList<>();
         String line;
@@ -95,7 +96,7 @@ public class Parser {
     public Collection<EnsemblTranscript> parseTranscript(String inputFile) throws Exception {
 
         log.info(SpeciesType.getCommonName(speciesTypeKey)+": parsing transcript file");
-        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedReader reader = Utils.openReader(inputFile);
 
         HashMap<String,EnsemblTranscript> transcripts = new HashMap<String,EnsemblTranscript>();
         String line;

@@ -3,12 +3,10 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.FileExternalSort;
+import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -145,7 +143,24 @@ public class EnsemblDataPuller {
         // delete the input file after the sorted file is available
         inFile.delete();
 
-        return outputFile;
+        // to save disk space, compress the file
+        return compressFile(outputFile);
+    }
+
+    String compressFile(String fileName) {
+        String outFileName = fileName + ".gz";
+        BufferedReader in = Utils.openReader(fileName);
+        BufferedWriter out = Utils.openWriter(outFileName);
+        String line;
+        while( (line=in.readLine())!=null ) {
+            out.write(line);
+            out.write("\n");
+        }
+        in.close();
+        out.close();
+
+        new File(fileName).delete();
+        return outFileName;
     }
 
     String getAssemblyNameFromEnsemblRest() throws Exception {
