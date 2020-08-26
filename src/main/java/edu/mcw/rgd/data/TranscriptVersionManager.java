@@ -75,7 +75,7 @@ public class TranscriptVersionManager {
                 continue;
             }
 
-            String accVer = acc + "." + info.version;
+            String accVer = info.version;
 
             String accVerInDb = dao.getTranscriptVersionInfo(acc);
             if( accVerInDb==null ) {
