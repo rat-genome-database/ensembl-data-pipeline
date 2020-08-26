@@ -65,6 +65,21 @@ public class EnsemblDAO extends AbstractDAO {
     public void insertTranscriptFeature(TranscriptFeature transcriptFeature,int speciesTypeKey) throws Exception {
         transcriptDAO.createFeature(transcriptFeature,speciesTypeKey);
     }
+
+    ///// STABLE_TRANSCRIPTS - transcript versions
+
+    public String getTranscriptVersionInfo(String acc) throws Exception {
+        return transcriptDAO.getTranscriptVersionInfo(acc);
+    }
+
+    public void updateTranscriptVersionInfo(String acc, String version) throws Exception {
+        transcriptDAO.updateTranscriptVersionInfo(acc, version);
+    }
+
+    public void insertTranscriptVersionInfo(String acc, String version, int rgdId) throws Exception {
+        transcriptDAO.insertTranscriptVersionInfo(acc, version, rgdId);
+    }
+
     public void insertNomenclatureEvent(NomenclatureEvent event) throws Exception {
         nomenclatureDAO.createNomenEvent(event);
     }

@@ -11,6 +11,7 @@ public class EnsemblTranscript {
 
     int rgdId;
     String ensTranscriptId;
+    String ensTranscriptVer;
     String ensGeneId;
     String proteinId;
     String chromosome;
@@ -36,6 +37,14 @@ public class EnsemblTranscript {
 
     public void setEnsTranscriptId(String ensTranscriptId) {
         this.ensTranscriptId = ensTranscriptId;
+    }
+
+    public String getEnsTranscriptVer() {
+        return ensTranscriptVer;
+    }
+
+    public void setEnsTranscriptVer(String ensTranscriptVer) {
+        this.ensTranscriptVer = ensTranscriptVer;
     }
 
     public String getEnsGeneId() {

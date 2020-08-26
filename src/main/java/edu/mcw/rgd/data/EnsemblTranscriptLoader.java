@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
@@ -33,6 +34,9 @@ public class EnsemblTranscriptLoader {
                 boolean transcriptMatch = false;
                 String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
                 if (rgdId != null) {
+
+                    TranscriptVersionManager.getInstance().addVersion(transcript.getEnsTranscriptId(), transcript.getEnsTranscriptVer());
+
                     int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
                     List<EnsemblExon> features = transcript.getExonList();
                     List<Transcript> transcriptsForGene = ensemblDAO.getTranscriptsForGene(geneRgdId);
@@ -74,12 +78,18 @@ public class EnsemblTranscriptLoader {
         if( transcriptsInserted>0 ) {
             log.info("Transcripts inserted: "+transcriptsInserted);
         }
+
+        CounterPool counters = new CounterPool();
+        TranscriptVersionManager.getInstance().qcAndLoad(counters);
+        log.info(counters.dumpAlphabetically());
     }
 
     public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
         Transcript t = ensemblDAO.getTranscript(transcript.getRgdId());
         t.setType(transcript.getType());
         ensemblDAO.updateTranscript(t);
+
+        TranscriptVersionManager.getInstance().addRgdId(t.getAccId(), t.getRgdId());
     }
 
     public void updateTranscriptData(int transcriptRgdId, List<EnsemblExon> features, int mapKey, int speciesTypeKey) throws Exception{

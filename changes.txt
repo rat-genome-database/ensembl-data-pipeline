@@ -1,5 +1,6 @@
 2020-08-26
   downloads the files in compressed format
+  added handling of transcript versions (STABLE_TRANSCRIPTS table)
 
 2020-08-06
   transcripts loader summary: shows count of inserted transcripts

@@ -4,7 +4,6 @@ import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -113,6 +112,7 @@ public class Parser {
             EnsemblTranscript transcript = new EnsemblTranscript();
             transcript.setEnsGeneId(cols[0]);
             transcript.setEnsTranscriptId(cols[1]);
+            transcript.setEnsTranscriptVer(cols[2]);
             transcript.setChromosome(cols[3]);
             transcript.setStart(Integer.valueOf(cols[4]));
             transcript.setStop(Integer.valueOf(cols[5]));
