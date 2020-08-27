@@ -119,7 +119,7 @@ public class EnsemblGeneLoader {
                                     continue;
                                 else {
                                     mismatches.add(gene.getEnsemblGeneId());
-                                    statuslog.info(" Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId()+"\n");
+                                    statuslog.info(" Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
                                 }
                             } else if (rgdId.equals(ncbiRgdId)) {
                                 updateData(gene, ncbiRgdId, ensemblMapKey);

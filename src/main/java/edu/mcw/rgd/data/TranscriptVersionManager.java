@@ -26,6 +26,10 @@ public class TranscriptVersionManager {
 
     Logger log = Logger.getLogger("transcriptVersions");
 
+    public void init() {
+        map.clear();
+    }
+
     public void addVersion(String acc, String version) {
 
         Info info = map.get(acc);

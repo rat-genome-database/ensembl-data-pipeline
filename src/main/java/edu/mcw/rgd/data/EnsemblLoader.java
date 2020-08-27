@@ -7,9 +7,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by sellanki on 8/6/2019.
@@ -48,7 +46,9 @@ public class EnsemblLoader {
             throw new Exception("Aborted: please specify the species in cmd line");
         }
         if( speciesTypeKey== SpeciesType.ALL ) {
-            for( String s:loader.getEnsemblAssemblyMap().keySet() ){
+            List<String> speciesList = new ArrayList<>(loader.getEnsemblAssemblyMap().keySet());
+            Collections.shuffle(speciesList);
+            for( String s: speciesList){
                 loader.run(SpeciesType.parse(s));
             }
         }
@@ -79,17 +79,16 @@ public class EnsemblLoader {
             log.info("Total genes parsed from file: "+genes.size());
             geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
 
+            TranscriptVersionManager.getInstance().init();
             String transcriptsFile = dataPuller.downloadTranscriptsFile();
             Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
             log.info("Total transcripts parsed from file: "+transcripts.size());
             transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
-
         }
         catch(Exception e) {
             Utils.printStackTrace(e, log);
             throw e;
         }
-
     }
 
     void validateAssemblyName(int ensemblMapKey) throws Exception {
