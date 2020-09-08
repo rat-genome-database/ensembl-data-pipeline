@@ -15,5 +15,6 @@ java -jar -Dspring.config=$APPDIR/../properties/default_db2.xml \
     -jar lib/$APPNAME.jar "$@" 2>&1 > run.log
 
 mailx -s "[$SERVER] EnsemblDataPipeline OK!" $EMAILLIST < $APPDIR/logs/summary.log
+mailx -s "[$SERVER] EnsemblDataPipeline conflicts" $EMAILLIST < $APPDIR/logs/conflicts.log
 
 

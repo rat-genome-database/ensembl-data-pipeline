@@ -98,7 +98,6 @@ public class EnsemblLoader {
         String expectedAssemblyNameInRgd = assemblyName+" Ensembl";
 
         edu.mcw.rgd.datamodel.Map ensemblMap = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
-        log.info("Ensembl Rest service: assembly name: "+assemblyName);
 
         if( !expectedAssemblyNameInRgd.equalsIgnoreCase(ensemblMap.getName()) ) {
             throw new Exception("Assembly map mismatch: expected ["+ensemblMap.getName()+"] found ["+assemblyName+"]");

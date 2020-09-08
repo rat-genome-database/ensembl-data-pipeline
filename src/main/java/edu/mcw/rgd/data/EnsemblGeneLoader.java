@@ -14,6 +14,7 @@ import java.util.Map;
 public class EnsemblGeneLoader {
     EnsemblDAO ensemblDAO = new EnsemblDAO();
     Logger statuslog = Logger.getLogger("status");
+    Logger conflictLog = Logger.getLogger("conflicts");
 
     Map<String,String> matches=new HashMap<String,String>();
     List mismatches=new ArrayList();
@@ -39,7 +40,7 @@ public class EnsemblGeneLoader {
                     else {
                         //This indicates multiple rgdIds for a ncbi
                         if (ncbiIds != null) {
-                            statuslog.info("Check the ncbi Id: " + gene.getEntrezgene_id() +"\n");
+                            conflictLog.info("Check the ncbi Id: " + gene.getEntrezgene_id());
                         } else ncbiRgdId = null; //Ncbi Id doesnt exist in rgd database
                     }
                 }
@@ -53,7 +54,7 @@ public class EnsemblGeneLoader {
                             rgdId = rgdIds.get(0);
                         else {
                             if(rgdId != null)
-                                statuslog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
+                                conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
                             rgdId = null;
                         }
                     }
@@ -63,7 +64,7 @@ public class EnsemblGeneLoader {
                             rgdId = rgdIds.get(0);
                         else {
                             if(rgdId != null)
-                                statuslog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid()+"\n");
+                                conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid());
                             rgdId = null;
                         }
                     }
@@ -75,7 +76,7 @@ public class EnsemblGeneLoader {
                     if (rgdId == null) {
                         // Case 1: No rgdid and no ncbi id in the file.
                         if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
-                            statuslog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
+                            conflictLog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
                         else {
                             if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
                                 createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
@@ -95,7 +96,7 @@ public class EnsemblGeneLoader {
                             else {
                                     if(ensembleRgdIds != null) {
                                         mismatches.add(gene.getEnsemblGeneId());
-                                        statuslog.info(" Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId()+"\n");
+                                        conflictLog.info("Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId());
                                     } else {
                                         createNewEnsemblGene(gene, ensemblMapKey, rgdId, speciesTypeKey);
                                     }
@@ -119,7 +120,7 @@ public class EnsemblGeneLoader {
                                     continue;
                                 else {
                                     mismatches.add(gene.getEnsemblGeneId());
-                                    statuslog.info(" Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
+                                    conflictLog.info("Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
                                 }
                             } else if (rgdId.equals(ncbiRgdId)) {
                                 updateData(gene, ncbiRgdId, ensemblMapKey);
@@ -132,11 +133,11 @@ public class EnsemblGeneLoader {
             }
         }
 
-        statuslog.info("Total mismatches: "+mismatches.size()+"\n");
-        statuslog.info("Total matches: "+ matches.size()+"\n");
-        statuslog.info("Total new Genes: "+ newGenes.size()+"\n");
-        statuslog.info("Total genes in file: "+genes.size()+"\n");
-        statuslog.info("Total nomenEvents in file: "+nomenEvents.size()+"\n");
+        statuslog.info("Total mismatches: "+mismatches.size());
+        statuslog.info("Total matches: "+ matches.size());
+        statuslog.info("Total new Genes: "+ newGenes.size());
+        statuslog.info("Total genes in file: "+genes.size());
+        statuslog.info("Total nomenEvents in file: "+nomenEvents.size());
     }
 
     public void aliasesinsert(int newRgdId, EnsemblGene gene) throws Exception {
