@@ -1,3 +1,6 @@
+2020-09-16
+  dao tuneup: replaced custom sql code with a call to rgdcore
+
 2020-09-08
   tuned up handling of transcript versions
   improved reporting: separated conflict report from summary report

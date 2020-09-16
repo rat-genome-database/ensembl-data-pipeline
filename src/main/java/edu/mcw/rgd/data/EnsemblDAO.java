@@ -18,13 +18,13 @@ public class EnsemblDAO extends AbstractDAO {
 
     Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
 
-    XdbIdDAO xdbDAO = new XdbIdDAO();
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
     TranscriptDAO transcriptDAO = new TranscriptDAO();
     RGDManagementDAO managementDAO = new RGDManagementDAO();
     NomenclatureDAO nomenclatureDAO = new NomenclatureDAO();
     MapDAO mapDAO = new MapDAO();
+    XdbIdDAO xdbDAO = new XdbIdDAO();
 
     RgdId createRgdId(int objectKey, int speciesTypeKey) throws Exception {
         return managementDAO.createRgdId(objectKey, "ACTIVE", "created by Ensembl pipeline", speciesTypeKey);
@@ -155,8 +155,12 @@ public class EnsemblDAO extends AbstractDAO {
 
     public List<String> getChromosomes(int mapKey) throws Exception {
 
-        String sql = "SELECT DISTINCT chromosome FROM CHROMOSOMES WHERE map_key=? ";
-        return StringListQuery.execute(mapDAO, sql, mapKey);
+        List<Chromosome> list = mapDAO.getChromosomes(mapKey);
+        List<String> chrNames = new ArrayList<>(list.size());
+        for( Chromosome chr: list ) {
+            chrNames.add(chr.getChromosome());
+        }
+        return chrNames;
     }
 
     public void insertMapData(MapData md) throws Exception {
