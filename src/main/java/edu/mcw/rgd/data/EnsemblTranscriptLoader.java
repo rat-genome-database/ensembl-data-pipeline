@@ -67,18 +67,18 @@ public class EnsemblTranscriptLoader {
 
                         // qc utrs
                         if( utrs!=null ) {
-                            List<TranscriptFeature> matchedUtrs = new ArrayList<>();
                             for (TranscriptFeature tfInRgd : positions) {
-                                for (TranscriptFeature utr : utrs) {
+                                for (int i=0; i<utrs.size(); i++ ) {
+                                    TranscriptFeature utr = utrs.get(i);
                                     if (utr.getFeatureType() == tfInRgd.getFeatureType()
                                             && utr.getStartPos().equals(tfInRgd.getStartPos())
                                             && utr.getStopPos().equals(tfInRgd.getStopPos())) {
-                                        matchedUtrs.add(utr);
+                                        utrs.remove(i);
+                                        counters.increment("TRANSCRIPT_UTRS_MATCHED");
+                                        break;
                                     }
                                 }
                             }
-                            counters.add("TRANSCRIPT_UTRS_MATCHED", matchedUtrs.size());
-                            utrs.removeAll(matchedUtrs);
                         }
                     }
                 }
