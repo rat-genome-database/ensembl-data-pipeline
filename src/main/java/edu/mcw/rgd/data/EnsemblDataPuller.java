@@ -8,8 +8,10 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,6 +28,7 @@ public class EnsemblDataPuller {
     List<String> biomartQueryAttrsHumanGenes;
     Logger statuslog = Logger.getLogger("status");
     int speciesTypeKey;
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 
     /**
      * download data from Ensembl biomart
@@ -46,10 +49,17 @@ public class EnsemblDataPuller {
 
         // build biomart url
         // and download the file from biomart given the url
-        statuslog.info("Downloading the genes file for "+ SpeciesType.getCommonName(speciesTypeKey));
-        String inputFile = downloadFile(attrs, "genes.txt");
-		// now sort the file using external merge sort
-		return sortFile(inputFile);
+        String speciesName = SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
+        statuslog.info("Downloading the genes file for "+ speciesName);
+
+        String finalOutputFile = "data/" + sdf.format(new Date()) +"_"+speciesName + "_genes.txt.sorted.gz";
+        if( !(new File(finalOutputFile).exists()) ) {
+
+            String fileName = "data/" + speciesName + "_genes.txt";
+            String downloadedFile = downloadFile(attrs, fileName);
+            sortFile(downloadedFile, finalOutputFile);
+        }
+        return finalOutputFile;
     }
 
     /**
@@ -63,29 +73,31 @@ public class EnsemblDataPuller {
         // it consist of attributes shared for any species, and attrs specific to species
         List<String> attrs = new ArrayList<String>(this.getBiomartQueryAttrsTranscripts());
 
-
         // build biomart url
         // and download the file from biomart given the url
-        statuslog.info("Downloading the transcripts file for "+ SpeciesType.getCommonName(speciesTypeKey));
+        String speciesName = SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
+        statuslog.info("Downloading the transcripts file for "+ speciesName);
 
-        String inputFile = downloadFile(attrs, "transcripts.txt");
-        // now sort the file using external merge sort
-        return sortFile(inputFile);
+        String finalOutputFile = "data/" + sdf.format(new Date()) +"_"+speciesName + "_transcripts.txt.sorted.gz";
+        if( !(new File(finalOutputFile).exists()) ) {
+
+            String fileName = "data/" + speciesName + "_transcripts.txt";
+            String downloadedFile = downloadFile(attrs, fileName);
+            sortFile(downloadedFile, finalOutputFile);
+        }
+        return finalOutputFile;
     }
 
     // return the name of output file
     String downloadFile(List<String> attributes, String outFile) throws Exception {
-        //System.out.println(attributes);
 
         String data = buildBiomartQuery(attributes);
 
         FileDownloader downloader = new FileDownloader();
         downloader.setExternalFile(websiteUrl + "?" + data);
-        downloader.setLocalFile("data/" + SpeciesType.getCommonName(speciesTypeKey).toLowerCase() + "_" + outFile);
-        downloader.setPrependDateStamp(true); // every downloaded file will have the current date in the name
+        downloader.setLocalFile(outFile);
         String outPath = downloader.download();
 
-        //dbLogger.log("Downloaded file "+outPath, PipelineLogger.INFO);
         return outPath;
     }
 
@@ -128,9 +140,10 @@ public class EnsemblDataPuller {
         return "query="+URLEncoder.encode(buf.toString(), "UTF-8");
     }
 
-    String sortFile(String inputFile) throws IOException {
+    void sortFile(String inputFile, String finalOutputFile) throws IOException {
+
         // now sort the file using external merge sort
-        String outputFile = inputFile + ".sorted";
+        String outputFile = inputFile + ".tmp";
         Comparator<String> comparator = new Comparator<String>() {
             public int compare(String r1, String r2){
                 return r1.compareTo(r2);
@@ -140,16 +153,12 @@ public class EnsemblDataPuller {
         List<File> l = FileExternalSort.sortInBatch(inFile, comparator) ;
         FileExternalSort.mergeSortedFiles(l, new File(outputFile), comparator, false);
 
-        // delete the input file after the sorted file is available
-        inFile.delete();
-
         // to save disk space, compress the file
-        return compressFile(outputFile);
+        compressFile(outputFile, finalOutputFile);
     }
 
-    String compressFile(String fileName) throws IOException {
-        String outFileName = fileName + ".gz";
-        BufferedReader in = Utils.openReader(fileName);
+    void compressFile(String inFileName, String outFileName) throws IOException {
+        BufferedReader in = Utils.openReader(inFileName);
         BufferedWriter out = Utils.openWriter(outFileName);
         String line;
         while( (line=in.readLine())!=null ) {
@@ -158,9 +167,6 @@ public class EnsemblDataPuller {
         }
         in.close();
         out.close();
-
-        new File(fileName).delete();
-        return outFileName;
     }
 
     String getAssemblyNameFromEnsemblRest() throws Exception {

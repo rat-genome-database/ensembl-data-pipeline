@@ -16,70 +16,88 @@ public class EnsemblTranscriptLoader {
 
     Logger log = Logger.getLogger("status");
 
-
-    List loaded=new ArrayList();
     List genesNotFound=new ArrayList();
 
     public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
 
         log.debug("Loading the transcripts file");
-        int transcriptsInserted = 0;
+        CounterPool counters = new CounterPool();
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
         for (EnsemblTranscript transcript : transcripts) {
-            if(chromosomes.contains(transcript.getChromosome())) {
-                boolean transcriptMatch = false;
-                String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
-                if (rgdId != null) {
+            counters.increment("TRANSCRIPTS_INCOMING");
 
-                    TranscriptVersionManager.getInstance().addVersion(transcript.getEnsTranscriptId(), transcript.getEnsTranscriptVer());
+            if( !chromosomes.contains(transcript.getChromosome()) ) {
+                counters.increment("TRANSCRIPTS_SKIPPED_UNEXPECTED_CHROMOSOME");
+                log.debug("transcript_skipped: unexpected chromosome "+transcript.getChromosome());
+                continue;
+            }
+            boolean transcriptMatch = false;
+            String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
+            if (rgdId != null) {
 
-                    int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
-                    List<EnsemblExon> features = transcript.getExonList();
-                    List<Transcript> transcriptsForGene = ensemblDAO.getTranscriptsForGene(geneRgdId);
-                    for (Transcript oldTranscript : transcriptsForGene) {
-                        if (oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
-                                oldTranscript.isNonCoding() == transcript.isNonCodingInd()) {
-                            transcriptMatch = true;
-                            transcript.setRgdId(oldTranscript.getRgdId());
-                            List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
-                            List<EnsemblExon> matchedPositions = new ArrayList<>();
-                            for (TranscriptFeature oldPos : positions) {
-                                for (EnsemblExon feature : features) {
-                                    if( feature.matchesByPos(oldPos) ) {
-                                        matchedPositions.add(feature);
+                TranscriptVersionManager.getInstance().addVersion(transcript.getEnsTranscriptId(), transcript.getEnsTranscriptVer());
+
+                List<EnsemblExon> exons = transcript.getExonList();
+                List<TranscriptFeature> utrs = transcript.getUtrs();
+
+                int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
+                List<Transcript> transcriptsForGene = ensemblDAO.getTranscriptsForGene(geneRgdId);
+                for (Transcript oldTranscript : transcriptsForGene) {
+                    if (oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
+                            oldTranscript.isNonCoding() == transcript.isNonCodingInd()) {
+
+                        transcriptMatch = true;
+                        transcript.setRgdId(oldTranscript.getRgdId());
+                        List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
+
+                        List<EnsemblExon> matchedPositions = new ArrayList<>();
+                        for (TranscriptFeature oldPos : positions) {
+                            for (EnsemblExon exon: exons) {
+                                if( exon.matchesByPos(oldPos) && oldPos.getFeatureType()==TranscriptFeature.FeatureType.EXON) {
+                                    matchedPositions.add(exon);
+                                }
+                            }
+                        }
+                        counters.add("TRANSCRIPT_EXONS_MATCHED", matchedPositions.size());
+                        exons.removeAll(matchedPositions);
+
+                        // qc utrs
+                        if( utrs!=null ) {
+                            List<TranscriptFeature> matchedUtrs = new ArrayList<>();
+                            for (TranscriptFeature tfInRgd : positions) {
+                                for (TranscriptFeature utr : utrs) {
+                                    if (utr.getFeatureType() == tfInRgd.getFeatureType()
+                                            && utr.getStartPos().equals(tfInRgd.getStartPos())
+                                            && utr.getStopPos().equals(tfInRgd.getStopPos())) {
+                                        matchedUtrs.add(utr);
                                     }
                                 }
                             }
-
-                            features.removeAll(matchedPositions);
+                            counters.add("TRANSCRIPT_UTRS_MATCHED", matchedUtrs.size());
+                            utrs.removeAll(matchedUtrs);
                         }
                     }
-                    if (transcriptMatch) {
-                        updateTranscriptData(transcript.getRgdId(), features, ensemblMapKey, speciesTypeKey);
-                        updateTranscriptType(transcript);
-                    } else {
-                        createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey);
-                        transcriptsInserted++;
-                    }
-
-                } else {
-                    genesNotFound.add(transcript.getEnsGeneId());
                 }
+
+
+                if (transcriptMatch) {
+                    insertExons(transcript.getRgdId(), exons, ensemblMapKey, speciesTypeKey, counters);
+                    insertUtrs(utrs, transcript.getRgdId(), ensemblMapKey, speciesTypeKey, counters);
+                    updateTranscriptType(transcript);
+                } else {
+                    createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey, counters);
+                }
+
+            } else {
+                genesNotFound.add(transcript.getEnsGeneId());
+                counters.increment("TRANSCRIPTS_WITHOUT_MATCHING_GENE");
             }
         }
 
-        log.info("Total loaded: "+loaded.size());
-        log.info("Total genes not found: "+genesNotFound.size());
-        log.info("Total in file: "+ transcripts.size());
-        if( transcriptsInserted>0 ) {
-            log.info("Transcripts inserted: "+transcriptsInserted);
-        }
-
-        CounterPool counters = new CounterPool();
         TranscriptVersionManager.getInstance().qcAndLoad(counters);
         log.info(counters.dumpAlphabetically());
     }
@@ -92,23 +110,42 @@ public class EnsemblTranscriptLoader {
         TranscriptVersionManager.getInstance().addRgdId(t.getAccId(), t.getRgdId());
     }
 
-    public void updateTranscriptData(int transcriptRgdId, List<EnsemblExon> features, int mapKey, int speciesTypeKey) throws Exception{
-        for(EnsemblExon feature: features) {
+    public void insertExons(int transcriptRgdId, List<EnsemblExon> exons, int mapKey, int speciesTypeKey, CounterPool counters) throws Exception{
+        for(EnsemblExon exon: exons) {
             TranscriptFeature newFeature = new TranscriptFeature();
             newFeature.setTranscriptRgdId(transcriptRgdId);
-            newFeature.setChromosome(feature.getExonChromosome());
-            newFeature.setStartPos(feature.getExonStart());
-            newFeature.setStopPos(feature.getExonStop());
-            newFeature.setStrand(feature.getStrand());
+            newFeature.setChromosome(exon.getExonChromosome());
+            newFeature.setStartPos(exon.getExonStart());
+            newFeature.setStopPos(exon.getExonStop());
+            newFeature.setStrand(exon.getStrand());
             newFeature.setSrcPipeline("Ensembl");
             newFeature.setMapKey(mapKey);
             newFeature.setFeatureType(TranscriptFeature.FeatureType.EXON);
             ensemblDAO.insertTranscriptFeature(newFeature,speciesTypeKey);
+            counters.increment("TRANSCRIPT_EXONS_INSERTED");
         }
     }
 
-    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey, int speciesTypeKey) throws Exception {
-        loaded.add(transcript);
+    public void insertUtrs(List<TranscriptFeature> utrs, int transcriptRgdId, int mapKey, int speciesTypeKey, CounterPool counters) throws Exception {
+
+        if( utrs!=null)
+        for(TranscriptFeature utr: utrs) {
+            TranscriptFeature newFeature = new TranscriptFeature();
+            newFeature.setTranscriptRgdId(transcriptRgdId);
+            newFeature.setChromosome(utr.getChromosome());
+            newFeature.setStartPos(utr.getStartPos());
+            newFeature.setStopPos(utr.getStopPos());
+            newFeature.setStrand(utr.getStrand());
+            newFeature.setSrcPipeline("Ensembl");
+            newFeature.setMapKey(mapKey);
+            newFeature.setFeatureType(utr.getFeatureType());
+            ensemblDAO.insertTranscriptFeature(newFeature,speciesTypeKey);
+            counters.increment("TRANSCRIPT_UTRS_INSERTED");
+        }
+    }
+
+    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey, int speciesTypeKey, CounterPool counters) throws Exception {
+
         Transcript newTranscript = new Transcript();
         newTranscript.setAccId(transcript.getEnsTranscriptId());
         int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
@@ -131,7 +168,11 @@ public class EnsemblTranscriptLoader {
         newTranscript.setGenomicPositions(genomicPos);
 
         ensemblDAO.insertTranscript(newTranscript, speciesTypeKey);
+        counters.increment("TRANSCRIPTS_INSERTED");
 
-        updateTranscriptData(newTranscript.getRgdId(), transcript.getExonList(), mapKey, speciesTypeKey);
+        insertExons(newTranscript.getRgdId(), transcript.getExonList(), mapKey, speciesTypeKey, counters);
+
+        List<TranscriptFeature> utrs = transcript.getUtrs();
+        insertUtrs(utrs, transcript.rgdId, mapKey, speciesTypeKey, counters);
     }
 }

@@ -97,7 +97,7 @@ public class Parser {
         log.info(SpeciesType.getCommonName(speciesTypeKey)+": parsing transcript file");
         BufferedReader reader = Utils.openReader(inputFile);
 
-        HashMap<String,EnsemblTranscript> transcripts = new HashMap<String,EnsemblTranscript>();
+        HashMap<String,EnsemblTranscript> transcripts = new HashMap<>();
         String line;
         while ((line = reader.readLine()) != null)
         {
@@ -109,23 +109,34 @@ public class Parser {
                 throw new Exception(msg);
             }
 
-            EnsemblTranscript transcript = new EnsemblTranscript();
-            transcript.setEnsGeneId(cols[0]);
-            transcript.setEnsTranscriptId(cols[1]);
-            transcript.setEnsTranscriptVer(cols[2]);
-            transcript.setChromosome(cols[3]);
-            transcript.setStart(Integer.valueOf(cols[4]));
-            transcript.setStop(Integer.valueOf(cols[5]));
-            if(cols[6].equals("1"))
-                transcript.setStrand("+");
-            else if(cols[6].equals("-1"))
-                transcript.setStrand("-");
+            String trAcc = cols[1];
+            EnsemblTranscript transcript = transcripts.get(trAcc);
+            if( transcript==null ) {
+                transcript = new EnsemblTranscript();
+                transcripts.put(trAcc, transcript);
 
+                transcript.setEnsGeneId(cols[0]);
+                transcript.setEnsTranscriptId(cols[1]);
+                transcript.setEnsTranscriptVer(cols[2]);
+                transcript.setChromosome(cols[3]);
+                transcript.setStart(Integer.parseInt(cols[4]));
+                transcript.setStop(Integer.parseInt(cols[5]));
+
+                if(cols[6].equals("1"))
+                    transcript.setStrand("+");
+                else if(cols[6].equals("-1"))
+                    transcript.setStrand("-");
+                if(cols[10] != null && cols[11] != null)
+                    transcript.setNonCodingInd(false);
+
+                transcript.setProteinId(cols[12]);
+                transcript.setType(cols[13]);
+            }
 
             EnsemblExon exon = new EnsemblExon();
             exon.setExonChromosome(cols[3]);
-            exon.setExonStart(Integer.valueOf(cols[7]));
-            exon.setExonStop(Integer.valueOf(cols[8]));
+            exon.setExonStart(Integer.parseInt(cols[7]));
+            exon.setExonStop(Integer.parseInt(cols[8]));
             if(cols[6].equals("1"))
                 exon.setStrand("+");
             else if(cols[6].equals("-1"))
@@ -133,21 +144,14 @@ public class Parser {
             exon.setExonTranscriptAccId(cols[1]);
             exon.setExonNumber(cols[9]);
 
-            if(cols[10] != null && cols[11] != null)
-                transcript.setNonCodingInd(false);
-
-            transcript.setProteinId(cols[12]);
-            transcript.setType(cols[13]);
-            ArrayList<EnsemblExon> exons = new ArrayList<>();
-
-            if(!transcripts.isEmpty() && transcripts.containsKey(transcript.getEnsTranscriptId())) {
-                transcript = transcripts.get(transcript.getEnsTranscriptId());
-                exons = transcript.getExonList();
+            if( !Utils.isStringEmpty(cols[10]) ) {
+                exon.setCdsStart(Integer.parseInt(cols[10]));
+            }
+            if( !Utils.isStringEmpty(cols[11]) ) {
+                exon.setCdsStop(Integer.parseInt(cols[11]));
             }
 
-            exons.add(exon);
-            transcript.setExonList(exons);
-            transcripts.put(transcript.getEnsTranscriptId(),transcript);
+            transcript.getExonList().add(exon);
         }
 
         reader.close();

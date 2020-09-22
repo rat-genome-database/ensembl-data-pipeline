@@ -9,9 +9,10 @@ import edu.mcw.rgd.process.Utils;
  */
 public class EnsemblExon {
 
-    private int rgdId;
     int exonStart;
     int exonStop;
+    int cdsStart;
+    int cdsStop;
     String strand;
     String exonChromosome;
     String exonNumber;
@@ -22,14 +23,6 @@ public class EnsemblExon {
         && Utils.intsAreEqual(this.exonStop, tf.getStopPos())
         && Utils.stringsAreEqual(this.strand, tf.getStrand())
         && Utils.stringsAreEqual(this.exonChromosome, tf.getChromosome());
-    }
-
-    public int getRgdId() {
-        return rgdId;
-    }
-
-    public void setRgdId(int rgdId) {
-        this.rgdId = rgdId;
     }
 
     public int getExonStop() {
@@ -46,6 +39,22 @@ public class EnsemblExon {
 
     public void setExonStart(int exonStart) {
         this.exonStart = exonStart;
+    }
+
+    public int getCdsStart() {
+        return cdsStart;
+    }
+
+    public void setCdsStart(int cdsStart) {
+        this.cdsStart = cdsStart;
+    }
+
+    public int getCdsStop() {
+        return cdsStop;
+    }
+
+    public void setCdsStop(int cdsStop) {
+        this.cdsStop = cdsStop;
     }
 
     public String getExonChromosome() {

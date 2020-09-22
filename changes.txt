@@ -1,3 +1,6 @@
+2020-09-22
+  transcript loader: added loading of UTR regions
+
 2020-09-16
   dao tuneup: replaced custom sql code with a call to rgdcore
 
