@@ -67,6 +67,7 @@ public class EnsemblLoader {
      * @throws Exception
      */
     public void run(int speciesTypeKey) throws Exception {
+        long time0 = System.currentTimeMillis();
         String speciesName = SpeciesType.getCommonName(speciesTypeKey);
         int ensemblMapKey = getEnsemblAssemblyMap().get(speciesName);
         log.info(speciesName+" " +getVersion());
@@ -82,8 +83,10 @@ public class EnsemblLoader {
             TranscriptVersionManager.getInstance().init();
             String transcriptsFile = dataPuller.downloadTranscriptsFile();
             Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
-            log.info("Total transcripts parsed from file: "+transcripts.size());
             transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
+
+            log.info(speciesName.toUpperCase()+" DONE -- TIME ELAPSED "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+            log.info("===");
         }
         catch(Exception e) {
             Utils.printStackTrace(e, log);
