@@ -1,3 +1,7 @@
+2020-09-24
+  for scaffold assemblies: when loading positions, Genebank chromosome accessions
+    are replaced with RefSeq accessions
+
 2020-09-22
   transcript loader: added loading of UTR regions
 

@@ -25,119 +25,134 @@ public class EnsemblGeneLoader {
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
-        List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
+        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
+
+        int skippedGenes = 0;
 
         for (EnsemblGene gene : genes) {
-            if(chromosomes.contains(gene.getChromosome())) {
-                String ncbiRgdId = null;
-                String rgdId = null;
+            String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
+            if (chr == null) {
+                skippedGenes++;
+                statuslog.debug("gene_skipped: unexpected chromosome " + gene.getChromosome());
+                continue;
+            }
+            gene.setChromosome(chr); // replace chr GeneBank id with NCBI scaffold acc
 
-                List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
-                if(!gene.getEntrezgene_id().equals("NIL")) {
-                    List<String> ncbiIds = ensemblDAO.getNcbiRgdId(gene.getEntrezgene_id());
-                    if (ncbiIds != null && ncbiIds.size() == 1)
-                        ncbiRgdId = ncbiIds.get(0);
+            String ncbiRgdId = null;
+            String rgdId = null;
+
+            List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
+            if(!gene.getEntrezgene_id().equals("NIL")) {
+                List<String> ncbiIds = ensemblDAO.getNcbiRgdId(gene.getEntrezgene_id());
+                if (ncbiIds != null && ncbiIds.size() == 1)
+                    ncbiRgdId = ncbiIds.get(0);
+                else {
+                    //This indicates multiple rgdIds for a ncbi
+                    if (ncbiIds != null) {
+                        conflictLog.info("Check the ncbi Id: " + gene.getEntrezgene_id());
+                    } else ncbiRgdId = null; //Ncbi Id doesnt exist in rgd database
+                }
+            }
+            // Get rgdId based on the id from the file. RgdiD for Rat, MGI Id for Mouse and HGNC id for human are the ids from file.
+            if (!gene.getrgdid().equals("0")) {
+                if (speciesTypeKey == SpeciesType.RAT)
+                    rgdId = gene.getrgdid();
+                else if (speciesTypeKey == SpeciesType.MOUSE) {
+                    List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_MGD);
+                    if(rgdIds != null && rgdIds.size() == 1)
+                        rgdId = rgdIds.get(0);
                     else {
-                        //This indicates multiple rgdIds for a ncbi
-                        if (ncbiIds != null) {
-                            conflictLog.info("Check the ncbi Id: " + gene.getEntrezgene_id());
-                        } else ncbiRgdId = null; //Ncbi Id doesnt exist in rgd database
+                        if(rgdId != null)
+                            conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
+                        rgdId = null;
                     }
                 }
-                // Get rgdId based on the id from the file. RgdiD for Rat, MGI Id for Mouse and HGNC id for human are the ids from file.
-                if (!gene.getrgdid().equals("0")) {
-                    if (speciesTypeKey == SpeciesType.RAT)
-                        rgdId = gene.getrgdid();
-                    else if (speciesTypeKey == SpeciesType.MOUSE) {
-                        List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_MGD);
-                        if(rgdIds != null && rgdIds.size() == 1)
-                            rgdId = rgdIds.get(0);
-                        else {
-                            if(rgdId != null)
-                                conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
-                            rgdId = null;
-                        }
-                    }
+                else {
+                    List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_HGNC);
+                    if(rgdIds != null && rgdIds.size() == 1)
+                        rgdId = rgdIds.get(0);
                     else {
-                        List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_HGNC);
-                        if(rgdIds != null && rgdIds.size() == 1)
-                            rgdId = rgdIds.get(0);
-                        else {
-                            if(rgdId != null)
-                                conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid());
-                            rgdId = null;
-                        }
+                        if(rgdId != null)
+                            conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid());
+                        rgdId = null;
                     }
                 }
+            }
 
-                // Ncbi id missing in the db
-                // check for rgdId in file and rgdId in database for ensemble gene id
-                if (ncbiRgdId == null) {
-                    if (rgdId == null) {
-                        // Case 1: No rgdid and no ncbi id in the file.
-                        if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
-                            conflictLog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
-                        else {
-                            if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
-                                createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
-                            else
-                                updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
+            // Ncbi id missing in the db
+            // check for rgdId in file and rgdId in database for ensemble gene id
+            if (ncbiRgdId == null) {
+                if (rgdId == null) {
+                    // Case 1: No rgdid and no ncbi id in the file.
+                    if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
+                        conflictLog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
+                    else {
+                        if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
+                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
+                        else
+                            updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
 
-                        }
+                    }
+                } else {
+
+                    // Case 2: No ncbi id in the file
+                    if (ensembleRgdIds != null && ensembleRgdIds.contains(rgdId)) {
+                        updateData(gene, rgdId, ensemblMapKey);
                     } else {
+                        // Ignore the duplicate entries which ensemble sends in the file with wrong ncbi ids and rgd ids
+                        if (matches.containsKey(gene.getEnsemblGeneId()) )
+                            continue;
+                        else {
+                                if(ensembleRgdIds != null) {
+                                    mismatches.add(gene.getEnsemblGeneId());
+                                    conflictLog.info("Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId());
+                                } else {
+                                    createNewEnsemblGene(gene, ensemblMapKey, rgdId, speciesTypeKey);
+                                }
+                            }
+                        }
+                    }
+                }
+            else {
 
-                        // Case 2: No ncbi id in the file
-                        if (ensembleRgdIds != null && ensembleRgdIds.contains(rgdId)) {
-                            updateData(gene, rgdId, ensemblMapKey);
-                        } else {
-                            // Ignore the duplicate entries which ensemble sends in the file with wrong ncbi ids and rgd ids
-                            if (matches.containsKey(gene.getEnsemblGeneId()) )
+                // Ncbi Rgd Id and ensemble RgdId matches
+                if (ensembleRgdIds != null && ensembleRgdIds.contains(ncbiRgdId)) {
+                    updateData(gene, ncbiRgdId, ensemblMapKey);
+                    matches.put(gene.getEnsemblGeneId(), ncbiRgdId);
+                } else {
+                    // Check if ncbi rgdId and rgdId from file matches
+                    if (ensembleRgdIds == null && rgdId == null) {
+                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
+                    } else {
+                        if (rgdId == null) {
+                            if (matches.containsKey(gene.getEnsemblGeneId()))
                                 continue;
                             else {
-                                    if(ensembleRgdIds != null) {
-                                        mismatches.add(gene.getEnsemblGeneId());
-                                        conflictLog.info("Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId());
-                                    } else {
-                                        createNewEnsemblGene(gene, ensemblMapKey, rgdId, speciesTypeKey);
-                                    }
-                                }
+                                mismatches.add(gene.getEnsemblGeneId());
+                                conflictLog.info("Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
                             }
+                        } else if (rgdId.equals(ncbiRgdId)) {
+                            updateData(gene, ncbiRgdId, ensemblMapKey);
+                            matches.put(gene.getEnsemblGeneId(), rgdId);
                         }
                     }
-                 else {
-
-                    // Ncbi Rgd Id and ensemble RgdId matches
-                    if (ensembleRgdIds != null && ensembleRgdIds.contains(ncbiRgdId)) {
-                        updateData(gene, ncbiRgdId, ensemblMapKey);
-                        matches.put(gene.getEnsemblGeneId(), ncbiRgdId);
-                    } else {
-                        // Check if ncbi rgdId and rgdId from file matches
-                        if (ensembleRgdIds == null && rgdId == null) {
-                            createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
-                        } else {
-                            if (rgdId == null) {
-                                if (matches.containsKey(gene.getEnsemblGeneId()))
-                                    continue;
-                                else {
-                                    mismatches.add(gene.getEnsemblGeneId());
-                                    conflictLog.info("Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
-                                }
-                            } else if (rgdId.equals(ncbiRgdId)) {
-                                updateData(gene, ncbiRgdId, ensemblMapKey);
-                                matches.put(gene.getEnsemblGeneId(), rgdId);
-                            }
-                        }
-                    }
-
                 }
+
             }
         }
 
         statuslog.info("Total mismatches: "+mismatches.size());
         statuslog.info("Total matches: "+ matches.size());
-        statuslog.info("Total new Genes: "+ newGenes.size());
+        if( newGenes.size()>0 ) {
+            statuslog.info("Total new Genes: " + newGenes.size());
+        }
         statuslog.info("Total genes in file: "+genes.size());
-        statuslog.info("Total nomenEvents in file: "+nomenEvents.size());
+        if( nomenEvents.size()>0 ) {
+            statuslog.info("Total nomenEvents in file: " + nomenEvents.size());
+        }
+        if( skippedGenes>0 ) {
+            statuslog.info("Genes skipped, unexpected chromosome: " + skippedGenes);
+        }
     }
 
     public void aliasesinsert(int newRgdId, EnsemblGene gene) throws Exception {

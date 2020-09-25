@@ -12,7 +12,7 @@ public class EnsemblGene {
     String chromosome;
     String startPos, stopPos;
     String strand;
-    String Map_key="361";
+    String Map_key;
     String geneSymbol;
     String gene_biotype;
     String gene_description;

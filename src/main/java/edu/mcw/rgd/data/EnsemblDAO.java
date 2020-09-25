@@ -153,14 +153,24 @@ public class EnsemblDAO extends AbstractDAO {
        return aliasDAO.insertAlias(alias);
     }
 
-    public List<String> getChromosomes(int mapKey) throws Exception {
-
-        List<Chromosome> list = mapDAO.getChromosomes(mapKey);
-        List<String> chrNames = new ArrayList<>(list.size());
-        for( Chromosome chr: list ) {
-            chrNames.add(chr.getChromosome());
+    public String matchChromosome(String chr, List<Chromosome> chromosomes) {
+        // try to match by chromosome directly
+        for( Chromosome c: chromosomes ) {
+            if(c.getChromosome().equals(chr)) {
+                return chr;
+            }
         }
-        return chrNames;
+        // try to match by genebank id (scaffold assemblies like chinchilla, squirrel)
+        for( Chromosome c: chromosomes ) {
+            if( c.getGenbankId()!=null && c.getGenbankId().equals(chr)) {
+                return c.getChromosome();
+            }
+        }
+        return null;
+    }
+
+    public List<Chromosome> getChromosomes(int mapKey) throws Exception {
+        return mapDAO.getChromosomes(mapKey);
     }
 
     public void insertMapData(MapData md) throws Exception {

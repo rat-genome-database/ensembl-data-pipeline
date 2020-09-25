@@ -25,23 +25,34 @@ public class EnsemblTranscriptLoader {
 
         // we have chromosome data only for NCBI assemblies
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
-        List<String> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
+        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
         for (EnsemblTranscript transcript : transcripts) {
             counters.increment("TRANSCRIPTS_INCOMING");
 
-            if( !chromosomes.contains(transcript.getChromosome()) ) {
+            String chr = ensemblDAO.matchChromosome(transcript.getChromosome(), chromosomes);
+            if( chr==null ) {
                 counters.increment("TRANSCRIPTS_SKIPPED_UNEXPECTED_CHROMOSOME");
                 log.debug("transcript_skipped: unexpected chromosome "+transcript.getChromosome());
                 continue;
             }
+            List<EnsemblExon> exons = transcript.getExonList();
+
+            if( !transcript.getChromosome().equals(chr) ) {
+                transcript.setChromosome(chr); // replace chr GeneBank id with NCBI scaffold acc
+
+                // ensure exons have the same chr as transcript
+                for (EnsemblExon exon : exons) {
+                    exon.setExonChromosome(chr);
+                }
+            }
+
             boolean transcriptMatch = false;
             String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
             if (rgdId != null) {
 
                 TranscriptVersionManager.getInstance().addVersion(transcript.getEnsTranscriptId(), transcript.getEnsTranscriptVer());
 
-                List<EnsemblExon> exons = transcript.getExonList();
                 List<TranscriptFeature> utrs = transcript.getUtrs();
 
                 int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
@@ -173,6 +184,6 @@ public class EnsemblTranscriptLoader {
         insertExons(newTranscript.getRgdId(), transcript.getExonList(), mapKey, speciesTypeKey, counters);
 
         List<TranscriptFeature> utrs = transcript.getUtrs();
-        insertUtrs(utrs, transcript.rgdId, mapKey, speciesTypeKey, counters);
+        insertUtrs(utrs, newTranscript.getRgdId(), mapKey, speciesTypeKey, counters);
     }
 }
