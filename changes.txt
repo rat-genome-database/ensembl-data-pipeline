@@ -1,3 +1,6 @@
+2020-12-03
+  logging fix: conflicts.txt file is no longer appended to
+
 2020-09-24
   for scaffold assemblies: when loading positions, Genebank chromosome accessions
     are replaced with RefSeq accessions
