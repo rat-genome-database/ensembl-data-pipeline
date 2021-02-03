@@ -39,14 +39,23 @@ public class EnsemblLoader {
             usage();
             return;
         }
+
         int speciesTypeKey = -1;
-        if( args[0].equals("-species") ) {
-            speciesTypeKey = SpeciesType.parse(args[1]);
+        for( int argc=0; argc<args.length; argc++ ) {
+            String arg = args[argc];
+            if (arg.equals("-species")) {
+                speciesTypeKey = SpeciesType.parse(args[++argc]);
+            }
+            else if( arg.equals("-skipGenes") ) {
+                loader.skipGeneLoader = true;
+            }
         }
+
         // if species type key is all, run for all species
         if( speciesTypeKey<0 ) {
             throw new Exception("Aborted: please specify the species in cmd line");
         }
+
         if( speciesTypeKey== SpeciesType.ALL ) {
             List<String> speciesList = new ArrayList<>(loader.getEnsemblAssemblyMap().keySet());
             Collections.shuffle(speciesList);
@@ -77,7 +86,9 @@ public class EnsemblLoader {
 
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
             validateAssemblyName(ensemblMapKey);
-            if( !skipGeneLoader ) {
+            if( skipGeneLoader ) {
+                log.warn("WARNING: gene processing skipped!");
+            } else {
                 String dataFile = dataPuller.downloadGenesFile();
                 List<EnsemblGene> genes = dataParser.parseGene(dataFile);
                 log.info("Total genes parsed from file: " + genes.size());

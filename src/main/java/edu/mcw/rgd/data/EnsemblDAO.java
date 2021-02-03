@@ -19,6 +19,7 @@ public class EnsemblDAO extends AbstractDAO {
     Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
     Logger logExonsInserted = Logger.getLogger("exons_inserted");
     Logger logExonsRemoved = Logger.getLogger("exons_removed");
+    Logger logUtrsRemoved = Logger.getLogger("utrs_removed");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -75,14 +76,20 @@ public class EnsemblDAO extends AbstractDAO {
         transcriptDAO.createFeature(tf, speciesTypeKey);
     }
 
-    public int unbindFeatureFromTranscript(Transcript tr, TranscriptFeature exon) throws Exception {
+    public int unbindFeatureFromTranscript(Transcript tr, TranscriptFeature tf) throws Exception {
 
-        if( exon.getFeatureType()== TranscriptFeature.FeatureType.EXON ) {
-            logExonsRemoved.debug(tr.getAccId() + " RGD:" + tr.getRgdId() + ", exon RGD:" + exon.getRgdId()
-                    + " chr" + exon.getChromosome() + ":" + exon.getStartPos() + ".." + exon.getStopPos() + " (" + exon.getStrand() + ")");
+        if( tf.getFeatureType()== TranscriptFeature.FeatureType.EXON ) {
+            logExonsRemoved.debug(tr.getAccId() + " RGD:" + tr.getRgdId() + ", exon RGD:" + tf.getRgdId()
+                + " chr" + tf.getChromosome() + ":" + tf.getStartPos() + ".." + tf.getStopPos() + " (" + tf.getStrand() + ")"
+                + " map_key="+tf.getMapKey());
+        }
+        else if( tf.getFeatureType()== TranscriptFeature.FeatureType.UTR3 || tf.getFeatureType()== TranscriptFeature.FeatureType.UTR5 ) {
+            logUtrsRemoved.debug(tr.getAccId() + " RGD:" + tr.getRgdId() + ", "+tf.getCanonicalName()+" RGD:" + tf.getRgdId()
+                + " chr" + tf.getChromosome() + ":" + tf.getStartPos() + ".." + tf.getStopPos() + " (" + tf.getStrand() + ")"
+                + " map_key="+tf.getMapKey());
         }
 
-        return transcriptDAO.unbindFeatureFromTranscript(tr.getRgdId(), exon.getRgdId());
+        return transcriptDAO.unbindFeatureFromTranscript(tr.getRgdId(), tf.getRgdId());
     }
 
     ///// STABLE_TRANSCRIPTS - transcript versions

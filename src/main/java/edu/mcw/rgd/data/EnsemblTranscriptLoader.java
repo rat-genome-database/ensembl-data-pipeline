@@ -68,11 +68,11 @@ public class EnsemblTranscriptLoader {
 
                         transcriptMatch = true;
                         transcript.setRgdId(oldTranscript.getRgdId());
-                        List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
+                        List<TranscriptFeature> tfsInRgd = ensemblDAO.getFeatures(oldTranscript.getRgdId());
                         List<TranscriptFeature> obsoleteExons = new ArrayList<>();
 
                         List<EnsemblExon> matchedPositions = new ArrayList<>();
-                        for (TranscriptFeature oldPos : positions) {
+                        for (TranscriptFeature oldPos : tfsInRgd) {
                             boolean matchFound = false;
                             for (EnsemblExon exon: exons) {
                                 if( exon.matchesByPos(oldPos) && oldPos.getFeatureType()==TranscriptFeature.FeatureType.EXON) {
@@ -90,28 +90,13 @@ public class EnsemblTranscriptLoader {
 
                         deleteExons(oldTranscript, obsoleteExons, counters);
 
-                        // qc utrs
-                        if( utrs!=null ) {
-                            for (TranscriptFeature tfInRgd : positions) {
-                                for (int i=0; i<utrs.size(); i++ ) {
-                                    TranscriptFeature utr = utrs.get(i);
-                                    if (utr.getFeatureType() == tfInRgd.getFeatureType()
-                                            && utr.getStartPos().equals(tfInRgd.getStartPos())
-                                            && utr.getStopPos().equals(tfInRgd.getStopPos())) {
-                                        utrs.remove(i);
-                                        counters.increment("TRANSCRIPT_UTRS_MATCHED");
-                                        break;
-                                    }
-                                }
-                            }
-                        }
+                        qcUtrs(utrs, tfsInRgd, counters, oldTranscript, ensemblMapKey, speciesTypeKey);
                     }
                 }
 
 
                 if (transcriptMatch) {
                     insertExons(transcript.getRgdId(), exons, ensemblMapKey, speciesTypeKey, counters);
-                    insertUtrs(utrs, transcript.getRgdId(), ensemblMapKey, speciesTypeKey, counters);
                     updateTranscriptType(transcript);
                 } else {
                     createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey, counters);
@@ -125,6 +110,51 @@ public class EnsemblTranscriptLoader {
 
         TranscriptVersionManager.getInstance().qcAndLoad(counters);
         log.info(counters.dumpAlphabetically());
+    }
+
+    void qcUtrs(List<TranscriptFeature> utrs, List<TranscriptFeature> tfsInRgd, CounterPool counters, Transcript tr, int ensemblMapKey, int speciesTypeKey) throws Exception {
+
+        List<TranscriptFeature> utrsInRgd = new ArrayList<>();
+        for( TranscriptFeature tf: tfsInRgd ) {
+            if( tf.getFeatureType()==TranscriptFeature.FeatureType.UTR3 || tf.getFeatureType()==TranscriptFeature.FeatureType.UTR5 ) {
+                utrsInRgd.add(tf);
+            }
+        }
+
+        // qc utrs
+        if( utrs!=null ) {
+
+            // remove matching utrs from both incoming utrs and utrs in rgd
+            boolean matchingUtrFound;
+            do {
+                matchingUtrFound = false;
+                for (int u = 0; u < utrsInRgd.size(); u++) {
+                    TranscriptFeature utrInRgd = utrsInRgd.get(u);
+                    for (int i = 0; i < utrs.size(); i++) {
+                        TranscriptFeature utr = utrs.get(i);
+                        if (utr.getFeatureType() == utrInRgd.getFeatureType()
+                                && utr.getStartPos().equals(utrInRgd.getStartPos())
+                                && utr.getStopPos().equals(utrInRgd.getStopPos())) {
+
+                            utrs.remove(i);
+                            utrsInRgd.remove(u);
+                            counters.increment("TRANSCRIPT_UTRS_MATCHED");
+                            matchingUtrFound = true;
+                            break;
+                        }
+                    }
+                    if( matchingUtrFound ) {
+                        break;
+                    }
+                }
+            } while(matchingUtrFound);
+
+            // remaining entries in 'utrs' must be inserted
+            insertUtrs(utrs, tr.getRgdId(), ensemblMapKey, speciesTypeKey, counters);
+        }
+
+        // remaining entries in 'utrsInRgd' table must be deleted
+        removeUtrs(tr, utrsInRgd, counters);
     }
 
     public void updateTranscriptType(EnsemblTranscript transcript) throws Exception{
@@ -162,6 +192,24 @@ public class EnsemblTranscriptLoader {
 
             ensemblDAO.unbindFeatureFromTranscript(tr, exon);
             counters.increment("TRANSCRIPT_EXONS_REMOVED");
+        }
+    }
+    public void removeUtrs(Transcript tr, List<TranscriptFeature> utrsInRgd, CounterPool counters) throws Exception{
+
+        for(TranscriptFeature utrInRgd: utrsInRgd) {
+
+            // sanity check
+            if( utrInRgd.getFeatureType()==TranscriptFeature.FeatureType.UTR3 ) {
+                ensemblDAO.unbindFeatureFromTranscript(tr, utrInRgd);
+                counters.increment("TRANSCRIPT_UTR3_REMOVED");
+            }
+            else if( utrInRgd.getFeatureType()==TranscriptFeature.FeatureType.UTR5 ) {
+                ensemblDAO.unbindFeatureFromTranscript(tr, utrInRgd);
+                counters.increment("TRANSCRIPT_UTR5_REMOVED");
+            }
+            else {
+                throw new Exception("removeUtrs() can process only UTRs!");
+            }
         }
     }
 

@@ -1,3 +1,6 @@
+2021-02-03
+  transcript loader: added code to detect and remove obsolete utr regions
+
 2021-02-02
   transcript loader: added code to detect and remove obsolete exons
 
