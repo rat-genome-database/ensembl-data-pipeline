@@ -1,3 +1,6 @@
+2021-02-02
+  transcript loader: added code to detect and remove obsolete exons
+
 2020-12-03
   logging fix: conflicts.txt file is no longer appended to
 

@@ -18,7 +18,7 @@ public class EnsemblTranscriptLoader {
 
     List genesNotFound=new ArrayList();
 
-    public void run(Collection<EnsemblTranscript> transcripts, int speciesTypeKey, int ensemblMapKey) throws Exception {
+    public void run(Collection<EnsemblTranscript> transcriptCollection, int speciesTypeKey, int ensemblMapKey) throws Exception {
 
         log.debug("Loading the transcripts file");
         CounterPool counters = new CounterPool();
@@ -27,7 +27,12 @@ public class EnsemblTranscriptLoader {
         edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
 
+        List<EnsemblTranscript> transcripts = new ArrayList<>(transcriptCollection);
+        Collections.shuffle(transcripts);
+
+        int t=0;
         for (EnsemblTranscript transcript : transcripts) {
+            log.debug((++t)+". "+transcript.getEnsTranscriptId());
             counters.increment("TRANSCRIPTS_INCOMING");
 
             String chr = ensemblDAO.matchChromosome(transcript.getChromosome(), chromosomes);
@@ -64,17 +69,26 @@ public class EnsemblTranscriptLoader {
                         transcriptMatch = true;
                         transcript.setRgdId(oldTranscript.getRgdId());
                         List<TranscriptFeature> positions = ensemblDAO.getFeatures(oldTranscript.getRgdId());
+                        List<TranscriptFeature> obsoleteExons = new ArrayList<>();
 
                         List<EnsemblExon> matchedPositions = new ArrayList<>();
                         for (TranscriptFeature oldPos : positions) {
+                            boolean matchFound = false;
                             for (EnsemblExon exon: exons) {
                                 if( exon.matchesByPos(oldPos) && oldPos.getFeatureType()==TranscriptFeature.FeatureType.EXON) {
                                     matchedPositions.add(exon);
+                                    matchFound = true;
+                                    break;
                                 }
+                            }
+                            if( !matchFound && oldPos.getFeatureType()==TranscriptFeature.FeatureType.EXON ) {
+                                obsoleteExons.add(oldPos);
                             }
                         }
                         counters.add("TRANSCRIPT_EXONS_MATCHED", matchedPositions.size());
                         exons.removeAll(matchedPositions);
+
+                        deleteExons(oldTranscript, obsoleteExons, counters);
 
                         // qc utrs
                         if( utrs!=null ) {
@@ -134,6 +148,20 @@ public class EnsemblTranscriptLoader {
             newFeature.setFeatureType(TranscriptFeature.FeatureType.EXON);
             ensemblDAO.insertTranscriptFeature(newFeature,speciesTypeKey);
             counters.increment("TRANSCRIPT_EXONS_INSERTED");
+        }
+    }
+
+    public void deleteExons(Transcript tr, List<TranscriptFeature> exons, CounterPool counters) throws Exception{
+
+        for(TranscriptFeature exon: exons) {
+
+            // sanity check
+            if( exon.getFeatureType()!=TranscriptFeature.FeatureType.EXON ) {
+                throw new Exception("deleteExons() can process only EXONs!");
+            }
+
+            ensemblDAO.unbindFeatureFromTranscript(tr, exon);
+            counters.increment("TRANSCRIPT_EXONS_REMOVED");
         }
     }
 

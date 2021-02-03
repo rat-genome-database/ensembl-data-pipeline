@@ -17,6 +17,8 @@ import java.util.List;
 public class EnsemblDAO extends AbstractDAO {
 
     Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
+    Logger logExonsInserted = Logger.getLogger("exons_inserted");
+    Logger logExonsRemoved = Logger.getLogger("exons_removed");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -62,8 +64,25 @@ public class EnsemblDAO extends AbstractDAO {
     List<Transcript> getTranscriptsForGene(int geneRgdId) throws Exception {
         return transcriptDAO.getTranscriptsForGene(geneRgdId);
     }
-    public void insertTranscriptFeature(TranscriptFeature transcriptFeature,int speciesTypeKey) throws Exception {
-        transcriptDAO.createFeature(transcriptFeature,speciesTypeKey);
+
+    public void insertTranscriptFeature(TranscriptFeature tf, int speciesTypeKey) throws Exception {
+
+        if( tf.getFeatureType()== TranscriptFeature.FeatureType.EXON ) {
+            logExonsInserted.debug("TR RGD:" + tf.getTranscriptRgdId() + ", exon RGD:" + tf.getRgdId()
+                    + " chr" + tf.getChromosome() + ":" + tf.getStartPos() + ".." + tf.getStopPos() + " (" + tf.getStrand() + ")");
+        }
+
+        transcriptDAO.createFeature(tf, speciesTypeKey);
+    }
+
+    public int unbindFeatureFromTranscript(Transcript tr, TranscriptFeature exon) throws Exception {
+
+        if( exon.getFeatureType()== TranscriptFeature.FeatureType.EXON ) {
+            logExonsRemoved.debug(tr.getAccId() + " RGD:" + tr.getRgdId() + ", exon RGD:" + exon.getRgdId()
+                    + " chr" + exon.getChromosome() + ":" + exon.getStartPos() + ".." + exon.getStopPos() + " (" + exon.getStrand() + ")");
+        }
+
+        return transcriptDAO.unbindFeatureFromTranscript(tr.getRgdId(), exon.getRgdId());
     }
 
     ///// STABLE_TRANSCRIPTS - transcript versions

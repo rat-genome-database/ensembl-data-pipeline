@@ -22,6 +22,8 @@ public class EnsemblLoader {
     EnsemblTranscriptLoader transcriptLoader;
     private Map<String, Integer> ensemblAssemblyMap;
 
+    private boolean skipGeneLoader = false;
+
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
      * @param args cmd line arguments, like species
@@ -75,14 +77,17 @@ public class EnsemblLoader {
 
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
             validateAssemblyName(ensemblMapKey);
-            String dataFile = dataPuller.downloadGenesFile();
-            List<EnsemblGene> genes=dataParser.parseGene(dataFile);
-            log.info("Total genes parsed from file: "+genes.size());
-            geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
+            if( !skipGeneLoader ) {
+                String dataFile = dataPuller.downloadGenesFile();
+                List<EnsemblGene> genes = dataParser.parseGene(dataFile);
+                log.info("Total genes parsed from file: " + genes.size());
+                geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
+            }
 
             TranscriptVersionManager.getInstance().init();
             String transcriptsFile = dataPuller.downloadTranscriptsFile();
             Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
+            log.info("Total transcripts parsed from file: "+transcripts.size());
             transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
 
             log.info(speciesName.toUpperCase()+" DONE -- TIME ELAPSED "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));
