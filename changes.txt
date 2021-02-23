@@ -1,3 +1,6 @@
+2021-02-23
+  updated mouse assembly to GRCm39
+
 2021-02-03
   transcript loader: added code to detect and remove obsolete utr regions
 
