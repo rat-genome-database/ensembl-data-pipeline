@@ -1,3 +1,6 @@
+2021-05-25
+  implemented deletion of obsolete gene positions (to prevent duplicate positions)
+
 2021-02-23
   updated mouse assembly to GRCm39
 

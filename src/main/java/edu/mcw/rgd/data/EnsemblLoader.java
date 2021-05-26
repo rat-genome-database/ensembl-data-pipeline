@@ -23,6 +23,7 @@ public class EnsemblLoader {
     private Map<String, Integer> ensemblAssemblyMap;
 
     private boolean skipGeneLoader = false;
+    private boolean skipTranscriptLoader = false;
 
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
@@ -48,6 +49,9 @@ public class EnsemblLoader {
             }
             else if( arg.equals("-skipGenes") ) {
                 loader.skipGeneLoader = true;
+            }
+            else if( arg.equals("-skipTranscripts") ) {
+                loader.skipTranscriptLoader = true;
             }
         }
 
@@ -95,11 +99,15 @@ public class EnsemblLoader {
                 geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
             }
 
-            TranscriptVersionManager.getInstance().init();
-            String transcriptsFile = dataPuller.downloadTranscriptsFile();
-            Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
-            log.info("Total transcripts parsed from file: "+transcripts.size());
-            transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
+            if( skipTranscriptLoader ) {
+                log.warn("WARNING: transcript processing skipped!");
+            } else {
+                TranscriptVersionManager.getInstance().init();
+                String transcriptsFile = dataPuller.downloadTranscriptsFile();
+                Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
+                log.info("Total transcripts parsed from file: " + transcripts.size());
+                transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
+            }
 
             log.info(speciesName.toUpperCase()+" DONE -- TIME ELAPSED "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));
             log.info("===");

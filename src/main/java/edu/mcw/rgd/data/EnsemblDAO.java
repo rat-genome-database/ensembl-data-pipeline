@@ -17,6 +17,8 @@ import java.util.List;
 public class EnsemblDAO extends AbstractDAO {
 
     Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
+    Logger logInsertedGenePos = Logger.getLogger("inserted_gene_pos");
+    Logger logDeletedGenePos = Logger.getLogger("deleted_gene_pos");
     Logger logExonsInserted = Logger.getLogger("exons_inserted");
     Logger logExonsRemoved = Logger.getLogger("exons_removed");
     Logger logUtrsRemoved = Logger.getLogger("utrs_removed");
@@ -200,11 +202,23 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public void insertMapData(MapData md) throws Exception {
+        logInsertedGenePos.info(md.dump("|"));
         mapDAO.insertMapData(md);
+    }
+
+    public void deleteMapData(List<MapData> posList) throws Exception {
+        for( MapData md: posList ) {
+            logDeletedGenePos.info(md.dump("|"));
+        }
+        mapDAO.deleteMapData(posList);
     }
 
     public Map getAssemblyMap(int mapKey) throws Exception {
         return mapDAO.getMapByKey(mapKey);
+    }
+
+    public List<MapData> getGenePositions(int mapKey) throws Exception {
+        return mapDAO.getMapDataByMapKeyObject(mapKey, RgdId.OBJECT_KEY_GENES, "Ensembl");
     }
 }
 
