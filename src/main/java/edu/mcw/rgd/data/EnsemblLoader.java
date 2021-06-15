@@ -21,7 +21,7 @@ public class EnsemblLoader {
     EnsemblGff3Parser dataGff3Parser;
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
-    private Map<String, Integer> ensemblAssemblyMap;
+    private Map<Integer, Integer> ensemblAssemblyMap;
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -66,10 +66,10 @@ public class EnsemblLoader {
         }
 
         if( speciesTypeKey== SpeciesType.ALL ) {
-            List<String> speciesList = new ArrayList<>(loader.getEnsemblAssemblyMap().keySet());
+            List<Integer> speciesList = new ArrayList<>(loader.getEnsemblAssemblyMap().keySet());
             Collections.shuffle(speciesList);
-            for( String s: speciesList){
-                loader.run(SpeciesType.parse(s));
+            for( Integer spKey: speciesList){
+                loader.run(spKey);
             }
         }
         else {
@@ -89,7 +89,7 @@ public class EnsemblLoader {
     public void run(int speciesTypeKey) throws Exception {
         long time0 = System.currentTimeMillis();
         String speciesName = SpeciesType.getCommonName(speciesTypeKey);
-        int ensemblMapKey = getEnsemblAssemblyMap().get(speciesName);
+        int ensemblMapKey = getEnsemblAssemblyMap().get(speciesTypeKey);
         log.info(speciesName+" " +getVersion());
         try {
 
@@ -189,11 +189,11 @@ public class EnsemblLoader {
         this.transcriptLoader = transcriptLoader;
     }
 
-    public void setEnsemblAssemblyMap(Map<String, Integer> ensemblAssemblyMap) {
+    public void setEnsemblAssemblyMap(Map<Integer, Integer> ensemblAssemblyMap) {
         this.ensemblAssemblyMap = ensemblAssemblyMap;
     }
 
-    public Map<String, Integer> getEnsemblAssemblyMap() {
+    public Map<Integer, Integer> getEnsemblAssemblyMap() {
         return ensemblAssemblyMap;
     }
 

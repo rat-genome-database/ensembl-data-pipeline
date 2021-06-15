@@ -1,5 +1,6 @@
 2021-06-15
   added skeleton code to load data from gff3 files
+  refactored species to process
 
 2021-05-25
   implemented deletion of obsolete gene positions (to prevent duplicate positions)

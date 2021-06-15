@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Pipeline  -- build 2021-05-25"/>
+        <property name="version" value="Ensembl Pipeline  -- build 2021-06-15"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -9,14 +9,14 @@
         <property name="transcriptLoader" ref="TranscriptLoader"/>
         <property name="ensemblAssemblyMap">
             <map>
-                <entry key="Rat" value="361"/>
-                <entry key="Mouse" value="240"/>
-                <entry key="Human" value="40"/>
-                <entry key="Chinchilla" value="45"/>
-                <entry key="Dog" value="632"/>
-                <entry key="Pig" value="912" />
-                <entry key="Bonobo" value="512"/>
-                <entry key="Vervet" value="1312" />
+                <entry key="3" value="361"/><!-- rat-->
+                <entry key="2" value="240"/><!-- mouse -->
+                <entry key="1" value="40"/><!-- human -->
+                <entry key="4" value="45"/><!-- chinchilla -->
+                <entry key="6" value="632"/><!-- dog -->
+                <entry key="9" value="912" /><!-- pig -->
+                <entry key="5" value="512"/><!-- bonobo -->
+                <entry key="13" value="1312" /><!-- vervet -->
             </map>
         </property>
     </bean>
