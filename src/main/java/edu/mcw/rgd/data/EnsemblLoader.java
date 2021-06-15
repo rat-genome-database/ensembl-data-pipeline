@@ -18,12 +18,14 @@ public class EnsemblLoader {
     Logger log = Logger.getLogger("status");
     EnsemblDataPuller dataPuller;
     Parser dataParser;
+    EnsemblGff3Parser dataGff3Parser;
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
     private Map<String, Integer> ensemblAssemblyMap;
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
+    private boolean useGff3Loader = false; // by default load data from Ensembl BioMart
 
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
@@ -52,6 +54,9 @@ public class EnsemblLoader {
             }
             else if( arg.equals("-skipTranscripts") ) {
                 loader.skipTranscriptLoader = true;
+            }
+            else if( arg.equals("-useGff3Loader") ) {
+                loader.useGff3Loader = true;
             }
         }
 
@@ -93,8 +98,13 @@ public class EnsemblLoader {
             if( skipGeneLoader ) {
                 log.warn("WARNING: gene processing skipped!");
             } else {
-                String dataFile = dataPuller.downloadGenesFile();
-                List<EnsemblGene> genes = dataParser.parseGene(dataFile);
+                List<EnsemblGene> genes;
+                if( useGff3Loader ) {
+                    genes = dataGff3Parser.parseGenes();
+                } else {
+                    String dataFile = dataPuller.downloadGenesFile();
+                    genes = dataParser.parseGene(dataFile);
+                }
                 log.info("Total genes parsed from file: " + genes.size());
                 geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
             }
@@ -185,5 +195,13 @@ public class EnsemblLoader {
 
     public Map<String, Integer> getEnsemblAssemblyMap() {
         return ensemblAssemblyMap;
+    }
+
+    public EnsemblGff3Parser getDataGff3Parser() {
+        return dataGff3Parser;
+    }
+
+    public void setDataGff3Parser(EnsemblGff3Parser dataGff3Parser) {
+        this.dataGff3Parser = dataGff3Parser;
     }
 }
