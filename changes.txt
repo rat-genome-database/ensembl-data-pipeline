@@ -1,3 +1,6 @@
+2021-07-30
+  gff3 gene loader: implemented loading of basic gene info from gff3 file
+
 2021-06-15
   added skeleton code to load data from gff3 files
   refactored species to process

@@ -28,12 +28,15 @@ public class EnsemblGff3Parser {
     public List<EnsemblGene> parseGenes() throws IOException {
 
         final int mapKey = 372; // rn7_2
-/*
+
         // load primary information from gff3 genes file
-        List<EnsemblGene> genes = parseGff3File();
+        List<EnsemblGene> genes = parseGff3File(mapKey);
+        System.out.println("genes loaded from gff3 file");
 
         // load supplemental information from xref file
         parseXrefFile(genes);
+
+        /*
 
         BufferedReader in = Utils.openReader(getSrcFile());
         String line;
@@ -42,11 +45,92 @@ public class EnsemblGff3Parser {
         }
 
         in.close();
+
+         */
         return genes;
-*/
-        return null;
     }
 
+    List<EnsemblGene> parseGff3File(int mapKey) throws IOException {
+
+        List<EnsemblGene> results = new ArrayList<>();
+
+        String genomeBuild = null;
+        if( mapKey==372 || mapKey==373 ) {
+            genomeBuild = "mRatBN7.2";
+        }
+        boolean genomeBuildVerified = false;
+
+        BufferedReader in = Utils.openReader(getGff3File());
+        String line;
+        while( (line=in.readLine())!=null ) {
+            // header parsing
+            if( line.startsWith("#") ) {
+                if( line.contains("genome-build") ) {
+                    if( line.contains(genomeBuild) ) {
+                        genomeBuildVerified = true;
+                    }
+                }
+                continue;
+            }
+
+            // data lines
+            if( !genomeBuildVerified ) {
+                // assembly mismatch
+                System.out.println("assembly "+genomeBuild+" expected! not found");
+                break;
+            }
+
+            // skip non-gene lines
+            // Y	ensembl	gene	7732918	7746199	.	+	.	ID=gene:ENSRNOG00000065605;biotype=protein_coding;gene_id=ENSRNOG00000065605;version=1
+            String[] cols = line.split("[\\t]", -1);
+            String info = cols[8];
+            if( !info.startsWith("ID=gene:ENSRNOG") ) {
+                continue;
+            }
+            String chr = cols[0];
+            String startPosStr = cols[3];
+            String stopPosStr = cols[4];
+            String strand = cols[6];
+            String geneId = null, bioType = null;
+
+            // parse gene data
+            String[] infos = info.split("[\\;]");
+            for( String inf: infos ) {
+                if( inf.startsWith("biotype=") ) {
+                    bioType = inf.substring(8);
+                } else if( inf.startsWith("gene_id=") ) {
+                    geneId = inf.substring(8);
+                }
+            }
+            if( geneId==null || bioType==null ) {
+                System.out.println("unexpected gene line: "+line);
+                continue;
+            }
+
+            EnsemblGene g = new EnsemblGene();
+            g.setChromosome(chr);
+            g.setStartPos(startPosStr);
+            g.setStopPos(stopPosStr);
+            g.setStrand(strand);
+            g.setgene_biotype(bioType);
+            g.setEnsemblGeneId(geneId);
+            results.add(g);
+        }
+        in.close();
+
+        return results;
+    }
+
+    void parseXrefFile( List<EnsemblGene> genes ) throws IOException {
+
+        BufferedReader in = Utils.openReader(getXrefFile());
+        String header = in.readLine();
+        String line;
+        while( (line=in.readLine())!=null ) {
+
+        }
+        in.close();
+    }
 
     public String getGff3File() {
         return gff3File;

@@ -64,7 +64,7 @@ public class EnsemblGeneLoader {
 
             // RgdId for Rat, MGI Id for Mouse and HGNC id for human are the ids from file.
             String accId = null;
-            if (!gene.getrgdid().equals("0")) {
+            if( gene.getrgdid().equals("0")) {
                 if (speciesTypeKey == SpeciesType.RAT)
                     accId = gene.getrgdid();
                 else if (speciesTypeKey == SpeciesType.MOUSE) {

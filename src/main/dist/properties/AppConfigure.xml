@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Pipeline  -- build 2021-06-15"/>
+        <property name="version" value="Ensembl Pipeline  -- build 2021-07-30"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -82,7 +82,7 @@
     </bean>
 
     <bean id="gff3Parser" class="edu.mcw.rgd.data.EnsemblGff3Parser">
-        <property name="gff3File" value="/tmp/ensembl_rn7/Rattus_norvegicus-GCA_015227675.2-2021_02-genes.gff3.gz"/>
-        <property name="xrefFile" value="/tmp/ensembl_rn7/Rattus_norvegicus-GCA_015227675.2-2021_02-xref.tsv.gz"/>
+        <property name="gff3File" value="data/rapid/Rattus_norvegicus-GCA_015227675.2-2021_02-genes.gff3.gz"/>
+        <property name="xrefFile" value="data/rapid/Rattus_norvegicus-GCA_015227675.2-2021_02-xref.tsv.gz"/>
     </bean>
 </beans>

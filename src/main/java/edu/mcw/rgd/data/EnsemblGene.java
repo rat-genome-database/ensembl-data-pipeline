@@ -4,18 +4,17 @@ package edu.mcw.rgd.data;
  */
 public class EnsemblGene {
 
-    String rgdid;
-    String entrezgene_id;
+    private String rgdid;
+    private String entrezgene_id;
     // incoming data from Ensembl
-    String ensemblGeneId;
+    private String ensemblGeneId;
     // genomic position
-    String chromosome;
-    String startPos, stopPos;
-    String strand;
-    String Map_key;
-    String geneSymbol;
-    String gene_biotype;
-    String gene_description;
+    private String chromosome;
+    private String startPos, stopPos;
+    private String strand;
+    private String geneSymbol;
+    private String gene_biotype;
+    private String gene_description;
 
     public String getgene_description(){return gene_description;}
     public void setgene_description(String gene_description){this.gene_description=gene_description;}
@@ -88,9 +87,5 @@ public class EnsemblGene {
 
     public void setEnsemblGeneId(String ensemblGeneId) {
         this.ensemblGeneId = ensemblGeneId;
-    }
-    public String getMap_key()
-    {
-        return Map_key;
     }
 }
