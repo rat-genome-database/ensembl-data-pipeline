@@ -19,6 +19,18 @@
                 <entry key="13" value="1312" /><!-- vervet -->
             </map>
         </property>
+        <property name="ncbiAssemblyMap">
+            <map>
+                <entry key="3" value="360"/><!-- rat-->
+                <entry key="2" value="239"/><!-- mouse -->
+                <entry key="1" value="38"/><!-- human -->
+                <entry key="4" value="44"/><!-- chinchilla -->
+                <entry key="6" value="631"/><!-- dog -->
+                <entry key="9" value="911" /><!-- pig -->
+                <entry key="5" value="511"/><!-- bonobo -->
+                <entry key="13" value="1311" /><!-- vervet -->
+            </map>
+        </property>
     </bean>
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">

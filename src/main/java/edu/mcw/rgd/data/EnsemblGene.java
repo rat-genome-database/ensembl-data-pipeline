@@ -1,4 +1,8 @@
 package edu.mcw.rgd.data;
+
+import java.util.List;
+import java.util.Set;
+
 /**
  * Created by sellanki on 8/6/2019.
  */
@@ -15,6 +19,9 @@ public class EnsemblGene {
     private String geneSymbol;
     private String gene_biotype;
     private String gene_description;
+
+    // transcript RefSeq acc ids, used by EnsemblGff3Parser
+    private Set<String> refseqAccIds;
 
     public String getgene_description(){return gene_description;}
     public void setgene_description(String gene_description){this.gene_description=gene_description;}
@@ -87,5 +94,13 @@ public class EnsemblGene {
 
     public void setEnsemblGeneId(String ensemblGeneId) {
         this.ensemblGeneId = ensemblGeneId;
+    }
+
+    public Set<String> getRefseqAccIds() {
+        return refseqAccIds;
+    }
+
+    public void setRefseqAccIds(Set<String> refseqAccIds) {
+        this.refseqAccIds = refseqAccIds;
     }
 }

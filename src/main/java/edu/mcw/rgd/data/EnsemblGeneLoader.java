@@ -22,7 +22,7 @@ public class EnsemblGeneLoader {
     List nomenEvents;
     AssemblyPositions genePositions;
 
-    public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey) throws Exception {
+    public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
 
         matches=new HashMap<>();
         mismatches=new ArrayList();
@@ -33,8 +33,7 @@ public class EnsemblGeneLoader {
         genePositions.loadPositionsInRgd(ensemblMapKey, ensemblDAO);
 
         // we have chromosome data only for NCBI assemblies
-        edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
-        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
+        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
 
         int skippedGenes = 0;
 
@@ -50,40 +49,42 @@ public class EnsemblGeneLoader {
             String ncbiRgdId = null;
 
             List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
-            if(!gene.getEntrezgene_id().equals("NIL")) {
-                List<String> ncbiIds = ensemblDAO.getNcbiRgdId(gene.getEntrezgene_id());
+            String ncbiId = Utils.NVL(gene.getEntrezgene_id(), "NIL");
+            if( !ncbiId.equals("NIL") ) {
+                List<String> ncbiIds = ensemblDAO.getNcbiRgdId(ncbiId);
                 if (ncbiIds != null && ncbiIds.size() == 1)
                     ncbiRgdId = ncbiIds.get(0);
                 else {
                     //This indicates multiple rgdIds for a ncbi
                     if (ncbiIds != null) {
-                        conflictLog.info("Check the ncbi Id: " + gene.getEntrezgene_id());
+                        conflictLog.info("Check the ncbi Id: " + ncbiId);
                     } else ncbiRgdId = null; //Ncbi Id doesnt exist in rgd database
                 }
             }
 
             // RgdId for Rat, MGI Id for Mouse and HGNC id for human are the ids from file.
             String accId = null;
-            if( gene.getrgdid().equals("0")) {
+            String incomingAcc = Utils.NVL(gene.getrgdid(), "0");
+            if( !incomingAcc.equals("0")) {
                 if (speciesTypeKey == SpeciesType.RAT)
-                    accId = gene.getrgdid();
+                    accId = incomingAcc;
                 else if (speciesTypeKey == SpeciesType.MOUSE) {
-                    List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_MGD);
+                    List<String> rgdIds = ensemblDAO.getRgd_id(incomingAcc, XdbId.XDB_KEY_MGD);
                     if(rgdIds != null && rgdIds.size() == 1)
                         accId = rgdIds.get(0);
                     else {
                         if(accId != null)
-                            conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +gene.getrgdid());
+                            conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +incomingAcc);
                         accId = null;
                     }
                 }
                 else {
-                    List<String> rgdIds = ensemblDAO.getRgd_id(gene.getrgdid(), XdbId.XDB_KEY_HGNC);
+                    List<String> rgdIds = ensemblDAO.getRgd_id(incomingAcc, XdbId.XDB_KEY_HGNC);
                     if(rgdIds != null && rgdIds.size() == 1)
                         accId = rgdIds.get(0);
                     else {
                         if(accId != null)
-                            conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +gene.getrgdid());
+                            conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +incomingAcc);
                         accId = null;
                     }
                 }
@@ -276,6 +277,12 @@ public class EnsemblGeneLoader {
     public void createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
 
         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
+
+            // gene symbol must be non-null
+            if( Utils.isStringEmpty(gene.getGeneSymbol()) ) {
+                conflictLog.info("gene "+gene.getEnsemblGeneId()+" does not have a symbol! gene skipped -- not inserted");
+                return;
+            }
 
             String geneTypeLc = gene.getgene_biotype().toLowerCase();
             if (!ensemblDAO.existsGeneType(geneTypeLc)) {

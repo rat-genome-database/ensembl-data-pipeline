@@ -5,6 +5,7 @@ import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -31,6 +32,10 @@ public class EnsemblDAO extends AbstractDAO {
     MapDAO mapDAO = new MapDAO();
     XdbIdDAO xdbDAO = new XdbIdDAO();
 
+    RgdId getRgdId(int rgdId) throws Exception {
+        return managementDAO.getRgdId2(rgdId);
+    }
+
     RgdId createRgdId(int objectKey, int speciesTypeKey) throws Exception {
         return managementDAO.createRgdId(objectKey, "ACTIVE", "created by Ensembl pipeline", speciesTypeKey);
     }
@@ -44,6 +49,9 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public void insertGene(Gene gene) throws Exception {
+        if( Utils.isStringEmpty(gene.getSymbol()) ) {
+            System.out.println("null gene symbol");
+        }
         geneDAO.insertGene(gene);
     }
 
@@ -66,6 +74,9 @@ public class EnsemblDAO extends AbstractDAO {
     }
     List<Transcript> getTranscriptsForGene(int geneRgdId) throws Exception {
         return transcriptDAO.getTranscriptsForGene(geneRgdId);
+    }
+    List<Transcript> getTranscriptsByAccId(String accId) throws Exception {
+        return transcriptDAO.getTranscriptsByAccId(accId);
     }
 
     public void insertTranscriptFeature(TranscriptFeature tf, int speciesTypeKey) throws Exception {
@@ -145,18 +156,6 @@ public class EnsemblDAO extends AbstractDAO {
     public int insertXdbIds(XdbId id) throws Exception {
         logInsertedXdbs.debug(id.dump("|"));
         return xdbDAO.insertXdb(id);
-    }
-
-    public MapData checkrecord(int rgd_id,String start_pos,String stop_pos,String strand,String chromosome,int mapKey) throws Exception {
-        String query="select * from maps_data where map_key=? and rgd_id=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
-        MapDataQuery q=new MapDataQuery(this.getDataSource(),query);
-        List<MapData> mp=execute(q,mapKey,rgd_id,start_pos,stop_pos,strand,chromosome);
-        if(!mp.isEmpty()) {
-            return mp.get(0);
-        }
-        else{
-            return null;
-        }
     }
 
     public boolean checkXDBRecord(int rgdId, String ensemblId, String srcPipeline) throws Exception{

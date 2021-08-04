@@ -22,6 +22,7 @@ public class EnsemblLoader {
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
     private Map<Integer, Integer> ensemblAssemblyMap;
+    private Map<Integer, Integer> ncbiAssemblyMap;
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -90,6 +91,7 @@ public class EnsemblLoader {
         long time0 = System.currentTimeMillis();
         String speciesName = SpeciesType.getCommonName(speciesTypeKey);
         int ensemblMapKey = getEnsemblAssemblyMap().get(speciesTypeKey);
+        int ncbiAssemblyMapKey = getNcbiAssemblyMap().get(speciesTypeKey);
         log.info(speciesName+" " +getVersion());
         try {
 
@@ -101,12 +103,15 @@ public class EnsemblLoader {
                 List<EnsemblGene> genes;
                 if( useGff3Loader ) {
                     genes = dataGff3Parser.parseGenes();
+                    ensemblMapKey = dataGff3Parser.getEnsemblAssemblyMapKey();
+                    ncbiAssemblyMapKey = dataGff3Parser.getNcbiAssemblyMapKey();
                 } else {
                     String dataFile = dataPuller.downloadGenesFile();
                     genes = dataParser.parseGene(dataFile);
                 }
                 log.info("Total genes parsed from file: " + genes.size());
-                geneLoader.run(genes, speciesTypeKey, ensemblMapKey);
+
+                geneLoader.run(genes, speciesTypeKey, ensemblMapKey, ncbiAssemblyMapKey);
             }
 
             if( skipTranscriptLoader ) {
@@ -195,6 +200,14 @@ public class EnsemblLoader {
 
     public Map<Integer, Integer> getEnsemblAssemblyMap() {
         return ensemblAssemblyMap;
+    }
+
+    public Map<Integer, Integer> getNcbiAssemblyMap() {
+        return ncbiAssemblyMap;
+    }
+
+    public void setNcbiAssemblyMap(Map<Integer, Integer> ncbiAssemblyMap) {
+        this.ncbiAssemblyMap = ncbiAssemblyMap;
     }
 
     public EnsemblGff3Parser getDataGff3Parser() {
