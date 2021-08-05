@@ -117,11 +117,18 @@ public class EnsemblLoader {
             if( skipTranscriptLoader ) {
                 log.warn("WARNING: transcript processing skipped!");
             } else {
+                String transcriptsFile;
+                if( useGff3Loader ) {
+                    ensemblMapKey = dataGff3Parser.getEnsemblAssemblyMapKey();
+                    ncbiAssemblyMapKey = dataGff3Parser.getNcbiAssemblyMapKey();
+                    transcriptsFile = dataGff3Parser.generateTranscriptFile();
+                } else {
+                    transcriptsFile = dataPuller.downloadTranscriptsFile();
+                }
                 TranscriptVersionManager.getInstance().init();
-                String transcriptsFile = dataPuller.downloadTranscriptsFile();
                 Collection<EnsemblTranscript> transcripts = dataParser.parseTranscript(transcriptsFile);
                 log.info("Total transcripts parsed from file: " + transcripts.size());
-                transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey);
+                transcriptLoader.run(transcripts, speciesTypeKey, ensemblMapKey, ncbiAssemblyMapKey);
             }
 
             log.info(speciesName.toUpperCase()+" DONE -- TIME ELAPSED "+Utils.formatElapsedTime(time0, System.currentTimeMillis()));

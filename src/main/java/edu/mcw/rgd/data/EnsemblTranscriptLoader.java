@@ -2,7 +2,6 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -18,14 +17,13 @@ public class EnsemblTranscriptLoader {
 
     List genesNotFound=new ArrayList();
 
-    public void run(Collection<EnsemblTranscript> transcriptCollection, int speciesTypeKey, int ensemblMapKey) throws Exception {
+    public void run(Collection<EnsemblTranscript> transcriptCollection, int speciesTypeKey, int ensemblMapKey, int ncbiMapKey) throws Exception {
 
         log.debug("Loading the transcripts file");
         CounterPool counters = new CounterPool();
 
         // we have chromosome data only for NCBI assemblies
-        edu.mcw.rgd.datamodel.Map referenceAssembly = MapManager.getInstance().getReferenceAssembly(speciesTypeKey);
-        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(referenceAssembly.getKey());
+        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiMapKey);
 
         List<EnsemblTranscript> transcripts = new ArrayList<>(transcriptCollection);
         Collections.shuffle(transcripts);
@@ -68,7 +66,7 @@ public class EnsemblTranscriptLoader {
 
                         transcriptMatch = true;
                         transcript.setRgdId(oldTranscript.getRgdId());
-                        List<TranscriptFeature> tfsInRgd = ensemblDAO.getFeatures(oldTranscript.getRgdId());
+                        List<TranscriptFeature> tfsInRgd = ensemblDAO.getFeatures(oldTranscript.getRgdId(), ensemblMapKey);
                         List<TranscriptFeature> obsoleteExons = new ArrayList<>();
 
                         List<EnsemblExon> matchedPositions = new ArrayList<>();

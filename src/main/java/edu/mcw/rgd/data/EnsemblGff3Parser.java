@@ -3,7 +3,6 @@ package edu.mcw.rgd.data;
 import edu.mcw.rgd.datamodel.RgdId;
 import edu.mcw.rgd.datamodel.Transcript;
 import edu.mcw.rgd.process.Utils;
-import oracle.ucp.util.MapChain;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -31,11 +30,13 @@ public class EnsemblGff3Parser {
     private String gff3File;
     private String xrefFile;
 
-    public List<EnsemblGene> parseGenes() throws Exception {
-
+    public EnsemblGff3Parser() {
         // rn7
         setNcbiAssemblyMapKey(372);
         setEnsemblAssemblyMapKey(373);
+    }
+
+    public List<EnsemblGene> parseGenes() throws Exception {
 
         // load primary information from gff3 genes file
         Map<String, EnsemblGene> genes = parseGff3File();
@@ -44,17 +45,6 @@ public class EnsemblGff3Parser {
         // load supplemental information from xref file
         parseXrefFile(genes);
 
-        /*
-
-        BufferedReader in = Utils.openReader(getSrcFile());
-        String line;
-        while( (line=in.readLine())!=null ) {
-
-        }
-
-        in.close();
-
-         */
         return new ArrayList<>(genes.values());
     }
 
@@ -261,6 +251,220 @@ public class EnsemblGff3Parser {
         return output_fname;
     }
 
+
+    String generateTranscriptFile() throws IOException {
+
+        // geneId to List of lines constituting a gene
+        Map<String, List<String[]>> genes = new HashMap<>();
+
+        String genomeBuild = null;
+        if( getNcbiAssemblyMapKey()==372 || getEnsemblAssemblyMapKey()==373 ) {
+            genomeBuild = "mRatBN7.2";
+        }
+        boolean genomeBuildVerified = false;
+
+        BufferedReader in = Utils.openReader(getGff3File());
+        String geneId = null;
+        List<String[]> geneLines = new ArrayList<>();
+
+        String line;
+        while( (line=in.readLine())!=null ) {
+            // new gene boundary
+            if( line.equals("###") ) {
+                if( geneId!=null )
+                    genes.put(geneId, geneLines);
+                geneId = null;
+                geneLines = new ArrayList<>();
+                continue;
+            }
+
+            // header parsing
+            if( line.startsWith("#") ) {
+                if( line.contains("genome-build") ) {
+                    if( line.contains(genomeBuild) ) {
+                        genomeBuildVerified = true;
+                    }
+                }
+                continue;
+            }
+
+            // data lines
+            if( !genomeBuildVerified ) {
+                // assembly mismatch
+                System.out.println("assembly "+genomeBuild+" expected! not found");
+                break;
+            }
+
+            // handle gene lines
+            // Y	ensembl	gene	7732918	7746199	.	+	.	ID=gene:ENSRNOG00000065605;biotype=protein_coding;gene_id=ENSRNOG00000065605;version=1
+            String[] cols = line.split("[\\t]", -1);
+            String info = cols[8];
+            if( info.startsWith("ID=gene:ENSRNOG") ) {
+                String[] infos = info.split("[\\;]");
+                for (String inf : infos) {
+                    if (inf.startsWith("gene_id=")) {
+                        geneId = inf.substring(8);
+                    }
+                }
+                continue;
+            }
+
+            geneLines.add(cols);
+        }
+        in.close();
+
+        if( !genomeBuildVerified ) {
+            return null;
+        }
+
+        return generateTranscriptFile(genes);
+    }
+
+    String generateTranscriptFile(Map<String, List<String[]>> genes) throws IOException {
+
+        List<String> trLines = new ArrayList<>();
+
+        genes.entrySet().parallelStream().forEach(e -> {
+
+            List<String> lines = processGene(e.getKey(), e.getValue());
+            synchronized (trLines) {
+                trLines.addAll(lines);
+            }
+        });
+
+        Collections.sort(trLines);
+
+        String fname = "data/rn7_transcripts.txt.gz";
+        BufferedWriter out = Utils.openWriter(fname);
+        for (String line : trLines) {
+            out.write(line);
+        }
+        out.close();
+
+        return fname;
+    }
+
+    List<String> processGene(String geneId, List<String[]> lines) {
+
+        // pass 1: determine transcripts
+        Map<String, Tr> trs = new HashMap<>();
+
+        for( String[]cols: lines ) {
+
+            String info = cols[8];
+            String[] infos = info.split("[\\;]");
+
+            // transcript line:
+            // Y	ensembl	mRNA	1156135	1300943	.	-	.	ID=transcript:ENSRNOT00000092901;Parent=gene:ENSRNOG00000058664;Name=Usp9y-201;biotype=protein_coding;transcript_id=ENSRNOT00000092901;version=2
+            if( info.startsWith("ID=transcript:ENSRNOT") ) {
+
+                Tr tr = new Tr();
+                for (String inf : infos) {
+                    if (inf.startsWith("transcript_id=")) {
+                        tr.trId = inf.substring(14);
+                    } else if (inf.startsWith("biotype=")) {
+                        tr.trType = inf.substring(8);
+                    } else if (inf.startsWith("version=")) {
+                        tr.trVer = "." + inf.substring(8);
+                    }
+                }
+                tr.chr = cols[0];
+                tr.trStart = cols[3];
+                tr.trStop = cols[4];
+                tr.strand = cols[6].equals("+") ? "1" : "-1";
+
+                trs.put(tr.trId, tr);
+            }
+        }
+
+        // pass 2: exons
+        for( String[]cols: lines ) {
+
+            String info = cols[8];
+            String[] infos = info.split("[\\;]");
+
+            // Y	ensembl	exon	1156135	1157993	.	-	.	Parent=transcript:ENSRNOT00000092901;constitutive=0;exon_id=ENSRNOE00000577740;rank=46;version=1
+            if( cols[2].equals("exon") ) {
+
+                Exon exon = new Exon();
+                String trId = null;
+                for( String inf: infos ) {
+                    if( inf.startsWith("Parent=transcript:") ) {
+                        trId = inf.substring(18);
+                    }
+                    else if( inf.startsWith("rank=") ) {
+                        exon.rank = inf.substring(5);
+                    }
+                }
+                Tr tr = trs.get(trId);
+
+                exon.exonStart = Integer.parseInt(cols[3]);
+                exon.exonStop = Integer.parseInt(cols[4]);
+                tr.exons.add(exon);
+
+                trs.put(tr.trId, tr);
+            }
+        }
+
+        // pass 3: CDSs
+        for( String[]cols: lines ) {
+
+            String info = cols[8];
+            String[] infos = info.split("[\\;]");
+
+            // Y	ensembl	CDS	1287115	1287260	.	-	0	ID=CDS:ENSRNOP00000071193;Parent=transcript:ENSRNOT00000088719;protein_id=ENSRNOP00000071193;version=2
+            if( cols[2].equals("CDS") ) {
+
+                String trId = null, proteinId = null;
+                for( String inf: infos ) {
+                    if( inf.startsWith("Parent=transcript:") ) {
+                        trId = inf.substring(18);
+                    }
+                    else if( inf.startsWith("protein_id=") ) {
+                        proteinId = inf.substring(11);
+                    }
+                }
+
+                int cdsStart = Integer.parseInt(cols[3]);
+                int cdsStop = Integer.parseInt(cols[4]);
+
+                // lookup for an exon
+                Tr tr = trs.get(trId);
+                if( proteinId!=null ) {
+                    tr.proteinId = proteinId;
+                }
+                for( Exon e: tr.exons ) {
+                    if( e.exonStart<=cdsStart && cdsStop<=e.exonStop ) {
+                        e.cdsStart = cdsStart;
+                        e.cdsStop = cdsStop;
+                        break;
+                    }
+                }
+            }
+        }
+
+        List<String> result = new ArrayList<>();
+        for( Tr tr: trs.values() ) {
+
+            String prefix = geneId+"\t"+tr.trId+"\t"+tr.trId+tr.trVer+"\t"+tr.chr+"\t"+tr.trStart+"\t"+tr.trStop+"\t"+tr.strand+"\t";
+            String suffix = "\t"+Utils.defaultString(tr.proteinId)+"\t"+tr.trType+"\n";
+
+            for( Exon e: tr.exons ) {
+                String line = prefix+e.exonStart+"\t"+e.exonStop+"\t"+e.rank+"\t";
+                if( e.cdsStart!=0 )
+                    line += e.cdsStart;
+                line += "\t";
+                if( e.cdsStop!=0 ) {
+                    line += e.cdsStop;
+                }
+                line += suffix;
+
+                result.add(line);
+            }
+        }
+        return result;
+    }
+
     public String getGff3File() {
         return gff3File;
     }
@@ -291,5 +495,26 @@ public class EnsemblGff3Parser {
 
     public void setEnsemblAssemblyMapKey(int ensemblAssemblyMapKey) {
         this.ensemblAssemblyMapKey = ensemblAssemblyMapKey;
+    }
+
+    class Exon {
+        public int exonStart;
+        public int exonStop;
+        public String rank;
+        public int cdsStart;
+        public int cdsStop;
+    }
+
+    class Tr {
+        public String trId;
+        public String trVer;
+        public String chr;
+        public String trStart;
+        public String trStop;
+        public String strand; // 1, -1
+        public String proteinId = "";
+        public String trType;
+
+        public List<Exon> exons = new ArrayList<>();
     }
 }

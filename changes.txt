@@ -1,3 +1,6 @@
+2021-08-05
+  gff3 transcript loader: implemented
+
 2021-07-30
   gff3 gene loader: implemented loading of basic gene info from gff3 file
 

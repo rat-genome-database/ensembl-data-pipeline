@@ -122,8 +122,9 @@ public class EnsemblDAO extends AbstractDAO {
     public void insertNomenclatureEvent(NomenclatureEvent event) throws Exception {
         nomenclatureDAO.createNomenEvent(event);
     }
-    public List<TranscriptFeature> getFeatures(int transcriptRgdId) throws Exception {
-        return transcriptDAO.getFeatures(transcriptRgdId);
+
+    public List<TranscriptFeature> getFeatures(int transcriptRgdId, int mapKey) throws Exception {
+        return transcriptDAO.getFeatures(transcriptRgdId, mapKey);
     }
 
     public List<String> getRgd_id(String accId, int xdbKey) throws Exception{
