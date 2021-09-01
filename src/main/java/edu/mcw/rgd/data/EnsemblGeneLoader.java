@@ -2,7 +2,6 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
-import edu.mcw.rgd.process.mapping.MapManager;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -36,6 +35,7 @@ public class EnsemblGeneLoader {
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
 
         int skippedGenes = 0;
+        int genesNoSymbolSkipped = 0;
 
         for (EnsemblGene gene : genes) {
             String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
@@ -46,9 +46,23 @@ public class EnsemblGeneLoader {
             }
             gene.setChromosome(chr); // replace chr GeneBank id with NCBI scaffold acc
 
+            // make sure gene name does not end with whitespace
+            if( gene.getgene_description()!=null ) {
+                gene.setgene_description(gene.getgene_description().trim());
+            }
+
             String ncbiRgdId = null;
 
             List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
+
+            // some new genes loaded from rapid Release files do not have gene symbols;
+            // we will use gene_ensembl_id as the gene symbol
+            if( Utils.isStringEmpty(gene.getGeneSymbol()) ) {
+                if( gene.getRefseqAccIds()==null ) {
+                    //System.out.println("problem");
+                }
+            }
+
             String ncbiId = Utils.NVL(gene.getEntrezgene_id(), "NIL");
             if( !ncbiId.equals("NIL") ) {
                 List<String> ncbiIds = ensemblDAO.getNcbiRgdId(ncbiId);
@@ -98,10 +112,13 @@ public class EnsemblGeneLoader {
                     if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
                         conflictLog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
                     else {
-                        if (ensembleRgdIds == null || ensembleRgdIds.isEmpty())
-                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
-                        else
+                        if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
+                            if (!createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey)) {
+                                genesNoSymbolSkipped++;
+                            }
+                        } else {
                             updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
+                        }
 
                     }
                 } else {
@@ -118,7 +135,9 @@ public class EnsemblGeneLoader {
                                     mismatches.add(gene.getEnsemblGeneId());
                                     conflictLog.info("Ensemble Rgd ID and RgdId in file mismatch: " + gene.getEnsemblGeneId());
                                 } else {
-                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey);
+                                    if( !createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
+                                        genesNoSymbolSkipped++;
+                                    }
                                 }
                             }
                         }
@@ -133,7 +152,9 @@ public class EnsemblGeneLoader {
                 } else {
                     // Check if ncbi rgdId and rgdId from file matches
                     if (ensembleRgdIds == null && accId == null) {
-                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
+                        if( !createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey) ) {
+                            genesNoSymbolSkipped++;
+                        }
                     } else {
                         if (accId == null) {
                             if (matches.containsKey(gene.getEnsemblGeneId()))
@@ -164,6 +185,9 @@ public class EnsemblGeneLoader {
         if( skippedGenes>0 ) {
             statuslog.info("Genes skipped, unexpected chromosome: " + skippedGenes);
         }
+        if( genesNoSymbolSkipped>0 ) {
+            statuslog.info("Genes skipped, no symbol, cannot match with NCBI gene: " + genesNoSymbolSkipped);
+        }
 
         genePositions.qcAndLoad(statuslog, ensemblDAO);
     }
@@ -173,12 +197,14 @@ public class EnsemblGeneLoader {
         Gene geneInRgd = ensemblDAO.getGene(newRgdId);
         String geneName = geneInRgd.getName();
 
+        String geneSymbolIncoming = Utils.NVL(gene.getGeneSymbol(), gene.getEnsemblGeneId());
+
         Alias aliasData = new Alias();
         aliasData.setNotes("Added by Ensembl pipeline");
 
-        if( !geneInRgd.getSymbol().equals(gene.getGeneSymbol()) ) {
+        if( !geneInRgd.getSymbol().equals(geneSymbolIncoming) ) {
             aliasData.setRgdId(newRgdId);
-            aliasData.setValue(gene.getGeneSymbol());
+            aliasData.setValue(geneSymbolIncoming);
             aliasData.setTypeName("ensembl_gene_symbol");
             ensemblDAO.insertAlias(aliasData);
         }
@@ -191,7 +217,7 @@ public class EnsemblGeneLoader {
         }
 
         geneInRgd.setEnsemblFullName(gene.getgene_description());
-        geneInRgd.setEnsemblGeneSymbol(gene.getGeneSymbol());
+        geneInRgd.setEnsemblGeneSymbol(geneSymbolIncoming);
         geneInRgd.setEnsemblGeneType(gene.getgene_biotype());
         ensemblDAO.updateGene(geneInRgd);
     }
@@ -225,11 +251,13 @@ public class EnsemblGeneLoader {
         Gene existing = ensemblDAO.getGene(rgdId);
         if(existing.getGeneSource().equals("Ensembl") && (existing.getNomenSource() == null || !existing.getNomenSource().equals("HGNC"))){
 
-            if(!existing.getSymbol().equalsIgnoreCase(gene.getGeneSymbol()) || (existing.getName() != null && !existing.getName().equalsIgnoreCase(gene.getgene_description()) )){
+            String geneSymbolIncoming = Utils.NVL(gene.getGeneSymbol(), gene.getEnsemblGeneId());
+
+            if( !existing.getSymbol().equalsIgnoreCase(geneSymbolIncoming) || (existing.getName() != null && !existing.getName().equalsIgnoreCase(gene.getgene_description()) )){
 
                 NomenclatureEvent event = new NomenclatureEvent();
                 event.setRgdId(rgdId);
-                event.setSymbol(gene.getGeneSymbol());
+                event.setSymbol(geneSymbolIncoming);
                 event.setName(gene.getgene_description());
                 event.setRefKey("133850");
                 event.setNomenStatusType("PROVISIONAL");
@@ -243,7 +271,7 @@ public class EnsemblGeneLoader {
                 Alias aliasData = new Alias();
                 aliasData.setNotes("Added by Ensembl pipeline");
                 aliasData.setRgdId(rgdId);
-                if(!existing.getSymbol().equalsIgnoreCase(gene.getGeneSymbol())){
+                if(!existing.getSymbol().equalsIgnoreCase(geneSymbolIncoming)){
                     aliasData.setValue(existing.getSymbol());
                     aliasData.setTypeName("old_gene_symbol");
                     ensemblDAO.insertAlias(aliasData);
@@ -254,9 +282,9 @@ public class EnsemblGeneLoader {
                     ensemblDAO.insertAlias(aliasData);
                 }
 
-                existing.setSymbol(gene.getGeneSymbol());
+                existing.setSymbol(geneSymbolIncoming);
                 existing.setName(gene.getgene_description());
-                existing.setEnsemblGeneSymbol(gene.getGeneSymbol());
+                existing.setEnsemblGeneSymbol(geneSymbolIncoming);
                 existing.setEnsemblFullName(gene.getgene_description());
                 existing.setNomenSource("Ensembl");
                 ensemblDAO.updateGene(existing);
@@ -274,14 +302,21 @@ public class EnsemblGeneLoader {
         }
     }
 
-    public void createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
+    public boolean createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
 
         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
 
-            // gene symbol must be non-null
-            if( Utils.isStringEmpty(gene.getGeneSymbol()) ) {
-                conflictLog.info("gene "+gene.getEnsemblGeneId()+" does not have a symbol! gene skipped -- not inserted");
-                return;
+            String geneSymbol = gene.getGeneSymbol();
+            if( false ) {
+                // gene symbol must be non-null
+                if (Utils.isStringEmpty(gene.getGeneSymbol())) {
+                    conflictLog.info("gene " + gene.getEnsemblGeneId() + " does not have a symbol! gene skipped -- not inserted");
+                    return false;
+                }
+            } else {
+                if( Utils.isStringEmpty(geneSymbol) ) {
+                    geneSymbol = gene.getEnsemblGeneId();
+                }
             }
 
             String geneTypeLc = gene.getgene_biotype().toLowerCase();
@@ -290,18 +325,19 @@ public class EnsemblGeneLoader {
             }
 
             if(rgdId == null) {
+
                 newGenes.add(gene);
                 RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, speciesTypeKey);
                 rgdId = String.valueOf(newRgdId.getRgdId());
                 Gene newGene = new Gene();
-                newGene.setSymbol(gene.getGeneSymbol());
+                newGene.setSymbol(geneSymbol);
                 newGene.setRgdId(Integer.parseInt(rgdId));
                 newGene.setType(geneTypeLc);
                 newGene.setName(gene.getgene_description());
                 newGene.setGeneSource("Ensembl");
                 newGene.setNomenSource("Ensembl");
                 newGene.setEnsemblFullName(gene.getgene_description());
-                newGene.setEnsemblGeneSymbol(gene.getGeneSymbol());
+                newGene.setEnsemblGeneSymbol(geneSymbol);
                 newGene.setEnsemblGeneType(gene.getgene_biotype());
                 ensemblDAO.insertGene(newGene);
 
@@ -331,7 +367,7 @@ public class EnsemblGeneLoader {
             mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
             mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
             mapData.setStrand(gene.getStrand());
-            ensemblDAO.insertMapData(mapData);
+            ensemblDAO.insertMapData(mapData, "GENE ");
 
 
             XdbId xdbId = new XdbId();
@@ -341,5 +377,6 @@ public class EnsemblGeneLoader {
             xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
             ensemblDAO.insertXdbIds(xdbId);
         }
+        return true;
     }
 }

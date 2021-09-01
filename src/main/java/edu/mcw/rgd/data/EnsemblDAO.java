@@ -23,6 +23,7 @@ public class EnsemblDAO extends AbstractDAO {
     Logger logExonsInserted = Logger.getLogger("exons_inserted");
     Logger logExonsRemoved = Logger.getLogger("exons_removed");
     Logger logUtrsRemoved = Logger.getLogger("utrs_removed");
+    Logger logUpdatedPos = Logger.getLogger("updated_pos");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -49,9 +50,6 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public void insertGene(Gene gene) throws Exception {
-        if( Utils.isStringEmpty(gene.getSymbol()) ) {
-            System.out.println("null gene symbol");
-        }
         geneDAO.insertGene(gene);
     }
 
@@ -201,9 +199,15 @@ public class EnsemblDAO extends AbstractDAO {
         return mapDAO.getChromosomes(mapKey);
     }
 
-    public void insertMapData(MapData md) throws Exception {
-        logInsertedGenePos.info(md.dump("|"));
+    public void insertMapData(MapData md, String prefix) throws Exception {
+        logInsertedGenePos.info(prefix+md.dump("|"));
         mapDAO.insertMapData(md);
+    }
+
+    public void updateMapData(MapData md, MapData mdOld) throws Exception {
+        logUpdatedPos.info("OLD>"+mdOld.dump("|"));
+        logUpdatedPos.info("NEW>"+md.dump("|"));
+        mapDAO.updateMapData(md);
     }
 
     public void deleteMapData(List<MapData> posList) throws Exception {

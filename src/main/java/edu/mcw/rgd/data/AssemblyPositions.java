@@ -44,7 +44,7 @@ public class AssemblyPositions {
 
         for( String keyForInsert: keysForInsert ) {
             MapData posForInsert = positionsIncoming.get(keyForInsert);
-            dao.insertMapData(posForInsert);
+            dao.insertMapData(posForInsert, "GENE ");
         }
         log.info("gene positions inserted: "+keysForInsert.size());
 

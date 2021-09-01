@@ -1,3 +1,7 @@
+2021-08-31
+  gff3 transcript loader: improved parsing nad loading code
+  transcript loader: implemented full qc of transcript positions
+
 2021-08-05
   gff3 transcript loader: implemented
 

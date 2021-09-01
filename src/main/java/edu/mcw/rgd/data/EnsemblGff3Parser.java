@@ -156,13 +156,32 @@ public class EnsemblGff3Parser {
                 gene.setGeneSymbol(geneSymbol);
                 gene.setgene_description(desc);
             }
-            else if( dbName.equals("RefSeq mRNA") ) {
+            else if( dbName.equals("RefSeq mRNA") || dbName.equals("RefSeq mRNA predicted") || dbName.equals("RefSeq ncRNA predicted") ) {
                 Set<String> refseqAccIds = gene.getRefseqAccIds();
                 if( refseqAccIds==null ) {
                     refseqAccIds = new HashSet<>();
                     gene.setRefseqAccIds(refseqAccIds);
                 }
                 refseqAccIds.add(xrefId);
+            }
+            else if( dbName.equals("RFAM transcript name") ) {
+
+                String geneSymbol = xrefId;
+                // remove version from symbol
+                int dashPos = geneSymbol.indexOf("-");
+                if( dashPos>0 ) {
+                    geneSymbol = geneSymbol.substring(0, dashPos);
+                }
+
+                gene.setGeneSymbol(geneSymbol);
+                gene.setgene_description(desc);
+            }
+            else if( dbName.equals("RefSeq peptide predicted") ) {
+
+                // optional gene name
+                if( Utils.isStringEmpty(gene.getgene_description()) && !Utils.isStringEmpty(desc) ) {
+                    gene.setgene_description(desc);
+                }
             }
         }
         in.close();

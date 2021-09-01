@@ -65,6 +65,9 @@ public class EnsemblTranscriptLoader {
                             oldTranscript.isNonCoding() == transcript.isNonCodingInd()) {
 
                         transcriptMatch = true;
+
+                        qcTranscriptPosition(transcript, oldTranscript, ensemblMapKey, counters);
+
                         transcript.setRgdId(oldTranscript.getRgdId());
                         List<TranscriptFeature> tfsInRgd = ensemblDAO.getFeatures(oldTranscript.getRgdId(), ensemblMapKey);
                         List<TranscriptFeature> obsoleteExons = new ArrayList<>();
@@ -92,7 +95,6 @@ public class EnsemblTranscriptLoader {
                     }
                 }
 
-
                 if (transcriptMatch) {
                     insertExons(transcript.getRgdId(), exons, ensemblMapKey, speciesTypeKey, counters);
                     updateTranscriptType(transcript);
@@ -108,6 +110,55 @@ public class EnsemblTranscriptLoader {
 
         TranscriptVersionManager.getInstance().qcAndLoad(counters);
         log.info(counters.dumpAlphabetically());
+    }
+
+    void qcTranscriptPosition(EnsemblTranscript tr, Transcript trInRgd, int ensemblMapKey, CounterPool counters) throws Exception {
+
+        // see if transcript in rgd has positions on given assembly
+        MapData mdInRgd = null;
+        for( MapData md: trInRgd.getGenomicPositions() ) {
+            if( md.getMapKey()==ensemblMapKey ) {
+                mdInRgd = md;
+                break;
+            }
+        }
+
+        // add a new position if not exists
+        if( mdInRgd==null ) {
+            MapData md = new MapData();
+            md.setSrcPipeline("Ensembl");
+            md.setStartPos(tr.start);
+            md.setStopPos(tr.stop);
+            md.setChromosome(tr.chromosome);
+            md.setStrand(tr.strand);
+            md.setMapKey(ensemblMapKey);
+            md.setRgdId(trInRgd.getRgdId());
+            md.setNotes("created "+new Date());
+            ensemblDAO.insertMapData(md, "TRANSCRIPT ");
+
+            counters.increment("TRANSCRIPTS_POS_INSERTED");
+        } else {
+            // see if position matches
+            if( mdInRgd.getChromosome().equals(tr.chromosome) &&
+                mdInRgd.getStartPos()==tr.start &&
+                mdInRgd.getStopPos()==tr.stop &&
+                mdInRgd.getStrand().equals(tr.strand) ) {
+
+                counters.increment("TRANSCRIPT_POS_MATCHING");
+            } else {
+
+                MapData md = mdInRgd.clone();
+
+                md.setStartPos(tr.start);
+                md.setStopPos(tr.stop);
+                md.setChromosome(tr.chromosome);
+                md.setStrand(tr.strand);
+                md.setNotes(md.getNotes() + "; " + "updated " + new Date());
+                ensemblDAO.updateMapData(md, mdInRgd);
+
+                counters.increment("TRANSCRIPT_POS_UPDATED");
+            }
+        }
     }
 
     void qcUtrs(List<TranscriptFeature> utrs, List<TranscriptFeature> tfsInRgd, CounterPool counters, Transcript tr, int ensemblMapKey, int speciesTypeKey) throws Exception {
