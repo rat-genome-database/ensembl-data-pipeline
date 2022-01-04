@@ -5,8 +5,8 @@ import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
-import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +17,13 @@ import java.util.List;
  */
 public class EnsemblDAO extends AbstractDAO {
 
-    Logger logInsertedXdbs = Logger.getLogger("inserted_xdbs");
-    Logger logInsertedGenePos = Logger.getLogger("inserted_gene_pos");
-    Logger logDeletedGenePos = Logger.getLogger("deleted_gene_pos");
-    Logger logExonsInserted = Logger.getLogger("exons_inserted");
-    Logger logExonsRemoved = Logger.getLogger("exons_removed");
-    Logger logUtrsRemoved = Logger.getLogger("utrs_removed");
-    Logger logUpdatedPos = Logger.getLogger("updated_pos");
+    Logger logInsertedXdbs = LogManager.getLogger("inserted_xdbs");
+    Logger logInsertedGenePos = LogManager.getLogger("inserted_gene_pos");
+    Logger logDeletedGenePos = LogManager.getLogger("deleted_gene_pos");
+    Logger logExonsInserted = LogManager.getLogger("exons_inserted");
+    Logger logExonsRemoved = LogManager.getLogger("exons_removed");
+    Logger logUtrsRemoved = LogManager.getLogger("utrs_removed");
+    Logger logUpdatedPos = LogManager.getLogger("updated_pos");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();

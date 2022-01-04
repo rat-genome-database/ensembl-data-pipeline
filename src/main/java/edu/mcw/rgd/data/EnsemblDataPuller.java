@@ -4,7 +4,8 @@ import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.FileExternalSort;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -26,7 +27,7 @@ public class EnsemblDataPuller {
     List<String> biomartQueryAttrsRatGenes; // extra attributes to be loaded for rat genes
     List<String> biomartQueryAttrsMouseGenes;
     List<String> biomartQueryAttrsHumanGenes;
-    Logger statuslog = Logger.getLogger("status");
+    Logger statuslog = LogManager.getLogger("status");
     int speciesTypeKey;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 

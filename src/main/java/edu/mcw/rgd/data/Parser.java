@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
  */
 public class Parser {
 
-    Logger log = Logger.getLogger("status");
+    Logger log = LogManager.getLogger("status");
 
     public List<EnsemblGene> parseGene(String inputFile) throws Exception {
 

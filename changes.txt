@@ -1,3 +1,6 @@
+2022-01-04
+  updated log4j to avoid zero day exploit
+
 2021-08-31
   gff3 transcript loader: improved parsing nad loading code
   transcript loader: implemented full qc of transcript positions

@@ -2,7 +2,8 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.CounterPool;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
@@ -13,7 +14,7 @@ public class EnsemblTranscriptLoader {
 
     EnsemblDAO ensemblDAO = new EnsemblDAO();
 
-    Logger log = Logger.getLogger("status");
+    Logger log = LogManager.getLogger("status");
 
     List genesNotFound=new ArrayList();
 

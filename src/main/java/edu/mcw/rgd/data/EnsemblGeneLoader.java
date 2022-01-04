@@ -2,7 +2,8 @@ package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -12,8 +13,8 @@ import java.util.Map;
  */
 public class EnsemblGeneLoader {
     EnsemblDAO ensemblDAO = new EnsemblDAO();
-    Logger statuslog = Logger.getLogger("status");
-    Logger conflictLog = Logger.getLogger("conflicts");
+    Logger statuslog = LogManager.getLogger("status");
+    Logger conflictLog = LogManager.getLogger("conflicts");
 
     Map<String,String> matches;
     List mismatches;

@@ -1,7 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.MapData;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
