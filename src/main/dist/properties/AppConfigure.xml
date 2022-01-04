@@ -9,11 +9,11 @@
         <property name="transcriptLoader" ref="TranscriptLoader"/>
         <property name="ensemblAssemblyMap">
             <map>
-                <entry key="3" value="361"/><!-- rat-->
+                <entry key="3" value="373"/><!-- rat mRatBN7.2-->
                 <entry key="2" value="240"/><!-- mouse -->
                 <entry key="1" value="40"/><!-- human -->
                 <entry key="4" value="45"/><!-- chinchilla -->
-                <entry key="6" value="632"/><!-- dog -->
+                <entry key="6" value="638"/><!-- dog ROS_Cfam_1.0 -->
                 <entry key="9" value="912" /><!-- pig -->
                 <entry key="5" value="512"/><!-- bonobo -->
                 <entry key="13" value="1312" /><!-- vervet -->
@@ -21,11 +21,11 @@
         </property>
         <property name="ncbiAssemblyMap">
             <map>
-                <entry key="3" value="360"/><!-- rat-->
+                <entry key="3" value="372"/><!-- rat mRatBN7.2-->
                 <entry key="2" value="239"/><!-- mouse -->
                 <entry key="1" value="38"/><!-- human -->
                 <entry key="4" value="44"/><!-- chinchilla -->
-                <entry key="6" value="631"/><!-- dog -->
+                <entry key="6" value="634"/><!-- dog ROS_Cfam_1.0 -->
                 <entry key="9" value="911" /><!-- pig -->
                 <entry key="5" value="511"/><!-- bonobo -->
                 <entry key="13" value="1311" /><!-- vervet -->

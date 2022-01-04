@@ -159,7 +159,7 @@ public class EnsemblLoader {
      */
     static public void usage() {
         System.out.println("Command line parameters required:");
-        System.out.println(" -species 0|1|2|3|Rat|Mouse|Human|All");
+        System.out.println(" -species 0|1|2|3|...|Rat|Mouse|Human|...|All");
     }
 
     public void setVersion(String version) {
