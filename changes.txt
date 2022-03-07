@@ -1,3 +1,6 @@
+2022-03-07
+  updated dependencies
+
 2022-01-04
   updated log4j to avoid zero day exploit
   updated dog and rat: new assemblies ROS_Cfam_1.0 and mRatBN7.2
