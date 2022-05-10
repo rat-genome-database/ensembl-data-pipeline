@@ -3,7 +3,7 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <!-- <PatternLayout pattern="%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/> -->
-            <PatternLayout pattern="[%d{yyyy-MM-hh HH:mm:ss}] %msg%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %msg%n"/>
         </Console>
 
         <RollingFile name="status" append="true" fileName="logs/status.log" filePattern="logs/status.log.%d{yyyy-MM}">
@@ -77,7 +77,7 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
-        <RollingFile name="updated_pos" append="true" fileName="logs/updated_pos.log" filePattern="logs/updated_pos.log.%d{yyyy-MM}">
+        <RollingFile name="pos_updated" append="true" fileName="logs/pos_updated.log" filePattern="logs/pos_updated.log.%d{yyyy-MM}">
             <PatternLayout pattern="[%d] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
@@ -132,8 +132,8 @@
             <AppenderRef ref="deleted_gene_pos"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
-        <Logger name="updated_pos" level="debug" additivity="false">
-            <AppenderRef ref="updated_pos"/>
+        <Logger name="pos_updated" level="debug" additivity="false">
+            <AppenderRef ref="pos_updated"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

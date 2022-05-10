@@ -23,7 +23,7 @@ public class EnsemblDAO extends AbstractDAO {
     Logger logExonsInserted = LogManager.getLogger("exons_inserted");
     Logger logExonsRemoved = LogManager.getLogger("exons_removed");
     Logger logUtrsRemoved = LogManager.getLogger("utrs_removed");
-    Logger logUpdatedPos = LogManager.getLogger("updated_pos");
+    Logger logUpdatedPos = LogManager.getLogger("pos_updated");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -204,9 +204,9 @@ public class EnsemblDAO extends AbstractDAO {
         mapDAO.insertMapData(md);
     }
 
-    public void updateMapData(MapData md, MapData mdOld) throws Exception {
-        logUpdatedPos.info("OLD>"+mdOld.dump("|"));
-        logUpdatedPos.info("NEW>"+md.dump("|"));
+    public void updateMapData(MapData md, MapData mdOld, String prefix) throws Exception {
+        logUpdatedPos.info(prefix+" OLD>"+mdOld.dump("|"));
+        logUpdatedPos.info(prefix+" NEW>"+md.dump("|"));
         mapDAO.updateMapData(md);
     }
 

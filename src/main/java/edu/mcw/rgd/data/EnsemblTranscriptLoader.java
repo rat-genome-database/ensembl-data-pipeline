@@ -155,7 +155,7 @@ public class EnsemblTranscriptLoader {
                 md.setChromosome(tr.chromosome);
                 md.setStrand(tr.strand);
                 md.setNotes(md.getNotes() + "; " + "updated " + new Date());
-                ensemblDAO.updateMapData(md, mdInRgd);
+                ensemblDAO.updateMapData(md, mdInRgd, "TRANSCRIPT");
 
                 counters.increment("TRANSCRIPT_POS_UPDATED");
             }
