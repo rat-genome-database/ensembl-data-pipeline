@@ -17,13 +17,17 @@ public class EnsemblGene {
     private String strand;
     private String geneSymbol;
     private String gene_biotype;
-    private String gene_description;
+    private String geneName;
 
     // transcript RefSeq acc ids, used by EnsemblGff3Parser
     private Set<String> refseqAccIds;
 
-    public String getgene_description(){return gene_description;}
-    public void setgene_description(String gene_description){this.gene_description=gene_description;}
+    public String getGeneName() {
+        return geneName;
+    }
+    public void setGeneName( String geneName ) {
+        this.geneName = geneName;
+    }
 
     public String getGeneSymbol()
     {

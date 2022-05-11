@@ -40,7 +40,7 @@ public class Parser {
             String entrezgene_id = cols[5];
             String gene_name = cols[6];
             String gene_biotype = cols[7];
-            String gene_description = cols[8];
+            String geneName = cols[8];
             String rgdid = "";
             if (cols.length > 9) {
                     rgdid = cols[9];
@@ -65,15 +65,15 @@ public class Parser {
             gene.setGeneSymbol(gene_name);
             gene.setStartPos(startPos);
             gene.setStopPos(stopPos);
-            if (!gene_description.isEmpty()) {
+            if (!geneName.isEmpty()) {
                 String gene_desc = "";
-                if(gene_description.contains("[")) {
-                    gene_desc = gene_description.substring(0, gene_description.indexOf('[')).trim();
+                if(geneName.contains("[")) {
+                    gene_desc = geneName.substring(0, geneName.indexOf('[')).trim();
                 }
-                else gene_desc = gene_description;
-                gene.setgene_description(gene_desc);
+                else gene_desc = geneName;
+                gene.setGeneName(gene_desc);
             } else {
-                gene.setgene_description(gene_description);
+                gene.setGeneName(geneName);
             }
             if (strand.equals("1"))
                 gene.setStrand("+");

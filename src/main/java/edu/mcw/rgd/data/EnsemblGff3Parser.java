@@ -155,7 +155,7 @@ public class EnsemblGff3Parser {
                 }
 
                 gene.setGeneSymbol(geneSymbol);
-                gene.setgene_description(desc);
+                gene.setGeneName(desc);
             }
             else if( dbName.equals("RefSeq mRNA") || dbName.equals("RefSeq mRNA predicted") || dbName.equals("RefSeq ncRNA predicted") ) {
                 Set<String> refseqAccIds = gene.getRefseqAccIds();
@@ -175,13 +175,13 @@ public class EnsemblGff3Parser {
                 }
 
                 gene.setGeneSymbol(geneSymbol);
-                gene.setgene_description(desc);
+                gene.setGeneName(desc);
             }
             else if( dbName.equals("RefSeq peptide predicted") ) {
 
                 // optional gene name
-                if( Utils.isStringEmpty(gene.getgene_description()) && !Utils.isStringEmpty(desc) ) {
-                    gene.setgene_description(desc);
+                if( Utils.isStringEmpty(gene.getGeneName()) && !Utils.isStringEmpty(desc) ) {
+                    gene.setGeneName(desc);
                 }
             }
         }

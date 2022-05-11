@@ -1,3 +1,6 @@
+May 11, 2022
+  better code to match by NCBI gene ids
+
 May 10, 2022
   tuned up logging
 

@@ -57,6 +57,7 @@ public class EnsemblDAO extends AbstractDAO {
         geneDAO.updateGene(gene);
     }
 
+    /// TODO: gene module -- processing bottleneck
     public Gene getGene(int rgdId) throws Exception {
         return geneDAO.getGene(rgdId);
     }
