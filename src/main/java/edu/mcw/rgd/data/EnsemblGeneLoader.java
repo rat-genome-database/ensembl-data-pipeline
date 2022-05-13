@@ -113,7 +113,7 @@ public class EnsemblGeneLoader {
                         else {
                                 if(ensembleRgdIds != null) {
                                     mismatches.add(gene.getEnsemblGeneId());
-                                    conflictLog.info("Ensemble Rgd ID and RgdId in file mismatch: RGD:" + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  vs  RGD:"+accId);
+                                    conflictLog.info("NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
                                     if( !createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
                                         genesNoSymbolSkipped++;
@@ -141,7 +141,7 @@ public class EnsemblGeneLoader {
                                 continue;
                             else {
                                 mismatches.add(gene.getEnsemblGeneId());
-                                conflictLog.info("Ensemble Rgd ID and Ncbi RgdId in db mismatch: " + gene.getEnsemblGeneId());
+                                conflictLog.info("NCBI mismatch for " + gene.getEnsemblGeneId()+": NCBI RGD:"+ncbiRgdId+", acc="+accId+", ensembl rgd ids:"+Utils.concatenate(ensembleRgdIds,","));
                             }
                         } else if (accId.equals(ncbiRgdId)) {
                             updateData(gene, ncbiRgdId, ensemblMapKey);

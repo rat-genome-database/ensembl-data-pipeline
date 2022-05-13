@@ -1,3 +1,6 @@
+May 13, 2022
+  improved QC reporting
+
 May 11, 2022
   better code to match by NCBI gene ids
 
