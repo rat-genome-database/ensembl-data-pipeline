@@ -83,6 +83,12 @@
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
         </RollingFile>
+        <RollingFile name="genes_updated" append="true" fileName="logs/genes_updated.log" filePattern="logs/genes_updated.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
@@ -134,6 +140,10 @@
         </Logger>
         <Logger name="pos_updated" level="debug" additivity="false">
             <AppenderRef ref="pos_updated"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="genes_updated" level="debug" additivity="false">
+            <AppenderRef ref="genes_updated"/>
             <AppenderRef ref="Console" level="info"/>
         </Logger>
     </Loggers>

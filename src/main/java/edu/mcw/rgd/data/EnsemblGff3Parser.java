@@ -111,7 +111,7 @@ public class EnsemblGff3Parser {
             g.setStartPos(startPosStr);
             g.setStopPos(stopPosStr);
             g.setStrand(strand);
-            g.setgene_biotype(bioType);
+            g.setGeneBioType(bioType);
             g.setEnsemblGeneId(geneId);
             results.put(geneId, g);
         }

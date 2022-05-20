@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,12 +16,14 @@ public class EnsemblGeneLoader {
     EnsemblDAO ensemblDAO = new EnsemblDAO();
     Logger statuslog = LogManager.getLogger("status");
     Logger conflictLog = LogManager.getLogger("conflicts");
+    Logger genesUpdatedLog = LogManager.getLogger("genes_updated");
 
     Map<String,String> matches;
     List mismatches;
     List<EnsemblGene> newGenes;
     List nomenEvents;
     AssemblyPositions genePositions;
+    CounterPool counters = new CounterPool();
 
     public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
 
@@ -159,12 +162,23 @@ public class EnsemblGeneLoader {
             statuslog.info("Total new Genes: " + newGenes.size());
         }
         statuslog.info("Total genes in file: "+genes.size());
+
         if( nomenEvents.size()>0 ) {
-            statuslog.info("Total nomenEvents in file: " + nomenEvents.size());
+            statuslog.info("  Total nomenEvents in file: " + nomenEvents.size());
         }
-        if( skippedGenes>0 ) {
-            statuslog.info("Genes skipped, unexpected chromosome: " + skippedGenes);
+        int count = counters.get("ENSEMBL_GENE_SYMBOL_CHANGED");
+        if( count>0 ){
+            statuslog.info("  genes with Ensembl symbol change: " + count);
         }
+        count = counters.get("ENSEMBL_GENE_NAME_CHANGED");
+        if( count>0 ){
+            statuslog.info("  genes with Ensembl name change: " + count);
+        }
+        count = counters.get("ENSEMBL_GENE_TYPE_CHANGED");
+        if( count>0 ){
+            statuslog.info("  genes with Ensembl biotype change: " + count);
+        }
+
         if( genesNoSymbolSkipped>0 ) {
             statuslog.info("Genes skipped, no symbol, cannot match with NCBI gene: " + genesNoSymbolSkipped);
         }
@@ -218,7 +232,7 @@ public class EnsemblGeneLoader {
 
         geneInRgd.setEnsemblFullName(gene.getGeneName());
         geneInRgd.setEnsemblGeneSymbol(geneSymbolIncoming);
-        geneInRgd.setEnsemblGeneType(gene.getgene_biotype());
+        geneInRgd.setEnsemblGeneType(gene.getGeneBioType());
         ensemblDAO.updateGene(geneInRgd);
     }
 
@@ -286,17 +300,38 @@ public class EnsemblGeneLoader {
                 existing.setName(gene.getGeneName());
                 existing.setEnsemblGeneSymbol(geneSymbolIncoming);
                 existing.setEnsemblFullName(gene.getGeneName());
+                existing.setEnsemblGeneType(gene.getGeneBioType());
                 existing.setNomenSource("Ensembl");
                 ensemblDAO.updateGene(existing);
                 nomenEvents.add(rgdId);
             }
 
         } else {
-            if( !Utils.stringsAreEqualIgnoreCase(existing.getEnsemblGeneSymbol(), gene.getGeneSymbol())
-             || !Utils.stringsAreEqualIgnoreCase(existing.getEnsemblFullName(), gene.getGeneName()) ){
+            // non-Ensembl genes or Ensembl genes with HGNC authority (reviewed May 20, 2022)
+            boolean symbolChanged = !Utils.stringsAreEqualIgnoreCase(existing.getEnsemblGeneSymbol(), gene.getGeneSymbol());
+            boolean nameChanged = !Utils.stringsAreEqualIgnoreCase(existing.getEnsemblFullName(), gene.getGeneName());
+            boolean typeChanged = !Utils.stringsAreEqualIgnoreCase(existing.getEnsemblGeneType(), gene.getGeneBioType());
+
+            if( symbolChanged || nameChanged || typeChanged ) {
+
+                if( symbolChanged ) {
+                    counters.increment("ENSEMBL_GENE_SYMBOL_CHANGED");
+                }
+                if( nameChanged ) {
+                    counters.increment("ENSEMBL_GENE_NAME_CHANGED");
+                }
+                if( typeChanged ) {
+                    counters.increment("ENSEMBL_GENE_TYPE_CHANGED");
+                }
+
+                String msg = "RGD:" + existing.getRgdId() + "\n" +
+                        "OLD: SYMBOL [" + existing.getEnsemblGeneSymbol() + "] NAME [" + existing.getEnsemblFullName() + "] TYPE [" + existing.getEnsemblGeneType() + "]\n" +
+                        "NEW: SYMBOL [" + gene.getGeneSymbol() + "] NAME [" + gene.getGeneName() + "] TYPE [" + gene.getGeneBioType() + "]";
+                genesUpdatedLog.debug(msg);
 
                 existing.setEnsemblGeneSymbol(gene.getGeneSymbol());
                 existing.setEnsemblFullName(gene.getGeneName());
+                existing.setEnsemblGeneType(gene.getGeneBioType());
                 ensemblDAO.updateGene(existing);
             }
         }
@@ -319,7 +354,7 @@ public class EnsemblGeneLoader {
                 }
             }
 
-            String geneTypeLc = gene.getgene_biotype().toLowerCase();
+            String geneTypeLc = gene.getGeneBioType().toLowerCase();
             if (!ensemblDAO.existsGeneType(geneTypeLc)) {
                 ensemblDAO.createGeneType(geneTypeLc);
             }
@@ -338,7 +373,7 @@ public class EnsemblGeneLoader {
                 newGene.setNomenSource("Ensembl");
                 newGene.setEnsemblFullName(gene.getGeneName());
                 newGene.setEnsemblGeneSymbol(geneSymbol);
-                newGene.setEnsemblGeneType(gene.getgene_biotype());
+                newGene.setEnsemblGeneType(gene.getGeneBioType());
                 ensemblDAO.insertGene(newGene);
 
                 // always create PROVISIONAL nomenclature event for newly created rat gene

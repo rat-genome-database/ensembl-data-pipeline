@@ -16,7 +16,7 @@ public class EnsemblGene {
     private String startPos, stopPos;
     private String strand;
     private String geneSymbol;
-    private String gene_biotype;
+    private String geneBioType;
     private String geneName;
 
     // transcript RefSeq acc ids, used by EnsemblGff3Parser
@@ -38,13 +38,11 @@ public class EnsemblGene {
         this.geneSymbol=geneSymbol;
     }
 
-    public String getgene_biotype()
-    {
-        return gene_biotype;
+    public String getGeneBioType() {
+        return geneBioType;
     }
-    public void setgene_biotype(String gene_biotype)
-    {
-        this.gene_biotype=gene_biotype;
+    public void setGeneBioType(String geneBioType) {
+        this.geneBioType = geneBioType;
     }
 
     public String getrgdid() {

@@ -59,9 +59,9 @@ public class Parser {
             }
             gene.setChromosome(chromosome);
             if (gene_biotype.equals("protein_coding"))
-                gene.setgene_biotype("protein-coding");
+                gene.setGeneBioType("protein-coding");
             else
-                gene.setgene_biotype(gene_biotype);
+                gene.setGeneBioType(gene_biotype);
             gene.setGeneSymbol(gene_name);
             gene.setStartPos(startPos);
             gene.setStopPos(stopPos);
