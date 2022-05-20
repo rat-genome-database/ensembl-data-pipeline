@@ -17,6 +17,7 @@
                 <entry key="9" value="912" /><!-- pig -->
                 <entry key="5" value="512"/><!-- bonobo -->
                 <entry key="13" value="1312" /><!-- vervet -->
+                <entry key="14" value="1411" /><!-- HetGla_female_1.0 -->
             </map>
         </property>
         <property name="ncbiAssemblyMap">
@@ -29,6 +30,7 @@
                 <entry key="9" value="911" /><!-- pig -->
                 <entry key="5" value="511"/><!-- bonobo -->
                 <entry key="13" value="1311" /><!-- vervet -->
+                <entry key="14" value="1410" /><!-- HetGla_female_1.0 -->
             </map>
         </property>
     </bean>

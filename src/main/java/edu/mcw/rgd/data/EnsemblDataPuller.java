@@ -50,7 +50,7 @@ public class EnsemblDataPuller {
 
         // build biomart url
         // and download the file from biomart given the url
-        String speciesName = SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
+        String speciesName = SpeciesType.getShortName(speciesTypeKey);
         statuslog.info("Downloading the genes file for "+ speciesName);
 
         String finalOutputFile = "data/" + sdf.format(new Date()) +"_"+speciesName + "_genes.txt.sorted.gz";
@@ -119,8 +119,10 @@ public class EnsemblDataPuller {
 
                 String[] taxoNameWords = SpeciesType.getTaxonomicName(speciesTypeKey).split(" ");
                 String taxoName = taxoNameWords[0].substring(0, 1).toLowerCase() + taxoNameWords[1];
-                if(speciesTypeKey == SpeciesType.DOG)
+                if( speciesTypeKey == SpeciesType.DOG )
                     taxoName = "clfamiliaris";
+                else if( speciesTypeKey == SpeciesType.NAKED_MOLE_RAT )
+                    taxoName = "hgfemale";
                 line = line.replaceAll("\\#SPECIES\\#", taxoName);
             }
             buf.append(line);
@@ -172,13 +174,21 @@ public class EnsemblDataPuller {
 
     String getAssemblyNameFromEnsemblRest() throws Exception {
 
+        String taxonName = SpeciesType.getTaxonomicName(speciesTypeKey);
+        if( speciesTypeKey==SpeciesType.NAKED_MOLE_RAT ) {
+            // Ensembl for unknown reason does not use 'Heterocephalus_glaber' but something else :-(
+            // Thank you, Ensembl!
+            // The actual name you find by searching via assembly accession:
+            //   "https://rest.ensembl.org/info/genomes/assembly/GCA_000247695.1";
+            taxonName = "Heterocephalus_glaber_female";
+        }
         FileDownloader fd = new FileDownloader();
-        String url = getRestGenomeUrl() + SpeciesType.getTaxonomicName(speciesTypeKey).replace(" ", "_");
+        String url = getRestGenomeUrl() + taxonName.replace(" ", "_");
         fd.setExternalFile(url);
         fd.setLocalFile(null);
         String content = fd.download();
 
-        // sexample line that interests us: "assembly_name: Sscrofa11.1"
+        // example line that interests us: "assembly_name: Sscrofa11.1"
         String[] lines = content.split("[\\n\\r]");
         String pattern = "assembly_name:";
         for( String line: lines ) {
