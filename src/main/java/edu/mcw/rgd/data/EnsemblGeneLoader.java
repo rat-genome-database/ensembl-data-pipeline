@@ -23,7 +23,7 @@ public class EnsemblGeneLoader {
     List<EnsemblGene> newGenes;
     List nomenEvents;
     AssemblyPositions genePositions;
-    CounterPool counters = new CounterPool();
+    CounterPool counters;
 
     public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
 
@@ -32,6 +32,7 @@ public class EnsemblGeneLoader {
         newGenes = new ArrayList<>();
         nomenEvents = new ArrayList<>();
         genePositions = new AssemblyPositions();
+        counters = new CounterPool();
 
         genePositions.loadPositionsInRgd(ensemblMapKey, ensemblDAO);
 
