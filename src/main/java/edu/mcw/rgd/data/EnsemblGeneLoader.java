@@ -96,7 +96,7 @@ public class EnsemblGeneLoader {
                 if (accId == null) {
                     // Case 1: No rgdid and no ncbi id in the file.
                     if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
-                        conflictLog.info(speciesName+"  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
+                        conflictLog.info(speciesName+gene.getEnsemblGeneId()+" has RGD IDS: "+Utils.concatenate(ensembleRgdIds,","));
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
                             if (!createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey)) {
