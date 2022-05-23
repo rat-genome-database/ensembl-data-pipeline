@@ -27,6 +27,8 @@ public class EnsemblGeneLoader {
 
     public void run(Collection<EnsemblGene> genes, int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
 
+        String speciesName = SpeciesType.getShortName(speciesTypeKey).toUpperCase()+": ";
+
         matches=new HashMap<>();
         mismatches=new ArrayList();
         newGenes = new ArrayList<>();
@@ -56,7 +58,7 @@ public class EnsemblGeneLoader {
                 gene.setGeneName(gene.getGeneName().trim());
             }
 
-            String ncbiRgdId = qcNcbiId(gene.getEntrezgene_id());
+            String ncbiRgdId = qcNcbiId(gene.getEntrezgene_id(), speciesName);
 
             List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
 
@@ -72,7 +74,7 @@ public class EnsemblGeneLoader {
                         accId = rgdIds.get(0);
                     else {
                         if(accId != null)
-                            conflictLog.info("Check these ids: Multiple rgdids for MGI Id -" +incomingAcc);
+                            conflictLog.info(speciesName+"Check these ids: Multiple rgdids for MGI Id -" +incomingAcc);
                         accId = null;
                     }
                 }
@@ -82,7 +84,7 @@ public class EnsemblGeneLoader {
                         accId = rgdIds.get(0);
                     else {
                         if(accId != null)
-                            conflictLog.info("Check these ids: Multiple rgdids for HGNC Id -" +incomingAcc);
+                            conflictLog.info(speciesName+"Check these ids: Multiple rgdids for HGNC Id -" +incomingAcc);
                         accId = null;
                     }
                 }
@@ -94,7 +96,7 @@ public class EnsemblGeneLoader {
                 if (accId == null) {
                     // Case 1: No rgdid and no ncbi id in the file.
                     if (ensembleRgdIds != null && ensembleRgdIds.size() > 1)
-                        conflictLog.info("  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
+                        conflictLog.info(speciesName+"  check this out: multiple RgdIds for EnsembleGene Id: " + gene.getEnsemblGeneId());
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
                             if (!createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey)) {
@@ -117,7 +119,7 @@ public class EnsemblGeneLoader {
                         else {
                                 if(ensembleRgdIds != null) {
                                     mismatches.add(gene.getEnsemblGeneId());
-                                    conflictLog.info("NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
+                                    conflictLog.info(speciesName+"NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
                                     if( !createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
                                         genesNoSymbolSkipped++;
@@ -145,7 +147,7 @@ public class EnsemblGeneLoader {
                                 continue;
                             else {
                                 mismatches.add(gene.getEnsemblGeneId());
-                                conflictLog.info("NCBI mismatch for " + gene.getEnsemblGeneId()+": NCBI RGD:"+ncbiRgdId+", acc="+accId+", ensembl rgd ids:"+Utils.concatenate(ensembleRgdIds,","));
+                                conflictLog.info(speciesName+"NCBI mismatch for " + gene.getEnsemblGeneId()+": NCBI RGD:"+ncbiRgdId+", acc="+accId+", ensembl rgd ids:"+Utils.concatenate(ensembleRgdIds,","));
                             }
                         } else if (accId.equals(ncbiRgdId)) {
                             updateData(gene, ncbiRgdId, ensemblMapKey);
@@ -187,7 +189,7 @@ public class EnsemblGeneLoader {
         genePositions.qcAndLoad(statuslog, ensemblDAO);
     }
 
-    String qcNcbiId(String ncbiGeneId) throws Exception {
+    String qcNcbiId(String ncbiGeneId, String speciesName) throws Exception {
 
         String ncbiRgdId = null;
 
@@ -198,10 +200,10 @@ public class EnsemblGeneLoader {
                 ncbiRgdId = ncbiRgdIds.get(0);
             } else if( ncbiRgdIds.size()>1 ) {
                 //This indicates multiple rgdIds for a ncbi
-                conflictLog.info("MULTIs: NCBI Id:" + ncbiId+" resolves to RGD ids: "+Utils.concatenate(ncbiRgdIds,","));
+                conflictLog.info(speciesName+"MULTIs: NCBI Id:" + ncbiId+" resolves to RGD ids: "+Utils.concatenate(ncbiRgdIds,","));
             } else {
                 //Ncbi Id doesnt exist in rgd database
-                conflictLog.info("NCBI Id:" + ncbiId+" is inactive in RGD or is not present in RGD");
+                conflictLog.info(speciesName+"NCBI Id:" + ncbiId+" is inactive in RGD or is not present in RGD");
             }
         }
         return ncbiRgdId;
@@ -343,16 +345,8 @@ public class EnsemblGeneLoader {
         if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
 
             String geneSymbol = gene.getGeneSymbol();
-            if( false ) {
-                // gene symbol must be non-null
-                if (Utils.isStringEmpty(gene.getGeneSymbol())) {
-                    conflictLog.info("gene " + gene.getEnsemblGeneId() + " does not have a symbol! gene skipped -- not inserted");
-                    return false;
-                }
-            } else {
-                if( Utils.isStringEmpty(geneSymbol) ) {
-                    geneSymbol = gene.getEnsemblGeneId();
-                }
+            if( Utils.isStringEmpty(geneSymbol) ) {
+                geneSymbol = gene.getEnsemblGeneId();
             }
 
             String geneTypeLc = gene.getGeneBioType().toLowerCase();

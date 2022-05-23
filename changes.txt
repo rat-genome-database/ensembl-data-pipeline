@@ -1,3 +1,6 @@
+May 23, 2022
+  improved logging of conflicts
+
 May 20, 2022
   implemented updates of Ensembl gene type
   added loading for naked mole-rat assembly HetGla_female_1.0
