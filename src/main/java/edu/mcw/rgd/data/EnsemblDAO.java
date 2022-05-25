@@ -5,6 +5,7 @@ import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -177,7 +178,17 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public int insertAlias(Alias alias) throws Exception {
-       return aliasDAO.insertAlias(alias);
+
+        // ensure alias value does not start with 'LOW QUALITY PROTEIN:' prefix
+        String prefix = "LOW QUALITY PROTEIN:";
+        if( alias.getValue().startsWith(prefix) ) {
+            String newValue = alias.getValue().substring(prefix.length()).trim();
+            if( Utils.isStringEmpty(newValue) ) {
+                return 0;
+            }
+            alias.setValue(newValue);
+        }
+        return aliasDAO.insertAlias(alias);
     }
 
     public String matchChromosome(String chr, List<Chromosome> chromosomes) {

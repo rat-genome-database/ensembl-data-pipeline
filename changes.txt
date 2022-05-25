@@ -1,3 +1,6 @@
+May 25, 2022
+  aliases: prefix 'LOW QUALITY PROTEIN:' is removed if present
+
 May 23, 2022
   improved logging of conflicts
 
