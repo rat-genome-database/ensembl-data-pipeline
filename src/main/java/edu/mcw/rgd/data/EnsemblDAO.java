@@ -25,6 +25,7 @@ public class EnsemblDAO extends AbstractDAO {
     Logger logExonsRemoved = LogManager.getLogger("exons_removed");
     Logger logUtrsRemoved = LogManager.getLogger("utrs_removed");
     Logger logUpdatedPos = LogManager.getLogger("pos_updated");
+    Logger logGenesInserted = LogManager.getLogger("genes_inserted");
 
     AliasDAO aliasDAO = new AliasDAO();
     GeneDAO geneDAO = new GeneDAO();
@@ -51,6 +52,7 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public void insertGene(Gene gene) throws Exception {
+        logGenesInserted.debug(gene.dump("|"));
         geneDAO.insertGene(gene);
     }
 

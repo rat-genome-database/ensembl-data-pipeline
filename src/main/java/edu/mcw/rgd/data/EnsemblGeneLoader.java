@@ -41,13 +41,13 @@ public class EnsemblGeneLoader {
         // we have chromosome data only for NCBI assemblies
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
 
-        int skippedGenes = 0;
-        int genesNoSymbolSkipped = 0;
+        int genesSkipped = 0;
+        int genesInserted = 0;
 
         for (EnsemblGene gene : genes) {
             String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
             if (chr == null) {
-                skippedGenes++;
+                genesSkipped++;
                 statuslog.debug("gene_skipped: unexpected chromosome " + gene.getChromosome());
                 continue;
             }
@@ -99,8 +99,8 @@ public class EnsemblGeneLoader {
                         conflictLog.info(speciesName+gene.getEnsemblGeneId()+" has RGD IDS: "+Utils.concatenate(ensembleRgdIds,","));
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
-                            if (!createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey)) {
-                                genesNoSymbolSkipped++;
+                            if( createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey) ) {
+                                genesInserted++;
                             }
                         } else {
                             updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
@@ -121,8 +121,8 @@ public class EnsemblGeneLoader {
                                     mismatches.add(gene.getEnsemblGeneId());
                                     conflictLog.info(speciesName+"NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
-                                    if( !createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
-                                        genesNoSymbolSkipped++;
+                                    if( createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
+                                        genesInserted++;
                                     }
                                 }
                             }
@@ -138,8 +138,8 @@ public class EnsemblGeneLoader {
                 } else {
                     // Check if ncbi rgdId and rgdId from file matches
                     if (ensembleRgdIds == null && accId == null) {
-                        if( !createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey) ) {
-                            genesNoSymbolSkipped++;
+                        if( createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey) ) {
+                            genesInserted++;
                         }
                     } else {
                         if (accId == null) {
@@ -182,8 +182,11 @@ public class EnsemblGeneLoader {
             statuslog.info("  genes with Ensembl biotype change: " + count);
         }
 
-        if( genesNoSymbolSkipped>0 ) {
-            statuslog.info("Genes skipped, no symbol, cannot match with NCBI gene: " + genesNoSymbolSkipped);
+        if( genesInserted>0 ) {
+            statuslog.info("Genes inserted: " + genesInserted);
+        }
+        if( genesSkipped>0 ) {
+            statuslog.info("Genes skipped: " + genesSkipped);
         }
 
         genePositions.qcAndLoad(statuslog, ensemblDAO);
@@ -340,73 +343,75 @@ public class EnsemblGeneLoader {
         }
     }
 
+    /// return true if new gene inserted
     public boolean createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
 
-        if (ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) == null) {
-
-            String geneSymbol = gene.getGeneSymbol();
-            if( Utils.isStringEmpty(geneSymbol) ) {
-                geneSymbol = gene.getEnsemblGeneId();
-            }
-
-            String geneTypeLc = gene.getGeneBioType().toLowerCase();
-            if (!ensemblDAO.existsGeneType(geneTypeLc)) {
-                ensemblDAO.createGeneType(geneTypeLc);
-            }
-
-            if(rgdId == null) {
-
-                newGenes.add(gene);
-                RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, speciesTypeKey);
-                rgdId = String.valueOf(newRgdId.getRgdId());
-                Gene newGene = new Gene();
-                newGene.setSymbol(geneSymbol);
-                newGene.setRgdId(Integer.parseInt(rgdId));
-                newGene.setType(geneTypeLc);
-                newGene.setName(gene.getGeneName());
-                newGene.setGeneSource("Ensembl");
-                newGene.setNomenSource("Ensembl");
-                newGene.setEnsemblFullName(gene.getGeneName());
-                newGene.setEnsemblGeneSymbol(geneSymbol);
-                newGene.setEnsemblGeneType(gene.getGeneBioType());
-                ensemblDAO.insertGene(newGene);
-
-                // always create PROVISIONAL nomenclature event for newly created rat gene
-                if( speciesTypeKey==SpeciesType.RAT ) {
-                    NomenclatureEvent event = new NomenclatureEvent();
-                    event.setRgdId(newRgdId.getRgdId());
-                    event.setSymbol(newGene.getSymbol());
-                    event.setName(newGene.getName());
-                    event.setRefKey("20683");
-                    event.setNomenStatusType("PROVISIONAL");
-                    event.setDesc("Symbol and Name status set to provisional");
-                    event.setEventDate(new Date());
-                    event.setOriginalRGDId(newRgdId.getRgdId());
-                    ensemblDAO.insertNomenclatureEvent(event);
-                }
-            } else {
-                aliasesinsert(Integer.parseInt(rgdId), gene);
-            }
-
-
-            MapData mapData = new MapData();
-            mapData.setSrcPipeline("Ensembl");
-            mapData.setChromosome(gene.getChromosome());
-            mapData.setMapKey(mapKey);
-            mapData.setRgdId(Integer.parseInt(rgdId));
-            mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
-            mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
-            mapData.setStrand(gene.getStrand());
-            ensemblDAO.insertMapData(mapData, "GENE ");
-
-
-            XdbId xdbId = new XdbId();
-            xdbId.setRgdId(Integer.parseInt(rgdId));
-            xdbId.setSrcPipeline("Ensembl");
-            xdbId.setAccId(gene.getEnsemblGeneId());
-            xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
-            ensemblDAO.insertXdbIds(xdbId);
+        if( ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) != null) {
+            return false;
         }
+
+        String geneSymbol = gene.getGeneSymbol();
+        if( Utils.isStringEmpty(geneSymbol) ) {
+            geneSymbol = gene.getEnsemblGeneId();
+        }
+
+        String geneTypeLc = gene.getGeneBioType().toLowerCase();
+        if (!ensemblDAO.existsGeneType(geneTypeLc)) {
+            ensemblDAO.createGeneType(geneTypeLc);
+        }
+
+        if(rgdId == null) {
+
+            newGenes.add(gene);
+            RgdId newRgdId = ensemblDAO.createRgdId(RgdId.OBJECT_KEY_GENES, speciesTypeKey);
+            rgdId = String.valueOf(newRgdId.getRgdId());
+            Gene newGene = new Gene();
+            newGene.setSymbol(geneSymbol);
+            newGene.setRgdId(Integer.parseInt(rgdId));
+            newGene.setType(geneTypeLc);
+            newGene.setName(gene.getGeneName());
+            newGene.setGeneSource("Ensembl");
+            newGene.setNomenSource("Ensembl");
+            newGene.setEnsemblFullName(gene.getGeneName());
+            newGene.setEnsemblGeneSymbol(geneSymbol);
+            newGene.setEnsemblGeneType(gene.getGeneBioType());
+            ensemblDAO.insertGene(newGene);
+
+            // always create PROVISIONAL nomenclature event for newly created rat gene
+            if( speciesTypeKey==SpeciesType.RAT ) {
+                NomenclatureEvent event = new NomenclatureEvent();
+                event.setRgdId(newRgdId.getRgdId());
+                event.setSymbol(newGene.getSymbol());
+                event.setName(newGene.getName());
+                event.setRefKey("20683");
+                event.setNomenStatusType("PROVISIONAL");
+                event.setDesc("Symbol and Name status set to provisional");
+                event.setEventDate(new Date());
+                event.setOriginalRGDId(newRgdId.getRgdId());
+                ensemblDAO.insertNomenclatureEvent(event);
+            }
+        } else {
+            aliasesinsert(Integer.parseInt(rgdId), gene);
+        }
+
+
+        MapData mapData = new MapData();
+        mapData.setSrcPipeline("Ensembl");
+        mapData.setChromosome(gene.getChromosome());
+        mapData.setMapKey(mapKey);
+        mapData.setRgdId(Integer.parseInt(rgdId));
+        mapData.setStartPos(Integer.parseInt(gene.getStartPos()));
+        mapData.setStopPos(Integer.parseInt(gene.getStopPos()));
+        mapData.setStrand(gene.getStrand());
+        ensemblDAO.insertMapData(mapData, "GENE ");
+
+
+        XdbId xdbId = new XdbId();
+        xdbId.setRgdId(Integer.parseInt(rgdId));
+        xdbId.setSrcPipeline("Ensembl");
+        xdbId.setAccId(gene.getEnsemblGeneId());
+        xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
+        ensemblDAO.insertXdbIds(xdbId);
         return true;
     }
 }
