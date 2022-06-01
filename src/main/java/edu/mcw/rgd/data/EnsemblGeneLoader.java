@@ -42,7 +42,6 @@ public class EnsemblGeneLoader {
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
 
         int genesSkipped = 0;
-        int genesInserted = 0;
 
         for (EnsemblGene gene : genes) {
             String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
@@ -99,9 +98,7 @@ public class EnsemblGeneLoader {
                         conflictLog.info(speciesName+gene.getEnsemblGeneId()+" has RGD IDS: "+Utils.concatenate(ensembleRgdIds,","));
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
-                            if( createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey) ) {
-                                genesInserted++;
-                            }
+                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
                         } else {
                             updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
                         }
@@ -121,9 +118,7 @@ public class EnsemblGeneLoader {
                                     mismatches.add(gene.getEnsemblGeneId());
                                     conflictLog.info(speciesName+"NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
-                                    if( createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey) ) {
-                                        genesInserted++;
-                                    }
+                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey);
                                 }
                             }
                         }
@@ -138,9 +133,7 @@ public class EnsemblGeneLoader {
                 } else {
                     // Check if ncbi rgdId and rgdId from file matches
                     if (ensembleRgdIds == null && accId == null) {
-                        if( createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey) ) {
-                            genesInserted++;
-                        }
+                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
                     } else {
                         if (accId == null) {
                             if (matches.containsKey(gene.getEnsemblGeneId()))
@@ -169,22 +162,8 @@ public class EnsemblGeneLoader {
         if( nomenEvents.size()>0 ) {
             statuslog.info("  Total nomenEvents in file: " + nomenEvents.size());
         }
-        int count = counters.get("ENSEMBL_GENE_SYMBOL_CHANGED");
-        if( count>0 ){
-            statuslog.info("  genes with Ensembl symbol change: " + count);
-        }
-        count = counters.get("ENSEMBL_GENE_NAME_CHANGED");
-        if( count>0 ){
-            statuslog.info("  genes with Ensembl name change: " + count);
-        }
-        count = counters.get("ENSEMBL_GENE_TYPE_CHANGED");
-        if( count>0 ){
-            statuslog.info("  genes with Ensembl biotype change: " + count);
-        }
+        statuslog.info(counters.dumpAlphabetically());
 
-        if( genesInserted>0 ) {
-            statuslog.info("Genes inserted: " + genesInserted);
-        }
         if( genesSkipped>0 ) {
             statuslog.info("Genes skipped: " + genesSkipped);
         }
@@ -376,6 +355,7 @@ public class EnsemblGeneLoader {
             newGene.setEnsemblGeneSymbol(geneSymbol);
             newGene.setEnsemblGeneType(gene.getGeneBioType());
             ensemblDAO.insertGene(newGene);
+            counters.increment("GENES_INSERTED");
 
             // always create PROVISIONAL nomenclature event for newly created rat gene
             if( speciesTypeKey==SpeciesType.RAT ) {
