@@ -98,7 +98,7 @@ public class EnsemblGeneLoader {
                         conflictLog.info(speciesName+gene.getEnsemblGeneId()+" has RGD IDS: "+Utils.concatenate(ensembleRgdIds,","));
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
-                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey);
+                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey, ncbiAssemblyMapKey);
                         } else {
                             updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
                         }
@@ -118,7 +118,7 @@ public class EnsemblGeneLoader {
                                     mismatches.add(gene.getEnsemblGeneId());
                                     conflictLog.info(speciesName+"NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
-                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey);
+                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey, ncbiAssemblyMapKey);
                                 }
                             }
                         }
@@ -133,7 +133,7 @@ public class EnsemblGeneLoader {
                 } else {
                     // Check if ncbi rgdId and rgdId from file matches
                     if (ensembleRgdIds == null && accId == null) {
-                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey);
+                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey, ncbiAssemblyMapKey);
                     } else {
                         if (accId == null) {
                             if (matches.containsKey(gene.getEnsemblGeneId()))
@@ -323,9 +323,18 @@ public class EnsemblGeneLoader {
     }
 
     /// return true if new gene inserted
-    public boolean createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey) throws Exception {
+    public boolean createNewEnsemblGene(EnsemblGene gene, int mapKey, String rgdId, int speciesTypeKey, int ncbiMapKey) throws Exception {
 
         if( ensemblDAO.checkrecord_rgdid(gene.getStartPos(), gene.getStopPos(), gene.getStrand(), gene.getChromosome(),mapKey) != null) {
+            return false;
+        }
+
+        // check if there is one  NCBI gene in this region
+        int ncbiGeneRgdId = findNcbiGeneInRegion(ncbiMapKey, gene);
+        if( ncbiGeneRgdId!=0 ) {
+
+            String rgdIdStr = Integer.toString(ncbiGeneRgdId);
+            updateData(gene, rgdIdStr, mapKey);
             return false;
         }
 
@@ -393,5 +402,34 @@ public class EnsemblGeneLoader {
         xdbId.setXdbKey(XdbId.XDB_KEY_ENSEMBL_GENES);
         ensemblDAO.insertXdbIds(xdbId);
         return true;
+    }
+
+    int findNcbiGeneInRegion(int mapKey, EnsemblGene gene) throws Exception {
+
+        // check if there is exactly one NCBI gene in this region
+        int start = Integer.parseInt(gene.getStartPos());
+        int end = Integer.parseInt(gene.getStopPos());
+        int genesInRegion = 0;
+        int ncbiGeneRgdId = 0;
+
+        List<MapData> ncbiGenesInRegion = ensemblDAO.getGenesInRegion(mapKey, gene.getChromosome(), start, end);
+        for( MapData md: ncbiGenesInRegion ) {
+            if( md.getStrand().equals(gene.getStrand()) ) {
+
+                // incoming ensembl gene and ncbi gene are in the same region, strand matches
+                // now check if the gene length are similar: matching ncbi gene cannot be 2x longer or 50% shorter than incoming ensembl gene
+                // (to exclude case when incomning snorna gene from Ensembl (very short) falls within a long protein coding ncbi gene etc)
+                float lenRatio = ((float)(1+end-start)) / ((float)(1+md.getStopPos()-md.getStartPos()));
+                if( lenRatio<2.0f && lenRatio>0.5f ) {
+                    genesInRegion++;
+                    ncbiGeneRgdId = md.getRgdId();
+                }
+            }
+        }
+
+        if( genesInRegion==1 ) {
+            return ncbiGeneRgdId;
+        }
+        return 0;
     }
 }

@@ -1,3 +1,7 @@
+Oct 07, 2022
+  loader: added species SpeTri2.0 (squirrel) to the list of supported species
+  loader: added matching of incoming Ensembl genes to existing NCBI genes by position
+
 Jun 01, 2022
   genes: added logging and summary reporting of inserted genes
 

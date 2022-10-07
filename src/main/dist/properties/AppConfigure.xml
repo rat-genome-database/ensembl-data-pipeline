@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Data Pipeline  -- build Jun 01, 2022"/>
+        <property name="version" value="Ensembl Data Pipeline  -- build Oct 07, 2022"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -18,6 +18,7 @@
                 <entry key="5" value="512"/><!-- bonobo -->
                 <entry key="13" value="1312" /><!-- vervet -->
                 <entry key="14" value="1411" /><!-- HetGla_female_1.0 -->
+                <entry key="7" value="721"/><!-- squirrel SpeTri2.0-->
             </map>
         </property>
         <property name="ncbiAssemblyMap">
@@ -31,6 +32,7 @@
                 <entry key="5" value="511"/><!-- bonobo -->
                 <entry key="13" value="1311" /><!-- vervet -->
                 <entry key="14" value="1410" /><!-- HetGla_female_1.0 -->
+                <entry key="7" value="720" /><!-- squirrel SpeTri2.0 -->
             </map>
         </property>
     </bean>

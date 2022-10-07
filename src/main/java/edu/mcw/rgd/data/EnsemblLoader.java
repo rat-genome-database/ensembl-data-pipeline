@@ -112,6 +112,7 @@ public class EnsemblLoader {
                 }
                 log.info("Total genes parsed from file: " + genes.size());
 
+                Collections.shuffle(genes);
                 geneLoader.run(genes, speciesTypeKey, ensemblMapKey, ncbiAssemblyMapKey);
             }
 

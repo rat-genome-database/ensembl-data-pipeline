@@ -218,6 +218,9 @@ public class EnsemblDAO extends AbstractDAO {
         mapDAO.insertMapData(md);
     }
 
+    public List<MapData> getGenesInRegion(int mapKey, String chr, int startPos, int stopPos) throws Exception {
+        return mapDAO.getMapDataWithinRange(startPos, stopPos, chr, mapKey, 0);
+    }
     public void updateMapData(MapData md, MapData mdOld, String prefix) throws Exception {
         logUpdatedPos.info(prefix+" OLD>"+mdOld.dump("|"));
         logUpdatedPos.info(prefix+" NEW>"+md.dump("|"));
