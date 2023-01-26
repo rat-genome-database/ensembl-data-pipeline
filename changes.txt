@@ -1,3 +1,6 @@
+Jan 26, 2023
+  updated build.gradle to be gradle 6.x + compatible
+
 Jan 10, 2023
   removed Harika from email recipients
 
