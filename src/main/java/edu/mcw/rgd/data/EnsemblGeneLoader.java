@@ -41,12 +41,10 @@ public class EnsemblGeneLoader {
         // we have chromosome data only for NCBI assemblies
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
 
-        int genesSkipped = 0;
-
         for (EnsemblGene gene : genes) {
             String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
             if (chr == null) {
-                genesSkipped++;
+                counters.increment("GENES_SKIPPED_UNEXPECTED_CHROMOSOME");
                 statuslog.debug("gene_skipped: unexpected chromosome " + gene.getChromosome());
                 continue;
             }
@@ -163,10 +161,6 @@ public class EnsemblGeneLoader {
             statuslog.info("  Total nomenEvents in file: " + nomenEvents.size());
         }
         statuslog.info(counters.dumpAlphabetically());
-
-        if( genesSkipped>0 ) {
-            statuslog.info("Genes skipped: " + genesSkipped);
-        }
 
         genePositions.qcAndLoad(statuslog, ensemblDAO);
     }
