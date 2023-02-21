@@ -76,7 +76,7 @@ public class EnsemblDataPuller {
 
         // build biomart url
         // and download the file from biomart given the url
-        String speciesName = SpeciesType.getCommonName(speciesTypeKey).toLowerCase();
+        String speciesName = SpeciesType.getShortName(speciesTypeKey).toLowerCase();
         statuslog.info("Downloading the transcripts file for "+ speciesName);
 
         String finalOutputFile = "data/" + sdf.format(new Date()) +"_"+speciesName + "_transcripts.txt.sorted.gz";

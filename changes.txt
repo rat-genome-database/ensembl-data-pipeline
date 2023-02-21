@@ -1,3 +1,6 @@
+Feb 21, 2023
+  fixed names of downloaded transcript files (no more spaces in file name)
+
 Feb 20, 2023
   better logging
 
