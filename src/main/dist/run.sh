@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 . /etc/profile
-APPNAME=EnsemblDataPipeline
+APPNAME="ensembl-data-pipeline"
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 

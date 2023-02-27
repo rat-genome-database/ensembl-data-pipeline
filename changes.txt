@@ -1,3 +1,6 @@
+Feb 27, 2023
+  renamed distro to 'ensembl-data-pipeline'
+
 Feb 21, 2023
   fixed names of downloaded transcript files (no more spaces in file name)
 
