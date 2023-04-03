@@ -4,7 +4,7 @@ APPNAME="ensembl-data-pipeline"
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 
-EMAILLIST=hsnalabolu@mcw.edu,mtutaj@mcw.edu
+EMAILLIST=mtutaj@mcw.edu
 if [ "$SERVER" == "REED" ]; then
   EMAILLIST=mtutaj@mcw.edu,jrsmith@mcw.edu,jdepons@mcw.edu
 fi
