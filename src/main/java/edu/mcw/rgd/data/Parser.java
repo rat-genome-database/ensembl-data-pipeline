@@ -37,7 +37,7 @@ public class Parser {
             String startPos = cols[2];
             String stopPos = cols[3];
             String strand = cols[4];
-            String entrezgene_id = cols[5];
+            String entrezGeneId = cols[5];
             String gene_name = cols[6];
             String gene_biotype = cols[7];
             String geneName = cols[8];
@@ -52,11 +52,7 @@ public class Parser {
             } else {
                 gene.setrgdid(rgdid);
             }
-            if (entrezgene_id.isEmpty()) {
-                gene.setEntrezgene_id("NIL");
-            } else {
-                gene.setEntrezgene_id(entrezgene_id);
-            }
+            gene.setEntrezGeneId(entrezGeneId);
             gene.setChromosome(chromosome);
             if (gene_biotype.equals("protein_coding"))
                 gene.setGeneBioType("protein-coding");

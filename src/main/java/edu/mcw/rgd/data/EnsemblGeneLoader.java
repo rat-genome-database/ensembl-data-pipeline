@@ -55,7 +55,7 @@ public class EnsemblGeneLoader {
                 gene.setGeneName(gene.getGeneName().trim());
             }
 
-            String ncbiRgdId = qcNcbiId(gene.getEntrezgene_id(), speciesName);
+            String ncbiRgdId = qcNcbiId(gene.getEntrezGeneId(), speciesName);
 
             List<String> ensembleRgdIds = ensemblDAO.getRgd_id(gene.getEnsemblGeneId(), XdbId.XDB_KEY_ENSEMBL_GENES);
 
@@ -169,8 +169,8 @@ public class EnsemblGeneLoader {
 
         String ncbiRgdId = null;
 
-        String ncbiId = Utils.NVL(ncbiGeneId, "NIL");
-        if( !ncbiId.equals("NIL") ) {
+        String ncbiId = Utils.NVL(ncbiGeneId, "");
+        if( !ncbiId.equals("") ) {
             List<String> ncbiRgdIds = ensemblDAO.getNcbiRgdId(ncbiId);
             if( ncbiRgdIds.size() == 1 ) {
                 ncbiRgdId = ncbiRgdIds.get(0);

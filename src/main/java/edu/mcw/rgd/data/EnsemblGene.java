@@ -8,7 +8,7 @@ import java.util.Set;
 public class EnsemblGene {
 
     private String rgdid;
-    private String entrezgene_id;
+    private String entrezGeneId;
     // incoming data from Ensembl
     private String ensemblGeneId;
     // genomic position
@@ -52,13 +52,13 @@ public class EnsemblGene {
         this.rgdid = rgdid;
     }
 
-    public String getEntrezgene_id()
+    public String getEntrezGeneId()
     {
-        return entrezgene_id;
+        return entrezGeneId;
     }
-    public void setEntrezgene_id(String entrezgene_id)
+    public void setEntrezGeneId(String entrezGeneId)
     {
-        this.entrezgene_id=entrezgene_id;
+        this.entrezGeneId=entrezGeneId;
     }
 
     public String getChromosome() {
