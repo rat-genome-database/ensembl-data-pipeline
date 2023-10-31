@@ -1,3 +1,10 @@
+Oct 31, 2023
+  gene loader: nomenclature events are no longer generated for genes having NOMEN_SOURCE='MGI'
+    Note: The problem was that mgi-nomenclature-pipeline was renaming Ensembl genes, setting NOMEN_SOURCE='MGI',
+          and then ensembl-gene-pipeline was renaming them to Ensembl nomenclature, setting NOMEN_SOURCE='Ensembl';
+          that resulted in endless circle of gene renaming for some mouse genes.
+          Since MGI is the primary nomenclature source, it must trump any other gene name sources.
+
 May 09, 2023
   gene loader: code cleanup
 
