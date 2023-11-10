@@ -155,8 +155,12 @@ public class EnsemblLoader {
 
             // try to use alternate map names, if available
             String altAssemblyName = getAssemblyMapNames().get(ensemblMapKey);
-            if( !expectedAssemblyNameInRgd.equalsIgnoreCase(altAssemblyName) ) {
-                throw new Exception("Assembly map mismatch: expected ["+altAssemblyName+"] found ["+expectedAssemblyNameInRgd+"]");
+            if( altAssemblyName!=null ) {
+                if (expectedAssemblyNameInRgd.equalsIgnoreCase(altAssemblyName)) {
+                    return; // validation succeeded on alt assembly name
+                } else {
+                    throw new Exception("Assembly map mismatch: expected [" + altAssemblyName + "] found [" + expectedAssemblyNameInRgd + "]");
+                }
             }
 
             throw new Exception("Assembly map mismatch: expected ["+ensemblMap.getName()+"] found ["+expectedAssemblyNameInRgd+"]");
