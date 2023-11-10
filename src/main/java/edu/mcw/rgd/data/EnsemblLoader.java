@@ -24,6 +24,7 @@ public class EnsemblLoader {
     EnsemblTranscriptLoader transcriptLoader;
     private Map<Integer, Integer> ensemblAssemblyMap;
     private Map<Integer, Integer> ncbiAssemblyMap;
+    private Map<Integer, String> assemblyMapNames;
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -151,7 +152,14 @@ public class EnsemblLoader {
         edu.mcw.rgd.datamodel.Map ensemblMap = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
 
         if( !expectedAssemblyNameInRgd.equalsIgnoreCase(ensemblMap.getName()) ) {
-            throw new Exception("Assembly map mismatch: expected ["+ensemblMap.getName()+"] found ["+assemblyName+"]");
+
+            // try to use alternate map names, if available
+            String altAssemblyName = getAssemblyMapNames().get(ensemblMapKey);
+            if( !expectedAssemblyNameInRgd.equalsIgnoreCase(altAssemblyName) ) {
+                throw new Exception("Assembly map mismatch: expected ["+altAssemblyName+"] found ["+expectedAssemblyNameInRgd+"]");
+            }
+
+            throw new Exception("Assembly map mismatch: expected ["+ensemblMap.getName()+"] found ["+expectedAssemblyNameInRgd+"]");
         }
     }
 
@@ -217,6 +225,14 @@ public class EnsemblLoader {
 
     public void setNcbiAssemblyMap(Map<Integer, Integer> ncbiAssemblyMap) {
         this.ncbiAssemblyMap = ncbiAssemblyMap;
+    }
+
+    public Map<Integer, String> getAssemblyMapNames() {
+        return assemblyMapNames;
+    }
+
+    public void setAssemblyMapNames(Map<Integer, String> assemblyMapNames) {
+        this.assemblyMapNames = assemblyMapNames;
     }
 
     public EnsemblGff3Parser getDataGff3Parser() {

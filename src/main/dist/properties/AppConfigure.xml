@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Data Pipeline  -- build Sep 31, 2023"/>
+        <property name="version" value="Ensembl Data Pipeline  -- build Nov 10, 2023"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -33,6 +33,11 @@
                 <entry key="13" value="1311" /><!-- vervet -->
                 <entry key="14" value="1410" /><!-- HetGla_female_1.0 -->
                 <entry key="7" value="720" /><!-- squirrel SpeTri2.0 -->
+            </map>
+        </property>
+        <property name="assemblyMapNames" ><!-- assembly map names, as found at Ensembl or  NCBI -->
+            <map>
+                <entry key="1411" value="Naked_mole-rat_maternal Ensembl" /><!-- 'HetGla_female_1.0 Ensembl' -->
             </map>
         </property>
     </bean>
