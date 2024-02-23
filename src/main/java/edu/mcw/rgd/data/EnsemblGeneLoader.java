@@ -244,8 +244,7 @@ public class EnsemblGeneLoader {
         Gene geneInRgd = ensemblDAO.getGene(rgdId);
 
         if( geneInRgd.getGeneSource().equals("Ensembl")
-                && (geneInRgd.getNomenSource() == null
-                   || !(geneInRgd.getNomenSource().equals("HGNC") || geneInRgd.getNomenSource().equals("MGI"))) ){
+         && (geneInRgd.getNomenSource() == null || geneInRgd.getNomenSource().equals("Ensembl")) ){
 
             String geneSymbolIncoming = Utils.NVL(gene.getGeneSymbol(), gene.getEnsemblGeneId());
 
