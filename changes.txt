@@ -1,3 +1,8 @@
+Nov 11, 2024
+    if a given species (and its assembly) is not available in the current Biomart release,
+    the species is skipped from processing, and the pipeline could continue processing other species.
+    Previously, that issue was breaking the pipeline.
+
 Aug 06, 2024
   renamed 'master' branch to 'main'
 

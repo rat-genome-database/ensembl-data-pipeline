@@ -14,3 +14,6 @@ Nomenclature events are generated only for genes:
 XDB_IDS (external database ids)
 
     1. genes: only Ensembl Gene Ids are loaded 
+
+As of Nov 11, 2024: if a given species (and its assembly) is not available in the current Biomart release,
+the species is skipped from processing, and the pipeline could continue processing other species. 

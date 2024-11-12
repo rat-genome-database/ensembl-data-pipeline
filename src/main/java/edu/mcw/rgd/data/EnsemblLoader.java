@@ -110,6 +110,12 @@ public class EnsemblLoader {
                 } else {
                     String dataFile = dataPuller.downloadGenesFile();
                     genes = dataParser.parseGene(dataFile);
+
+                    if( genes==null ) {
+                        log.info(speciesName.toUpperCase() + " SKIPPED -- TIME ELAPSED " + Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+                        log.info("===");
+                        return;
+                    }
                 }
                 log.info("Total genes parsed from file: " + genes.size());
 
