@@ -27,6 +27,14 @@ public class Parser {
             EnsemblGene gene = new EnsemblGene();
             String[] cols = line.split("\t", -1);
             if (cols.length < 6) {
+
+                // Query ERROR: caught BioMart::Exception::Usage: WITHIN Virtual Schema : default, Dataset rnorvegicus_gene_ensembl NOT FOUND
+                if( line.contains("BioMart::Exception") && line.contains("Dataset") && line.contains("NOT FOUND") ) {
+                    log.warn(" ***** processing aborted for "+inputFile);
+                    log.warn(" ***** "+line);
+                    return null;
+                }
+
                 String msg = "5 columns expected, but found only " + cols.length + " in the file " + inputFile + "\n" +
                         "  offending line: [" + line + "]";
                 log.warn(msg);
