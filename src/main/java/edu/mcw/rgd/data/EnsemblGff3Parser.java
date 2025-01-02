@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class EnsemblGff3Parser {
 
+    private String genomeBuild;
+    private String ensemblGenePrefix;
     private int ncbiAssemblyMapKey;
     private int ensemblAssemblyMapKey;
 
@@ -32,16 +34,13 @@ public class EnsemblGff3Parser {
     private String xrefFile;
 
     public EnsemblGff3Parser() {
-        // rn7
-        setNcbiAssemblyMapKey(372);
-        setEnsemblAssemblyMapKey(373);
     }
 
     public List<EnsemblGene> parseGenes() throws Exception {
 
         // load primary information from gff3 genes file
         Map<String, EnsemblGene> genes = parseGff3File();
-        System.out.println("genes loaded from gff3 file");
+        System.out.println("genes loaded from gff3 file: "+genes.size());
 
         // load supplemental information from xref file
         parseXrefFile(genes);
@@ -53,10 +52,6 @@ public class EnsemblGff3Parser {
 
         Map<String, EnsemblGene> results = new HashMap<>();
 
-        String genomeBuild = null;
-        if( getNcbiAssemblyMapKey()==372 || getEnsemblAssemblyMapKey()==373 ) {
-            genomeBuild = "mRatBN7.2";
-        }
         boolean genomeBuildVerified = false;
 
         BufferedReader in = Utils.openReader(getGff3File());
@@ -83,7 +78,7 @@ public class EnsemblGff3Parser {
             // Y	ensembl	gene	7732918	7746199	.	+	.	ID=gene:ENSRNOG00000065605;biotype=protein_coding;gene_id=ENSRNOG00000065605;version=1
             String[] cols = line.split("[\\t]", -1);
             String info = cols[8];
-            if( !info.startsWith("ID=gene:ENSRNOG") ) {
+            if( !info.startsWith("ID=gene:"+getEnsemblGenePrefix()) ) {
                 continue;
             }
             String chr = cols[0];
@@ -128,8 +123,9 @@ public class EnsemblGff3Parser {
         //ENSRNOG00000000001	ENSRNOT00000055633	ENSRNOP00000092332	Arsj-201	Arsj-201	arylsulfatase family, member J	RGD transcript name	MISC
         //ENSRNOG00000000001	ENSRNOT00000055633	ENSRNOP00000092332	NM_001047887	NM_001047887.1		RefSeq mRNA	DIRECT		50	100
 
-
-        BufferedReader in = Utils.openReader(fixXrefFile());
+        boolean fixXrefFile = false;
+        String fname = fixXrefFile ? fixXrefFile() : getXrefFile();
+        BufferedReader in = Utils.openReader(fname);
         String header = in.readLine();
         String line;
         while( (line=in.readLine())!=null ) {
@@ -483,6 +479,22 @@ public class EnsemblGff3Parser {
             }
         }
         return result;
+    }
+
+    public String getGenomeBuild() {
+        return genomeBuild;
+    }
+
+    public void setGenomeBuild(String genomeBuild) {
+        this.genomeBuild = genomeBuild;
+    }
+
+    public String getEnsemblGenePrefix() {
+        return ensemblGenePrefix;
+    }
+
+    public void setEnsemblGenePrefix(String ensemblGenePrefix) {
+        this.ensemblGenePrefix = ensemblGenePrefix;
     }
 
     public String getGff3File() {

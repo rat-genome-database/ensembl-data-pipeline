@@ -242,8 +242,9 @@ public class EnsemblGeneLoader {
     public void updateNomenEvents(EnsemblGene gene,int rgdId) throws  Exception{
 
         Gene geneInRgd = ensemblDAO.getGene(rgdId);
+        String geneInRgdGeneSource = Utils.defaultString(geneInRgd.getGeneSource());
 
-        if( geneInRgd.getGeneSource().equals("Ensembl")
+        if( geneInRgdGeneSource.equals("Ensembl")
          && (geneInRgd.getNomenSource() == null || geneInRgd.getNomenSource().equals("Ensembl")) ){
 
             String geneSymbolIncoming = Utils.NVL(gene.getGeneSymbol(), gene.getEnsemblGeneId());

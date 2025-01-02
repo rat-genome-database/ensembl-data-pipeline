@@ -98,7 +98,6 @@ public class EnsemblLoader {
         try {
 
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
-            validateAssemblyName(ensemblMapKey);
             if( skipGeneLoader ) {
                 log.warn("WARNING: gene processing skipped!");
             } else {
@@ -108,6 +107,8 @@ public class EnsemblLoader {
                     ensemblMapKey = dataGff3Parser.getEnsemblAssemblyMapKey();
                     ncbiAssemblyMapKey = dataGff3Parser.getNcbiAssemblyMapKey();
                 } else {
+                    validateAssemblyName(ensemblMapKey);
+
                     String dataFile = dataPuller.downloadGenesFile();
                     genes = dataParser.parseGene(dataFile);
 

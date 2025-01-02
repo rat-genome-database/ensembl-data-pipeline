@@ -1,3 +1,6 @@
+Jan 02, 2025
+  gene nomenclature events: fixed NullPointerException
+
 Nov 11, 2024
     if a given species (and its assembly) is not available in the current Biomart release,
     the species is skipped from processing, and the pipeline could continue processing other species.
