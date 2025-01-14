@@ -141,16 +141,22 @@ public class EnsemblDAO extends AbstractDAO {
         else return null;
     }
 
-    public List<String> getNcbiRgdId(String Acc_id) throws Exception{
-        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 3 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
-                "and rx.src_pipeline = 'ENTREZGENE'";
-        List<String> result =  StringListQuery.execute(this,sql,Acc_id);
-        return result;
+    public List<String> getNcbiRgdId( String accId ) throws Exception{
+        String sql = """
+            SELECT DISTINCT(rx.rgd_id) FROM rgd_acc_xdb rx, rgd_ids r
+            WHERE rx.acc_id=? AND rx.xdb_key = 3 AND r.rgd_id = rx.rgd_id AND r.object_status = 'ACTIVE'
+                AND r.object_key = 1 AND rx.src_pipeline = 'ENTREZGENE'
+            """;
+        return StringListQuery.execute(this, sql, accId);
     }
-    public String getEnsemblRgdId(String Acc_id) throws Exception{
-        String sql = " select distinct(rx.rgd_id) from rgd_acc_xdb rx, rgd_ids r where rx.acc_id=? and rx.xdb_key = 20 and r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE' and r.object_key = 1 " +
-                "and rx.src_pipeline = 'Ensembl'";
-        List<String> result =  StringListQuery.execute(this,sql,Acc_id);
+
+    public String getEnsemblRgdId( String accId ) throws Exception{
+        String sql = """
+            SELECT DISTINCT(rx.rgd_id) FROM rgd_acc_xdb rx, rgd_ids r
+            WHERE rx.acc_id=? AND rx.xdb_key = 20 AND r.rgd_id = rx.rgd_id and r.object_status = 'ACTIVE'
+               AND r.object_key = 1 AND rx.src_pipeline = 'Ensembl'
+            """;
+        List<String> result =  StringListQuery.execute(this, sql, accId);
         if(result.size() >  0)
             return result.get(0);
         else return null;

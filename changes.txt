@@ -1,3 +1,6 @@
+Jan 14, 2025
+  dao: refactored sql queries for better readability
+
 Jan 02, 2025
   gene nomenclature events: fixed NullPointerException
 
