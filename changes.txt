@@ -1,3 +1,6 @@
+May 07, 2025
+  loader: changed rat assembly to GRCr8
+
 Jan 14, 2025
   dao: refactored sql queries for better readability
 

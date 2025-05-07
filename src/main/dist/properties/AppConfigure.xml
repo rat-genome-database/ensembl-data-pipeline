@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="Ensembl Data Pipeline  -- build Jan 14, 2025"/>
+        <property name="version" value="Ensembl Data Pipeline  -- build May 07, 2025"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -9,7 +9,7 @@
         <property name="transcriptLoader" ref="TranscriptLoader"/>
         <property name="ensemblAssemblyMap">
             <map>
-                <entry key="3" value="373"/><!-- rat mRatBN7.2-->
+                <entry key="3" value="381"/><!-- rat GRCr8-->
                 <entry key="2" value="240"/><!-- mouse -->
                 <entry key="1" value="40"/><!-- human -->
                 <entry key="4" value="45"/><!-- chinchilla -->
@@ -23,7 +23,7 @@
         </property>
         <property name="ncbiAssemblyMap">
             <map>
-                <entry key="3" value="372"/><!-- rat mRatBN7.2-->
+                <entry key="3" value="380"/><!-- rat GRCr8-->
                 <entry key="2" value="239"/><!-- mouse -->
                 <entry key="1" value="38"/><!-- human -->
                 <entry key="4" value="44"/><!-- chinchilla -->
