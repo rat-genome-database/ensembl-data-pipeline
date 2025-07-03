@@ -196,6 +196,9 @@ public class EnsemblDAO extends AbstractDAO {
             }
             alias.setValue(newValue);
         }
+        if( Utils.isStringEmpty(alias.getValue()) ) {
+            return 0;
+        }
         return aliasDAO.insertAlias(alias);
     }
 

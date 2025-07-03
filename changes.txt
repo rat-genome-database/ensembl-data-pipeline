@@ -1,3 +1,6 @@
+Jul 03, 2025
+  fixed loading of aliases (to avid NullPointerException)
+
 Jun 20, 2025
   updated dependencies
 
