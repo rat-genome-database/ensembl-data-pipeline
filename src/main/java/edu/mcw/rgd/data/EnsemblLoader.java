@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.process.MemoryMonitor;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -95,6 +96,9 @@ public class EnsemblLoader {
         int ensemblMapKey = getEnsemblAssemblyMap().get(speciesTypeKey);
         int ncbiAssemblyMapKey = getNcbiAssemblyMap().get(speciesTypeKey);
         log.info(speciesName+" " +getVersion());
+
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
         try {
 
             dataPuller.setSpeciesTypeKey(speciesTypeKey);
@@ -147,6 +151,10 @@ public class EnsemblLoader {
         catch(Exception e) {
             Utils.printStackTrace(e, log);
             throw e;
+        }
+        finally {
+            memoryMonitor.stop();
+            log.info(memoryMonitor.getSummary());
         }
     }
 
