@@ -30,6 +30,8 @@ public class EnsemblDataPuller {
     Logger statuslog = LogManager.getLogger("status");
     int speciesTypeKey;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    int biomartRetryCount;
+    int biomartRetryDelaySeconds;
 
     /**
      * download data from Ensembl biomart
@@ -94,12 +96,40 @@ public class EnsemblDataPuller {
 
         String data = buildBiomartQuery(attributes);
 
-        FileDownloader downloader = new FileDownloader();
-        downloader.setExternalFile(websiteUrl + "?" + data);
-        downloader.setLocalFile(outFile);
-        String outPath = downloader.download();
+        int totalAttempts = biomartRetryCount + 1;
+        for( int attempt = 1; ; attempt++ ) {
+            FileDownloader downloader = new FileDownloader();
+            downloader.setExternalFile(websiteUrl + "?" + data);
+            downloader.setLocalFile(outFile);
+            String outPath = downloader.download();
 
-        return outPath;
+            try {
+                validateBiomartResponse(outPath);
+                return outPath;
+            } catch( IOException e ) {
+                if( attempt > biomartRetryCount ) {
+                    throw e;
+                }
+                statuslog.warn("BioMart error on attempt "+attempt+"/"+totalAttempts
+                        +"; retrying in "+biomartRetryDelaySeconds+"s: "+e.getMessage());
+                Thread.sleep(biomartRetryDelaySeconds * 1000L);
+            }
+        }
+    }
+
+    // BioMart returns HTTP 200 with a Perl error message in the body when its backend is
+    // unhealthy, e.g. 'Query ERROR: caught BioMart::Exception::Database: ...'.
+    // Treat any such response as a hard failure instead of persisting garbage downstream.
+    void validateBiomartResponse(String filePath) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            char[] buf = new char[2048];
+            int n = br.read(buf);
+            String head = n > 0 ? new String(buf, 0, n) : "";
+            if( head.contains("Query ERROR") || head.contains("BioMart::Exception") ) {
+                String snippet = head.length() > 500 ? head.substring(0, 500) + "..." : head;
+                throw new IOException("BioMart returned an error response for " + filePath + ": " + snippet.trim());
+            }
+        }
     }
 
     // return url encoded biomart xml query
@@ -272,5 +302,21 @@ public class EnsemblDataPuller {
 
     public void setRestGenomeUrl(String restGenomeUrl) {
         this.restGenomeUrl = restGenomeUrl;
+    }
+
+    public int getBiomartRetryCount() {
+        return biomartRetryCount;
+    }
+
+    public void setBiomartRetryCount(int biomartRetryCount) {
+        this.biomartRetryCount = biomartRetryCount;
+    }
+
+    public int getBiomartRetryDelaySeconds() {
+        return biomartRetryDelaySeconds;
+    }
+
+    public void setBiomartRetryDelaySeconds(int biomartRetryDelaySeconds) {
+        this.biomartRetryDelaySeconds = biomartRetryDelaySeconds;
     }
 }

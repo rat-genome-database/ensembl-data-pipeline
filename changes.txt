@@ -1,4 +1,5 @@
 Apr 22, 2026
+  detect BioMart error responses and retry on transient failures
   added memory usage monitoring; updated dependencies
 
 Jul 03, 2025

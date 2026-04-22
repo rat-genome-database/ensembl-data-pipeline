@@ -46,6 +46,8 @@
         <property name="websiteUrl" value="http://www.ensembl.org/biomart/martservice"/>
         <property name="restGenomeUrl" value="http://rest.ensembl.org/info/genomes/"/><!-- append species, f.e. http://rest.ensembl.org/info/genomes/Sus_scrofa -->
         <property name="biomartQueryTemplate" value="properties/biomart.xml"/>
+        <property name="biomartRetryCount" value="3"/><!-- number of retries after an initial BioMart failure; total attempts = retries + 1 -->
+        <property name="biomartRetryDelaySeconds" value="60"/>
         <property name="biomartQueryAttrsGenes"><!-- ensembl gene attributes common to all species -->
             <list>
                 <value>chromosome_name</value>
