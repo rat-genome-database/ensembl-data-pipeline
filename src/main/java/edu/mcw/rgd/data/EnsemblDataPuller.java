@@ -1,7 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
-import edu.mcw.rgd.process.FileDownloader;
+import edu.mcw.rgd.process.FileDownloader2;
 import edu.mcw.rgd.process.FileExternalSort;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
@@ -98,7 +98,7 @@ public class EnsemblDataPuller {
 
         int totalAttempts = biomartRetryCount + 1;
         for( int attempt = 1; ; attempt++ ) {
-            FileDownloader downloader = new FileDownloader();
+            FileDownloader2 downloader = new FileDownloader2();
             downloader.setExternalFile(websiteUrl + "?" + data);
             downloader.setLocalFile(outFile);
             String outPath = downloader.download();
@@ -212,7 +212,7 @@ public class EnsemblDataPuller {
             //   "https://rest.ensembl.org/info/genomes/assembly/GCA_000247695.1";
             taxonName = "Heterocephalus_glaber_female";
         }
-        FileDownloader fd = new FileDownloader();
+        FileDownloader2 fd = new FileDownloader2();
         String url = getRestGenomeUrl() + taxonName.replace(" ", "_");
         fd.setExternalFile(url);
         fd.setLocalFile(null);

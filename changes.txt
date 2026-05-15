@@ -1,3 +1,6 @@
+May 15, 2026
+  switched to FileDownloader2; removed unused Apache HTTP and FTP dependencies
+
 Apr 22, 2026
   detect BioMart error responses and retry on transient failures
   added memory usage monitoring; updated dependencies
