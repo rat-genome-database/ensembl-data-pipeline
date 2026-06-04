@@ -30,7 +30,9 @@ public class EnsemblLoader {
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
-    private boolean useGff3Loader = false; // by default load data from Ensembl BioMart
+    // data source -- exactly one must be selected on the command line (no default)
+    private boolean useGff3Loader = false;
+    private boolean useBioMart = false;
 
     /**
      * starts the pipeline; properties are read from properties/AppConfigure.xml file
@@ -63,6 +65,19 @@ public class EnsemblLoader {
             else if( arg.equals("-useGff3Loader") ) {
                 loader.useGff3Loader = true;
             }
+            else if( arg.equals("-useBioMart") ) {
+                loader.useBioMart = true;
+            }
+        }
+
+        // the data source must be chosen explicitly -- exactly one of -useBioMart / -useGff3Loader
+        if( loader.useBioMart == loader.useGff3Loader ) {
+            if( loader.useBioMart ) {
+                System.out.println("Aborted: specify only ONE data source: -useBioMart OR -useGff3Loader");
+            } else {
+                System.out.println("Aborted: please specify the data source: -useBioMart OR -useGff3Loader");
+            }
+            return;
         }
 
         // if species type key is all, run for all species
@@ -247,6 +262,8 @@ public class EnsemblLoader {
     static public void usage() {
         System.out.println("Command line parameters required:");
         System.out.println(" -species 0|1|2|3|...|Rat|Mouse|Human|...|All");
+        System.out.println(" data source (pick one): -useBioMart | -useGff3Loader");
+        System.out.println(" optional: -skipGenes -skipTranscripts");
     }
 
     public void setVersion(String version) {

@@ -2,4 +2,4 @@
 
 APPDIR=/home/rgddata/pipelines/ensembl-data-pipeline
 
-$APPDIR/run.sh -species ALL
+$APPDIR/run.sh -species ALL -useGff3Loader
