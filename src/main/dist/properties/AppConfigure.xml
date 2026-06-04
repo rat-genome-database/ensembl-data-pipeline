@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build May 15, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Jun 4, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -104,20 +104,13 @@
     <bean id="Parser" class="edu.mcw.rgd.data.Parser">
     </bean>
 
-    <bean id="gff3Parser" class="edu.mcw.rgd.data.EnsemblGff3Parser">
-        <property name="genomeBuild" value="UU_Cfam_GSD_1.0"/>
-        <property name="ensemblGenePrefix" value="ENSCAFG"/>
-        <property name="ncbiAssemblyMapKey" value="637"/>
-        <property name="ensemblAssemblyMapKey" value="639"/>
-        <property name="gff3File" value="data/rapid/Canis_lupus_familiarisgsd.UU_Cfam_GSD_1.0.113.chr.gff3.gz"/>
-        <property name="xrefFile" value="data/rapid/Canis_lupus_familiaris-GCA_011100685.1-2021_03-xref.tsv.gz"/>
-<!--
-        <property name="genomeBuild" value="mRatBN7.2"/>
-        <property name="ensemblGenePrefix" value="ENSRNOG"/>
-        <property name="ncbiAssemblyMapKey" value="372"/>
-        <property name="ensemblAssemblyMapKey" value="373"/>
-        <property name="gff3File" value="data/rapid/Rattus_norvegicus-GCA_015227675.2-2021_02-genes.gff3.gz"/>
-        <property name="xrefFile" value="data/rapid/Rattus_norvegicus-GCA_015227675.2-2021_02-xref.tsv.gz"/>
-        -->
-    </bean>
+    <!-- main-release GFF3 parser; per-species values are set by EnsemblLoader at runtime (next increment).
+         Template (rat, Ensembl 115):
+         genomeBuild         = GRCr8
+         ensemblGenePrefix   = ENSRNOG
+         xrefAuthority       = RGD          (RGD | MGI | HGNC | empty)
+         ensemblAssemblyMapKey = 381        ncbiAssemblyMapKey = 380
+         gff3File            = data/<species>.gff3.gz   (current_gff3/<species>/<Species>.<assembly>.<rel>.gff3.gz)
+         entrezFile          = data/<species>.entrez.tsv.gz   (current_tsv/<species>/<Species>.<assembly>.<rel>.entrez.tsv.gz) -->
+    <bean id="gff3Parser" class="edu.mcw.rgd.data.EnsemblGff3Parser"/>
 </beans>

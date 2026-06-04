@@ -1,3 +1,6 @@
+Jun 4, 2026
+  GFF3 migration groundwork: generalized EnsemblGff3Parser to main-release GFF3 + entrez.tsv for all species (verified equivalent to BioMart); added Ensembl-source QC pre-check before loading a species
+
 May 15, 2026
   switched to FileDownloader2; removed unused Apache HTTP and FTP dependencies
 

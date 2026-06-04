@@ -97,6 +97,9 @@ public class EnsemblLoader {
         int ncbiAssemblyMapKey = getNcbiAssemblyMap().get(speciesTypeKey);
         log.info(speciesName+" " +getVersion());
 
+        // QC pre-check: the assembly we load onto must be an Ensembl-source assembly in RGD
+        checkLoadingAssemblyIsEnsembl(ensemblMapKey, speciesName);
+
         MemoryMonitor memoryMonitor = new MemoryMonitor();
         memoryMonitor.start();
         try {
@@ -156,6 +159,24 @@ public class EnsemblLoader {
             memoryMonitor.stop();
             log.info(memoryMonitor.getSummary());
         }
+    }
+
+    /**
+     * QC pre-check run before processing a species: the assembly map we load Ensembl positions onto
+     * must itself be an Ensembl-source assembly in RGD. Guards against a misconfigured map key
+     * that would load Ensembl data onto an NCBI (or other) assembly.
+     */
+    void checkLoadingAssemblyIsEnsembl(int ensemblMapKey, String speciesName) throws Exception {
+
+        edu.mcw.rgd.datamodel.Map map = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
+        if( map==null ) {
+            throw new Exception("QC pre-check failed for "+speciesName+": assembly map_key "+ensemblMapKey+" not found in RGD");
+        }
+        if( !Utils.stringsAreEqualIgnoreCase(map.getSource(), "Ensembl") ) {
+            throw new Exception("QC pre-check failed for "+speciesName+": loading assembly map_key "+ensemblMapKey
+                    +" ["+map.getName()+"] has source '"+map.getSource()+"', expected 'Ensembl'");
+        }
+        log.info("  QC: loading assembly map_key "+ensemblMapKey+" ["+map.getName()+"] source=Ensembl -- OK");
     }
 
     void validateAssemblyName(int ensemblMapKey) throws Exception {
