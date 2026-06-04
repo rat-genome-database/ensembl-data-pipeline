@@ -241,21 +241,19 @@ public class EnsemblDataPuller {
         return SpeciesType.getTaxonomicName(speciesTypeKey);
     }
 
-    /// latest Ensembl release number, f.e. 115 -- https://rest.ensembl.org/info/data -> {"releases":[115]}
+    /// latest Ensembl release number, f.e. 115. Read from the FTP 'current_README' (same host we download
+    /// the data files from) -- the rest.ensembl.org HTTP/2 endpoint sends GOAWAY frames to the JDK client.
+    /// First lines of current_README contain: 'Ensembl Release 115 Databases.'
     public int getCurrentEnsemblRelease() throws Exception {
         FileDownloader2 fd = new FileDownloader2();
-        fd.setExternalFile("https://rest.ensembl.org/info/data/?content-type=application/json");
+        fd.setExternalFile("https://ftp.ensembl.org/pub/current_README");
         fd.setLocalFile(null);
         String body = fd.download();
-        int max = 0;
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(body);
-        while( m.find() ) {
-            max = Math.max(max, Integer.parseInt(m.group()));
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("Release\\s+(\\d+)").matcher(body);
+        if( m.find() ) {
+            return Integer.parseInt(m.group(1));
         }
-        if( max==0 ) {
-            throw new Exception("could not parse Ensembl release number from "+body);
-        }
-        return max;
+        throw new Exception("could not parse Ensembl release number from current_README");
     }
 
     /// download the main-release GFF3 file for the current species/assembly; returns local path
