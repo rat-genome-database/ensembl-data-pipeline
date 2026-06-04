@@ -40,6 +40,13 @@
                 <entry key="1411" value="Naked_mole-rat_maternal Ensembl" /><!-- 'HetGla_female_1.0 Ensembl' -->
             </map>
         </property>
+        <property name="gff3XrefAuthorities"><!-- gff3 loader: species type key -> species xref authority in the gff3 gene description -->
+            <map>
+                <entry key="3" value="RGD"/><!-- rat -->
+                <entry key="2" value="MGI"/><!-- mouse -->
+                <entry key="1" value="HGNC"/><!-- human -->
+            </map>
+        </property>
     </bean>
 
     <bean id="ensemblDataPuller" class="edu.mcw.rgd.data.EnsemblDataPuller">

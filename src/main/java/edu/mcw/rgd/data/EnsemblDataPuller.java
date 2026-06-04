@@ -232,6 +232,57 @@ public class EnsemblDataPuller {
         throw new Exception("Cannot retrieve an assembly name from "+url);
     }
 
+    /// Ensembl FTP/REST taxon name for the current species, f.e. 'Rattus norvegicus'
+    /// (molerat is served under 'Heterocephalus_glaber_female' at Ensembl)
+    String ensemblTaxonName() {
+        if( speciesTypeKey==SpeciesType.NAKED_MOLE_RAT ) {
+            return "Heterocephalus_glaber_female";
+        }
+        return SpeciesType.getTaxonomicName(speciesTypeKey);
+    }
+
+    /// latest Ensembl release number, f.e. 115 -- https://rest.ensembl.org/info/data -> {"releases":[115]}
+    public int getCurrentEnsemblRelease() throws Exception {
+        FileDownloader2 fd = new FileDownloader2();
+        fd.setExternalFile("https://rest.ensembl.org/info/data/?content-type=application/json");
+        fd.setLocalFile(null);
+        String body = fd.download();
+        int max = 0;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(body);
+        while( m.find() ) {
+            max = Math.max(max, Integer.parseInt(m.group()));
+        }
+        if( max==0 ) {
+            throw new Exception("could not parse Ensembl release number from "+body);
+        }
+        return max;
+    }
+
+    /// download the main-release GFF3 file for the current species/assembly; returns local path
+    public String downloadGff3File(String assembly, int release) throws Exception {
+        return downloadEnsemblFtpFile("current_gff3", assembly, release, "gff3.gz");
+    }
+
+    /// download the entrez (NCBI gene id) tsv file for the current species/assembly; returns local path
+    public String downloadEntrezFile(String assembly, int release) throws Exception {
+        return downloadEnsemblFtpFile("current_tsv", assembly, release, "entrez.tsv.gz");
+    }
+
+    // f.e. https://ftp.ensembl.org/pub/current_gff3/rattus_norvegicus/Rattus_norvegicus.GRCr8.115.gff3.gz
+    String downloadEnsemblFtpFile(String subdir, String assembly, int release, String ext) throws Exception {
+        String speciesCap = ensemblTaxonName().replace(" ", "_"); // 'Rattus_norvegicus'
+        String dir = speciesCap.toLowerCase();                    // 'rattus_norvegicus'
+        String url = "https://ftp.ensembl.org/pub/"+subdir+"/"+dir+"/"+speciesCap+"."+assembly+"."+release+"."+ext;
+
+        FileDownloader2 fd = new FileDownloader2();
+        fd.setExternalFile(url);
+        fd.setLocalFile("data/"+dir+"."+ext);
+        fd.setPrependDateStamp(true);
+        String localFile = fd.downloadNew();
+        statuslog.info("Downloaded "+url+" to "+localFile);
+        return localFile;
+    }
+
     public String getWebsiteUrl() {
         return websiteUrl;
     }

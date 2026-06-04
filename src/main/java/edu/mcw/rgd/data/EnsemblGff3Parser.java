@@ -17,9 +17,8 @@ import java.util.*;
  */
 public class EnsemblGff3Parser {
 
-    private String genomeBuild;       // Ensembl assembly, f.e. 'GRCr8' -- must appear on the '#!genome-build' header line
-    private String ensemblGenePrefix; // f.e. 'ENSRNOG'
-    private String xrefAuthority;     // species xref authority in the description: 'RGD' | 'MGI' | 'HGNC' | null
+    private String genomeBuild;   // Ensembl assembly, f.e. 'GRCr8' -- must appear on the '#!genome-build' header line
+    private String xrefAuthority; // species xref authority in the description: 'RGD' | 'MGI' | 'HGNC' | null
     private int ncbiAssemblyMapKey;
     private int ensemblAssemblyMapKey;
 
@@ -62,10 +61,10 @@ public class EnsemblGff3Parser {
                 break;
             }
 
-            // only gene lines for our species' gene-id prefix
+            // gene lines (single-species file, so any 'ID=gene:' is ours)
             String[] cols = line.split("[\\t]", -1);
             String info = cols[8];
-            if( !info.startsWith("ID=gene:"+getEnsemblGenePrefix()) ) {
+            if( !info.startsWith("ID=gene:") ) {
                 continue;
             }
 
@@ -165,7 +164,7 @@ public class EnsemblGff3Parser {
 
             String[] cols = line.split("[\\t]", -1);
             String info = cols[8];
-            if( info.startsWith("ID=gene:"+getEnsemblGenePrefix()) ) {
+            if( info.startsWith("ID=gene:") ) {
                 geneId = attr(info, "gene_id=");
                 continue;
             }
@@ -349,13 +348,6 @@ public class EnsemblGff3Parser {
     }
     public void setGenomeBuild(String genomeBuild) {
         this.genomeBuild = genomeBuild;
-    }
-
-    public String getEnsemblGenePrefix() {
-        return ensemblGenePrefix;
-    }
-    public void setEnsemblGenePrefix(String ensemblGenePrefix) {
-        this.ensemblGenePrefix = ensemblGenePrefix;
     }
 
     public String getXrefAuthority() {

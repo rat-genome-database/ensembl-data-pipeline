@@ -26,6 +26,7 @@ public class EnsemblLoader {
     private Map<Integer, Integer> ensemblAssemblyMap;
     private Map<Integer, Integer> ncbiAssemblyMap;
     private Map<Integer, String> assemblyMapNames;
+    private Map<Integer, String> gff3XrefAuthorities; // species -> 'RGD' | 'MGI' | 'HGNC' (gff3 loader only)
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -99,6 +100,11 @@ public class EnsemblLoader {
 
         // QC pre-check: the assembly we load onto must be an Ensembl-source assembly in RGD
         checkLoadingAssemblyIsEnsembl(ensemblMapKey, speciesName);
+
+        // GFF3 path: download the species' gff3 + entrez files and configure the parser
+        if( useGff3Loader ) {
+            prepareGff3Parser(speciesTypeKey, ensemblMapKey, ncbiAssemblyMapKey);
+        }
 
         MemoryMonitor memoryMonitor = new MemoryMonitor();
         memoryMonitor.start();
@@ -177,6 +183,38 @@ public class EnsemblLoader {
                     +" ["+map.getName()+"] has source '"+map.getSource()+"', expected 'Ensembl'");
         }
         log.info("  QC: loading assembly map_key "+ensemblMapKey+" ["+map.getName()+"] source=Ensembl -- OK");
+    }
+
+    /// download the species' main-release gff3 + entrez files and configure the gff3 parser for this species
+    void prepareGff3Parser(int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
+
+        dataPuller.setSpeciesTypeKey(speciesTypeKey);
+        String assembly = resolveEnsemblAssembly(ensemblMapKey);
+        int release = dataPuller.getCurrentEnsemblRelease();
+
+        String gff3File = dataPuller.downloadGff3File(assembly, release);
+        String entrezFile = dataPuller.downloadEntrezFile(assembly, release);
+
+        String xrefAuthority = getGff3XrefAuthorities()==null ? null : getGff3XrefAuthorities().get(speciesTypeKey);
+
+        dataGff3Parser.setGff3File(gff3File);
+        dataGff3Parser.setEntrezFile(entrezFile);
+        dataGff3Parser.setGenomeBuild(assembly);
+        dataGff3Parser.setXrefAuthority(xrefAuthority);
+        dataGff3Parser.setEnsemblAssemblyMapKey(ensemblMapKey);
+        dataGff3Parser.setNcbiAssemblyMapKey(ncbiAssemblyMapKey);
+
+        log.info("  GFF3: assembly="+assembly+" release="+release+" xrefAuthority="+xrefAuthority);
+    }
+
+    /// Ensembl assembly name for a map key: the assemblyMapNames override if present, else the RGD map name,
+    /// with the trailing ' Ensembl' stripped. f.e. map 381 -> 'GRCr8'; map 1411 (override) -> 'Naked_mole-rat_maternal'
+    String resolveEnsemblAssembly(int ensemblMapKey) throws Exception {
+        String name = getAssemblyMapNames()!=null ? getAssemblyMapNames().get(ensemblMapKey) : null;
+        if( name==null ) {
+            name = new EnsemblDAO().getAssemblyMap(ensemblMapKey).getName();
+        }
+        return name.replace(" Ensembl", "").trim();
     }
 
     void validateAssemblyName(int ensemblMapKey) throws Exception {
@@ -273,6 +311,14 @@ public class EnsemblLoader {
 
     public void setAssemblyMapNames(Map<Integer, String> assemblyMapNames) {
         this.assemblyMapNames = assemblyMapNames;
+    }
+
+    public Map<Integer, String> getGff3XrefAuthorities() {
+        return gff3XrefAuthorities;
+    }
+
+    public void setGff3XrefAuthorities(Map<Integer, String> gff3XrefAuthorities) {
+        this.gff3XrefAuthorities = gff3XrefAuthorities;
     }
 
     public EnsemblGff3Parser getDataGff3Parser() {
