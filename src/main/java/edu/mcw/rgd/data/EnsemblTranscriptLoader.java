@@ -26,6 +26,9 @@ public class EnsemblTranscriptLoader {
         // we have chromosome data only for NCBI assemblies
         List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiMapKey);
 
+        // preload Ensembl gene id -> gene RGD id once, instead of querying per transcript
+        java.util.Map<String,String> ensemblGeneRgdIdMap = ensemblDAO.getEnsemblGeneRgdIdMap(speciesTypeKey);
+
         List<EnsemblTranscript> transcripts = new ArrayList<>(transcriptCollection);
         Collections.shuffle(transcripts);
 
@@ -52,14 +55,14 @@ public class EnsemblTranscriptLoader {
             }
 
             boolean transcriptMatch = false;
-            String rgdId = ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId());
+            String rgdId = ensemblGeneRgdIdMap.get(transcript.getEnsGeneId());
             if (rgdId != null) {
 
                 TranscriptVersionManager.getInstance().addVersion(transcript.getEnsTranscriptId(), transcript.getEnsTranscriptVer());
 
                 List<TranscriptFeature> utrs = transcript.getUtrs();
 
-                int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
+                int geneRgdId = Integer.parseInt(rgdId);
                 List<Transcript> transcriptsForGene = ensemblDAO.getTranscriptsForGene(geneRgdId);
                 for (Transcript oldTranscript : transcriptsForGene) {
                     if (oldTranscript.getAccId().equalsIgnoreCase(transcript.getEnsTranscriptId()) &&
@@ -100,7 +103,7 @@ public class EnsemblTranscriptLoader {
                     insertExons(transcript.getRgdId(), exons, ensemblMapKey, speciesTypeKey, counters);
                     updateTranscriptType(transcript);
                 } else {
-                    createNewEnsemblTranscript(transcript, ensemblMapKey, speciesTypeKey, counters);
+                    createNewEnsemblTranscript(transcript, geneRgdId, ensemblMapKey, speciesTypeKey, counters);
                 }
 
             } else {
@@ -281,11 +284,10 @@ public class EnsemblTranscriptLoader {
         }
     }
 
-    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int mapKey, int speciesTypeKey, CounterPool counters) throws Exception {
+    public void createNewEnsemblTranscript(EnsemblTranscript transcript, int geneRgdId, int mapKey, int speciesTypeKey, CounterPool counters) throws Exception {
 
         Transcript newTranscript = new Transcript();
         newTranscript.setAccId(transcript.getEnsTranscriptId());
-        int geneRgdId = Integer.parseInt(ensemblDAO.getEnsemblRgdId(transcript.getEnsGeneId()));
         newTranscript.setGeneRgdId(geneRgdId);
         newTranscript.setNonCoding(transcript.isNonCodingInd());
         newTranscript.setProteinAccId(transcript.getProteinId());

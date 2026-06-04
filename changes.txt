@@ -2,6 +2,7 @@ Jun 4, 2026
   GFF3 migration groundwork: generalized EnsemblGff3Parser to main-release GFF3 + entrez.tsv for all species (verified equivalent to BioMart); added Ensembl-source QC pre-check before loading a species
   GFF3 loader wiring: per-species gff3/entrez download from Ensembl current_ FTP (release read from FTP current_README -- rest.ensembl.org HTTP/2 sends GOAWAY to the JDK client), assembly/species derived from the reconciled maps; still opt-in via -useGff3Loader
   data source must now be chosen explicitly: -useBioMart | -useGff3Loader (aborts if neither/both); scheduled run switched to -useGff3Loader
+  transcript loader speedup: preload Ensembl gene-id -> gene-rgd-id once per species instead of querying per transcript (also removed a redundant per-transcript lookup)
 
 May 15, 2026
   switched to FileDownloader2; removed unused Apache HTTP and FTP dependencies

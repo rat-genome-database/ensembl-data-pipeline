@@ -4,12 +4,14 @@ import edu.mcw.rgd.dao.AbstractDAO;
 import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
+import edu.mcw.rgd.dao.spring.StringMapQuery;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -160,6 +162,22 @@ public class EnsemblDAO extends AbstractDAO {
         if(result.size() >  0)
             return result.get(0);
         else return null;
+    }
+
+    /// preload (once per species) the map of Ensembl gene id -> active gene RGD id, so the transcript
+    /// loader does not call getEnsemblRgdId() per transcript. Mirrors getEnsemblRgdId (xdb_key=20, Ensembl).
+    public java.util.Map<String,String> getEnsemblGeneRgdIdMap( int speciesTypeKey ) throws Exception {
+        String sql = """
+            SELECT rx.acc_id, rx.rgd_id FROM rgd_acc_xdb rx, rgd_ids r
+            WHERE rx.xdb_key = 20 AND rx.src_pipeline = 'Ensembl'
+               AND r.rgd_id = rx.rgd_id AND r.object_status = 'ACTIVE'
+               AND r.object_key = 1 AND r.species_type_key = ?
+            """;
+        java.util.Map<String,String> map = new HashMap<>();
+        for( StringMapQuery.MapPair pair: StringMapQuery.execute(this, sql, speciesTypeKey) ) {
+            map.putIfAbsent(pair.keyValue, pair.stringValue);
+        }
+        return map;
     }
 
     public int insertXdbIds(XdbId id) throws Exception {
