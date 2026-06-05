@@ -1,3 +1,6 @@
+Jun 5, 2026
+  GFF3 loader: gff3/entrez source files are now full URLs configured per species in AppConfigure.xml (fixes 404s for human and bonobo, whose Ensembl file names differ in case/version from the RGD assembly names); genome-build header check is case-insensitive
+
 Jun 4, 2026
   GFF3 migration groundwork: generalized EnsemblGff3Parser to main-release GFF3 + entrez.tsv for all species (verified equivalent to BioMart); added Ensembl-source QC pre-check before loading a species
   GFF3 loader wiring: per-species gff3/entrez download from Ensembl current_ FTP (release read from FTP current_README -- rest.ensembl.org HTTP/2 sends GOAWAY to the JDK client), assembly/species derived from the reconciled maps; still opt-in via -useGff3Loader

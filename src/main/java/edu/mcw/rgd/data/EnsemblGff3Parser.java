@@ -50,7 +50,7 @@ public class EnsemblGff3Parser {
 
             // header parsing -- '#!genome-build  GRCr8'
             if( line.startsWith("#") ) {
-                if( line.contains("genome-build") && line.contains(genomeBuild) ) {
+                if( line.contains("genome-build") && line.toLowerCase().contains(genomeBuild.toLowerCase()) ) {
                     genomeBuildVerified = true;
                 }
                 continue;
@@ -151,7 +151,7 @@ public class EnsemblGff3Parser {
 
             // header parsing
             if( line.startsWith("#") ) {
-                if( line.contains("genome-build") && line.contains(genomeBuild) ) {
+                if( line.contains("genome-build") && line.toLowerCase().contains(genomeBuild.toLowerCase()) ) {
                     genomeBuildVerified = true;
                 }
                 continue;

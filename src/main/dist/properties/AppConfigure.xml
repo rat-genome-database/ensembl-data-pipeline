@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Jun 4, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Jun 5, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -45,6 +45,34 @@
                 <entry key="3" value="RGD"/><!-- rat -->
                 <entry key="2" value="MGI"/><!-- mouse -->
                 <entry key="1" value="HGNC"/><!-- human -->
+            </map>
+        </property>
+        <property name="gff3SourceFiles"><!-- gff3 loader: species type key -> full Ensembl GFF3 source URL (update file names on each Ensembl release) -->
+            <map>
+                <entry key="3"  value="https://ftp.ensembl.org/pub/current_gff3/rattus_norvegicus/Rattus_norvegicus.GRCr8.115.gff3.gz"/><!-- rat -->
+                <entry key="2"  value="https://ftp.ensembl.org/pub/current_gff3/mus_musculus/Mus_musculus.GRCm39.115.gff3.gz"/><!-- mouse -->
+                <entry key="1"  value="https://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.115.gff3.gz"/><!-- human -->
+                <entry key="4"  value="https://ftp.ensembl.org/pub/current_gff3/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.115.gff3.gz"/><!-- chinchilla -->
+                <entry key="6"  value="https://ftp.ensembl.org/pub/current_gff3/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.115.gff3.gz"/><!-- dog -->
+                <entry key="9"  value="https://ftp.ensembl.org/pub/current_gff3/sus_scrofa/Sus_scrofa.Sscrofa11.1.115.gff3.gz"/><!-- pig -->
+                <entry key="5"  value="https://ftp.ensembl.org/pub/current_gff3/pan_paniscus/Pan_paniscus.panpan1.1.115.gff3.gz"/><!-- bonobo -->
+                <entry key="13" value="https://ftp.ensembl.org/pub/current_gff3/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.115.gff3.gz"/><!-- vervet -->
+                <entry key="14" value="https://ftp.ensembl.org/pub/current_gff3/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.115.gff3.gz"/><!-- naked mole-rat -->
+                <entry key="7"  value="https://ftp.ensembl.org/pub/current_gff3/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.115.gff3.gz"/><!-- squirrel -->
+            </map>
+        </property>
+        <property name="entrezSourceFiles"><!-- gff3 loader: species type key -> full Ensembl entrez (NCBI gene id) tsv source URL -->
+            <map>
+                <entry key="3"  value="https://ftp.ensembl.org/pub/current_tsv/rattus_norvegicus/Rattus_norvegicus.GRCr8.115.entrez.tsv.gz"/><!-- rat -->
+                <entry key="2"  value="https://ftp.ensembl.org/pub/current_tsv/mus_musculus/Mus_musculus.GRCm39.115.entrez.tsv.gz"/><!-- mouse -->
+                <entry key="1"  value="https://ftp.ensembl.org/pub/current_tsv/homo_sapiens/Homo_sapiens.GRCh38.115.entrez.tsv.gz"/><!-- human -->
+                <entry key="4"  value="https://ftp.ensembl.org/pub/current_tsv/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.115.entrez.tsv.gz"/><!-- chinchilla -->
+                <entry key="6"  value="https://ftp.ensembl.org/pub/current_tsv/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.115.entrez.tsv.gz"/><!-- dog -->
+                <entry key="9"  value="https://ftp.ensembl.org/pub/current_tsv/sus_scrofa/Sus_scrofa.Sscrofa11.1.115.entrez.tsv.gz"/><!-- pig -->
+                <entry key="5"  value="https://ftp.ensembl.org/pub/current_tsv/pan_paniscus/Pan_paniscus.panpan1.1.115.entrez.tsv.gz"/><!-- bonobo -->
+                <entry key="13" value="https://ftp.ensembl.org/pub/current_tsv/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.115.entrez.tsv.gz"/><!-- vervet -->
+                <entry key="14" value="https://ftp.ensembl.org/pub/current_tsv/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.115.entrez.tsv.gz"/><!-- naked mole-rat -->
+                <entry key="7"  value="https://ftp.ensembl.org/pub/current_tsv/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.115.entrez.tsv.gz"/><!-- squirrel -->
             </map>
         </property>
     </bean>

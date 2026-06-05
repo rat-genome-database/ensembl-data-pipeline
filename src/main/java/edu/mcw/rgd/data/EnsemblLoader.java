@@ -27,6 +27,8 @@ public class EnsemblLoader {
     private Map<Integer, Integer> ncbiAssemblyMap;
     private Map<Integer, String> assemblyMapNames;
     private Map<Integer, String> gff3XrefAuthorities; // species -> 'RGD' | 'MGI' | 'HGNC' (gff3 loader only)
+    private Map<Integer, String> gff3SourceFiles;     // species -> full Ensembl gff3.gz URL (gff3 loader only)
+    private Map<Integer, String> entrezSourceFiles;   // species -> full Ensembl entrez.tsv.gz URL (gff3 loader only)
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -200,26 +202,31 @@ public class EnsemblLoader {
         log.info("  QC: loading assembly map_key "+ensemblMapKey+" ["+map.getName()+"] source=Ensembl -- OK");
     }
 
-    /// download the species' main-release gff3 + entrez files and configure the gff3 parser for this species
+    /// download the species' gff3 + entrez source files (full URLs configured per species in AppConfigure.xml)
+    /// and configure the gff3 parser for this species
     void prepareGff3Parser(int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
 
         dataPuller.setSpeciesTypeKey(speciesTypeKey);
-        String assembly = resolveEnsemblAssembly(ensemblMapKey);
-        int release = dataPuller.getCurrentEnsemblRelease();
+        String gff3Url = getGff3SourceFiles()==null ? null : getGff3SourceFiles().get(speciesTypeKey);
+        String entrezUrl = getEntrezSourceFiles()==null ? null : getEntrezSourceFiles().get(speciesTypeKey);
+        if( gff3Url==null || entrezUrl==null ) {
+            throw new Exception("no GFF3/entrez source file configured for "+SpeciesType.getCommonName(speciesTypeKey)
+                    +" (species "+speciesTypeKey+") -- add it to gff3SourceFiles/entrezSourceFiles in AppConfigure.xml");
+        }
 
-        String gff3File = dataPuller.downloadGff3File(assembly, release);
-        String entrezFile = dataPuller.downloadEntrezFile(assembly, release);
+        String gff3File = dataPuller.downloadEnsemblFile(gff3Url);
+        String entrezFile = dataPuller.downloadEnsemblFile(entrezUrl);
 
         String xrefAuthority = getGff3XrefAuthorities()==null ? null : getGff3XrefAuthorities().get(speciesTypeKey);
 
         dataGff3Parser.setGff3File(gff3File);
         dataGff3Parser.setEntrezFile(entrezFile);
-        dataGff3Parser.setGenomeBuild(assembly);
+        dataGff3Parser.setGenomeBuild(resolveEnsemblAssembly(ensemblMapKey));
         dataGff3Parser.setXrefAuthority(xrefAuthority);
         dataGff3Parser.setEnsemblAssemblyMapKey(ensemblMapKey);
         dataGff3Parser.setNcbiAssemblyMapKey(ncbiAssemblyMapKey);
 
-        log.info("  GFF3: assembly="+assembly+" release="+release+" xrefAuthority="+xrefAuthority);
+        log.info("  GFF3: "+gff3Url);
     }
 
     /// Ensembl assembly name for a map key: the assemblyMapNames override if present, else the RGD map name,
@@ -336,6 +343,22 @@ public class EnsemblLoader {
 
     public void setGff3XrefAuthorities(Map<Integer, String> gff3XrefAuthorities) {
         this.gff3XrefAuthorities = gff3XrefAuthorities;
+    }
+
+    public Map<Integer, String> getGff3SourceFiles() {
+        return gff3SourceFiles;
+    }
+
+    public void setGff3SourceFiles(Map<Integer, String> gff3SourceFiles) {
+        this.gff3SourceFiles = gff3SourceFiles;
+    }
+
+    public Map<Integer, String> getEntrezSourceFiles() {
+        return entrezSourceFiles;
+    }
+
+    public void setEntrezSourceFiles(Map<Integer, String> entrezSourceFiles) {
+        this.entrezSourceFiles = entrezSourceFiles;
     }
 
     public EnsemblGff3Parser getDataGff3Parser() {
