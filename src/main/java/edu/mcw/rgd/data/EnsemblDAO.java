@@ -240,6 +240,31 @@ public class EnsemblDAO extends AbstractDAO {
         return mapDAO.getChromosomes(mapKey);
     }
 
+    /// chromosomes for the assembly being loaded: prefer the Ensembl (loading) map's own chromosomes;
+    /// fall back to the NCBI map (legacy case: Ensembl and NCBI share the assembly and the chromosomes
+    /// are stored only on the NCBI map). An Ensembl-only assembly (no NCBI counterpart, f.e. naked mole-rat
+    /// 'Naked mole-rat maternal') keeps its chromosomes on the Ensembl map itself.
+    public List<Chromosome> getLoadingChromosomes(int ensemblMapKey, int ncbiMapKey) throws Exception {
+        List<Chromosome> chrs = getChromosomes(ensemblMapKey);
+        if( chrs!=null && !chrs.isEmpty() ) {
+            return chrs;
+        }
+        return getChromosomes(ncbiMapKey);
+    }
+
+    /// true unless the two maps are known to be DIFFERENT assemblies (both carry a GenBank accession and the
+    /// accessions differ). Used to decide whether NCBI-gene-by-position matching is valid -- it only is when
+    /// the NCBI map shares the Ensembl map's coordinate system. If either accession is missing we cannot tell,
+    /// so we assume they are the same (preserves legacy behavior for maps that have no accession populated).
+    public boolean mapsShareAssembly(int mapKeyA, int mapKeyB) throws Exception {
+        String accA = getAssemblyMap(mapKeyA).getGenBankAssemblyAcc();
+        String accB = getAssemblyMap(mapKeyB).getGenBankAssemblyAcc();
+        if( Utils.isStringEmpty(accA) || Utils.isStringEmpty(accB) ) {
+            return true;
+        }
+        return Utils.stringsAreEqualIgnoreCase(accA, accB);
+    }
+
     public void insertMapData(MapData md, String prefix) throws Exception {
         logInsertedGenePos.info(prefix+md.dump("|"));
         mapDAO.insertMapData(md);

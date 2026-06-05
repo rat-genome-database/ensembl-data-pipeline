@@ -38,8 +38,17 @@ public class EnsemblGeneLoader {
 
         genePositions.loadPositionsInRgd(ensemblMapKey, ensemblDAO);
 
-        // we have chromosome data only for NCBI assemblies
-        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiAssemblyMapKey);
+        // chromosomes of the assembly being loaded (Ensembl map if populated, else the NCBI map)
+        List<Chromosome> chromosomes = ensemblDAO.getLoadingChromosomes(ensemblMapKey, ncbiAssemblyMapKey);
+
+        // NCBI-gene-by-position matching is only valid when the NCBI map is the SAME assembly as the one we
+        // load onto. For an Ensembl-only assembly (no matching NCBI assembly) disable it (0) -- otherwise we
+        // would match incoming genes against NCBI genes positioned on a different genome.
+        int ncbiMatchMapKey = ensemblDAO.mapsShareAssembly(ensemblMapKey, ncbiAssemblyMapKey) ? ncbiAssemblyMapKey : 0;
+        if( ncbiMatchMapKey==0 ) {
+            statuslog.info(speciesName+"NCBI-gene-by-position matching disabled: NCBI map "+ncbiAssemblyMapKey
+                    +" is a different assembly than Ensembl map "+ensemblMapKey);
+        }
 
         for (EnsemblGene gene : genes) {
             String chr = ensemblDAO.matchChromosome(gene.getChromosome(), chromosomes);
@@ -96,7 +105,7 @@ public class EnsemblGeneLoader {
                         conflictLog.info(speciesName+gene.getEnsemblGeneId()+" has RGD IDS: "+Utils.concatenate(ensembleRgdIds,","));
                     else {
                         if (ensembleRgdIds == null || ensembleRgdIds.isEmpty()) {
-                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey, ncbiAssemblyMapKey);
+                            createNewEnsemblGene(gene, ensemblMapKey, null, speciesTypeKey, ncbiMatchMapKey);
                         } else {
                             updateData(gene, ensembleRgdIds.get(0), ensemblMapKey);
                         }
@@ -116,7 +125,7 @@ public class EnsemblGeneLoader {
                                     mismatches.add(gene.getEnsemblGeneId());
                                     conflictLog.info(speciesName+"NO NCBI rgd ids; incoming " + gene.getEnsemblGeneId()+" "+gene.getGeneSymbol()+"  has  RGD:"+accId+" and Ensembl RGD IDS: "+Utils.concatenate(ensembleRgdIds, ","));
                                 } else {
-                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey, ncbiAssemblyMapKey);
+                                    createNewEnsemblGene(gene, ensemblMapKey, accId, speciesTypeKey, ncbiMatchMapKey);
                                 }
                             }
                         }
@@ -131,7 +140,7 @@ public class EnsemblGeneLoader {
                 } else {
                     // Check if ncbi rgdId and rgdId from file matches
                     if (ensembleRgdIds == null && accId == null) {
-                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey, ncbiAssemblyMapKey);
+                        createNewEnsemblGene(gene, ensemblMapKey, ncbiRgdId, speciesTypeKey, ncbiMatchMapKey);
                     } else {
                         if (accId == null) {
                             if (matches.containsKey(gene.getEnsemblGeneId()))
@@ -326,8 +335,8 @@ public class EnsemblGeneLoader {
             return false;
         }
 
-        // check if there is one  NCBI gene in this region
-        int ncbiGeneRgdId = findNcbiGeneInRegion(ncbiMapKey, gene);
+        // check if there is one  NCBI gene in this region (skipped when there is no matching NCBI assembly)
+        int ncbiGeneRgdId = ncbiMapKey>0 ? findNcbiGeneInRegion(ncbiMapKey, gene) : 0;
         if( ncbiGeneRgdId!=0 ) {
 
             String rgdIdStr = Integer.toString(ncbiGeneRgdId);

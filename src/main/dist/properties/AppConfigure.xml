@@ -17,7 +17,7 @@
                 <entry key="9" value="912" /><!-- pig -->
                 <entry key="5" value="512"/><!-- bonobo -->
                 <entry key="13" value="1312" /><!-- vervet -->
-                <entry key="14" value="1411" /><!-- HetGla_female_1.0 -->
+                <entry key="14" value="1412" /><!-- naked mole-rat 'Naked mole-rat maternal' (GCA_944319715.1) -->
                 <entry key="7" value="721"/><!-- squirrel SpeTri2.0-->
             </map>
         </property>
@@ -37,7 +37,7 @@
         </property>
         <property name="assemblyMapNames" ><!-- assembly map names, as found at Ensembl or  NCBI -->
             <map>
-                <entry key="1411" value="Naked_mole-rat_maternal Ensembl" /><!-- 'HetGla_female_1.0 Ensembl' -->
+                <entry key="1412" value="Naked_mole-rat_maternal Ensembl" /><!-- map_name has spaces; use Ensembl's underscore form for the transcript file name + BioMart name check -->
             </map>
         </property>
         <property name="gff3XrefAuthorities"><!-- gff3 loader: species type key -> species xref authority in the gff3 gene description -->

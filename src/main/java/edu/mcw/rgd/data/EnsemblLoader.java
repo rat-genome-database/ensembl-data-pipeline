@@ -202,6 +202,38 @@ public class EnsemblLoader {
         log.info("  QC: loading assembly map_key "+ensemblMapKey+" ["+map.getName()+"] source=Ensembl -- OK");
     }
 
+    /**
+     * QC pre-check (GFF3 path): make certain the map_key we load onto is the SAME assembly as the downloaded
+     * GFF3 -- so there is no doubt which assembly the data goes into. The check is by GenBank assembly
+     * accession only (the definitive identity of an assembly); a missing or mismatched accession aborts the
+     * species rather than guessing by assembly name.
+     * @param ensemblMapKey the map_key the pipeline loads Ensembl positions onto
+     * @param gff3AssemblyName  GFF3 '#!genome-build' value, f.e. 'Naked_mole-rat_maternal' (for messages)
+     * @param gff3Accession     GFF3 '#!genome-build-accession' value, f.e. 'GCA_944319715.1'
+     */
+    void verifyLoadingAssembly(int ensemblMapKey, String gff3AssemblyName, String gff3Accession) throws Exception {
+
+        edu.mcw.rgd.datamodel.Map map = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
+        if( map==null ) {
+            throw new Exception("QC pre-check failed: assembly map_key "+ensemblMapKey+" not found in RGD");
+        }
+        String mapAcc = map.getGenBankAssemblyAcc();
+
+        if( Utils.isStringEmpty(gff3Accession) ) {
+            throw new Exception("QC pre-check failed: GFF3 for "+gff3AssemblyName+" has no '#!genome-build-accession' line");
+        }
+        if( Utils.isStringEmpty(mapAcc) ) {
+            throw new Exception("QC pre-check failed: map_key "+ensemblMapKey+" ["+map.getName()
+                    +"] has no GenBank accession in RGD -- set maps.genbank_assembly_acc to "+gff3Accession);
+        }
+        if( !Utils.stringsAreEqualIgnoreCase(gff3Accession, mapAcc) ) {
+            throw new Exception("QC pre-check failed: WRONG ASSEMBLY -- map_key "+ensemblMapKey+" ["+map.getName()
+                    +"] GenBank acc "+mapAcc+" != GFF3 genome-build-accession "+gff3Accession+" ("+gff3AssemblyName+")");
+        }
+        log.info("  QC: assembly map_key "+ensemblMapKey+" ["+map.getName()+"] GenBank acc "+mapAcc
+                +" == GFF3 "+gff3Accession+" -- OK");
+    }
+
     /// download the species' gff3 + entrez source files (full URLs configured per species in AppConfigure.xml)
     /// and configure the gff3 parser for this species
     void prepareGff3Parser(int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
@@ -216,6 +248,10 @@ public class EnsemblLoader {
 
         String gff3File = dataPuller.downloadEnsemblFile(gff3Url);
         String entrezFile = dataPuller.downloadEnsemblFile(entrezUrl);
+
+        // pre-check: the map_key we load onto must be the SAME assembly as the GFF3 we just downloaded
+        String[] gff3Assembly = EnsemblGff3Parser.readAssemblyHeader(gff3File); // { name, GenBank accession }
+        verifyLoadingAssembly(ensemblMapKey, gff3Assembly[0], gff3Assembly[1]);
 
         String xrefAuthority = getGff3XrefAuthorities()==null ? null : getGff3XrefAuthorities().get(speciesTypeKey);
 

@@ -23,8 +23,8 @@ public class EnsemblTranscriptLoader {
         log.debug("Loading the transcripts file");
         CounterPool counters = new CounterPool();
 
-        // we have chromosome data only for NCBI assemblies
-        List<Chromosome> chromosomes = ensemblDAO.getChromosomes(ncbiMapKey);
+        // chromosomes of the assembly being loaded (Ensembl map if populated, else the NCBI map)
+        List<Chromosome> chromosomes = ensemblDAO.getLoadingChromosomes(ensemblMapKey, ncbiMapKey);
 
         // preload Ensembl gene id -> gene RGD id once, instead of querying per transcript
         java.util.Map<String,String> ensemblGeneRgdIdMap = ensemblDAO.getEnsemblGeneRgdIdMap(speciesTypeKey);

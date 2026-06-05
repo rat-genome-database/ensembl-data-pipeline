@@ -281,6 +281,28 @@ public class EnsemblGff3Parser {
 
     // --- helpers -------------------------------------------------------------
 
+    /// read the assembly identity from the GFF3 header (lines at the top of the file), f.e.
+    ///   '#!genome-build  Naked_mole-rat_maternal'  and  '#!genome-build-accession GCA_944319715.1'
+    /// returns { assemblyName, genBankAccession } -- either element may be null if its line is absent
+    static String[] readAssemblyHeader(String gff3File) throws IOException {
+        String name=null, accession=null;
+        BufferedReader in = Utils.openReader(gff3File);
+        String line;
+        while( (line=in.readLine())!=null ) {
+            if( !line.startsWith("#") ) {
+                break; // header lines are at the very top of the file
+            }
+            // check the longer '-accession' tag before the 'genome-build' prefix it shares
+            if( line.startsWith("#!genome-build-accession") ) {
+                accession = line.substring("#!genome-build-accession".length()).trim();
+            } else if( line.startsWith("#!genome-build") ) {
+                name = line.substring("#!genome-build".length()).trim();
+            }
+        }
+        in.close();
+        return new String[]{ name, accession };
+    }
+
     /// extract the value of a ';'-separated GFF3 attribute, f.e. attr(info, "gene_id=")
     static String attr(String info, String key) {
         for( String part: info.split("[\\;]") ) {
