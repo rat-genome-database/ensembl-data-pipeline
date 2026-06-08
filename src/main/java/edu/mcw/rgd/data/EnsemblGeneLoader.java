@@ -42,12 +42,12 @@ public class EnsemblGeneLoader {
         List<Chromosome> chromosomes = ensemblDAO.getLoadingChromosomes(ensemblMapKey, ncbiAssemblyMapKey);
 
         // NCBI-gene-by-position matching is only valid when the NCBI map is the SAME assembly as the one we
-        // load onto. For an Ensembl-only assembly (no matching NCBI assembly) disable it (0) -- otherwise we
-        // would match incoming genes against NCBI genes positioned on a different genome.
-        int ncbiMatchMapKey = ensemblDAO.mapsShareAssembly(ensemblMapKey, ncbiAssemblyMapKey) ? ncbiAssemblyMapKey : 0;
+        // load onto. For an Ensembl-only assembly (no NCBI map, or a different-assembly NCBI map) disable it (0)
+        // -- otherwise we would match incoming genes against NCBI genes positioned on a different genome.
+        int ncbiMatchMapKey = (ncbiAssemblyMapKey>0 && ensemblDAO.mapsShareAssembly(ensemblMapKey, ncbiAssemblyMapKey))
+                ? ncbiAssemblyMapKey : 0;
         if( ncbiMatchMapKey==0 ) {
-            statuslog.info(speciesName+"NCBI-gene-by-position matching disabled: NCBI map "+ncbiAssemblyMapKey
-                    +" is a different assembly than Ensembl map "+ensemblMapKey);
+            statuslog.info(speciesName+"NCBI-gene-by-position matching disabled (no NCBI assembly matching Ensembl map "+ensemblMapKey+")");
         }
 
         for (EnsemblGene gene : genes) {

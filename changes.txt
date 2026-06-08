@@ -1,3 +1,7 @@
+Jun 8, 2026
+  naked mole-rat has no NCBI assembly matching the Ensembl 'Naked mole-rat maternal' genome: dropped its NCBI map entry; NCBI map is now optional per species; verified all other NCBI/Ensembl map pairs share the same assembly
+  AppConfigure: assembly-map comments now show common species name + official assembly name
+
 Jun 5, 2026
   GFF3 loader: gff3/entrez source files are now full URLs configured per species in AppConfigure.xml (fixes 404s for human and bonobo, whose Ensembl file names differ in case/version from the RGD assembly names); genome-build header check is case-insensitive
   naked mole-rat: load onto the current Ensembl assembly (Naked mole-rat maternal); chromosomes are read from the Ensembl map when present, else the NCBI map; NCBI-gene-by-position matching is skipped when no matching NCBI assembly exists

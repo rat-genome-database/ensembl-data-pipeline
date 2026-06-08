@@ -112,7 +112,8 @@ public class EnsemblLoader {
         long time0 = System.currentTimeMillis();
         String speciesName = SpeciesType.getCommonName(speciesTypeKey);
         int ensemblMapKey = getEnsemblAssemblyMap().get(speciesTypeKey);
-        int ncbiAssemblyMapKey = getNcbiAssemblyMap().get(speciesTypeKey);
+        Integer ncbiMapKeyBoxed = getNcbiAssemblyMap().get(speciesTypeKey);
+        int ncbiAssemblyMapKey = ncbiMapKeyBoxed!=null ? ncbiMapKeyBoxed : 0; // 0 = no NCBI assembly (f.e. naked mole-rat)
         log.info(speciesName+" " +getVersion());
 
         // QC pre-check: the assembly we load onto must be an Ensembl-source assembly in RGD

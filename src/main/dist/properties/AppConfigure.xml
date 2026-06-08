@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Jun 5, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Jun 8, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -9,29 +9,29 @@
         <property name="transcriptLoader" ref="TranscriptLoader"/>
         <property name="ensemblAssemblyMap">
             <map>
-                <entry key="3" value="381"/><!-- rat GRCr8-->
-                <entry key="2" value="240"/><!-- mouse -->
-                <entry key="1" value="40"/><!-- human -->
-                <entry key="4" value="45"/><!-- chinchilla -->
+                <entry key="3" value="381"/><!-- rat GRCr8 -->
+                <entry key="2" value="240"/><!-- mouse GRCm39 -->
+                <entry key="1" value="40"/><!-- human GRCh38.p14 -->
+                <entry key="4" value="45"/><!-- chinchilla ChiLan1.0 -->
                 <entry key="6" value="638"/><!-- dog ROS_Cfam_1.0 -->
-                <entry key="9" value="912" /><!-- pig -->
-                <entry key="5" value="512"/><!-- bonobo -->
-                <entry key="13" value="1312" /><!-- vervet -->
-                <entry key="14" value="1412" /><!-- naked mole-rat 'Naked mole-rat maternal' (GCA_944319715.1) -->
-                <entry key="7" value="721"/><!-- squirrel SpeTri2.0-->
+                <entry key="9" value="912" /><!-- pig Sscrofa11.1 -->
+                <entry key="5" value="512"/><!-- bonobo PanPan1.1 -->
+                <entry key="13" value="1312" /><!-- vervet ChlSab1.1 -->
+                <entry key="14" value="1412" /><!-- naked mole-rat 'Naked mole-rat maternal' -->
+                <entry key="7" value="721"/><!-- squirrel SpeTri2.0 -->
             </map>
         </property>
         <property name="ncbiAssemblyMap">
             <map>
-                <entry key="3" value="380"/><!-- rat GRCr8-->
-                <entry key="2" value="239"/><!-- mouse -->
-                <entry key="1" value="38"/><!-- human -->
-                <entry key="4" value="44"/><!-- chinchilla -->
+                <entry key="3" value="380"/><!-- rat GRCr8 -->
+                <entry key="2" value="239"/><!-- mouse GRCm39 -->
+                <entry key="1" value="38"/><!-- human GRCh38 -->
+                <entry key="4" value="44"/><!-- chinchilla ChiLan1.0 -->
                 <entry key="6" value="634"/><!-- dog ROS_Cfam_1.0 -->
-                <entry key="9" value="911" /><!-- pig -->
-                <entry key="5" value="511"/><!-- bonobo -->
-                <entry key="13" value="1311" /><!-- vervet -->
-                <entry key="14" value="1410" /><!-- HetGla_female_1.0 -->
+                <entry key="9" value="911" /><!-- pig Sscrofa11.1 -->
+                <entry key="5" value="511"/><!-- bonobo PanPan1.1 -->
+                <entry key="13" value="1311" /><!-- vervet ChlSab1.1 -->
+                <!-- naked mole-rat (14): no NCBI map; the Ensembl 'Naked mole-rat maternal' (GCA_944319715.1) has no NCBI/RefSeq counterpart -->
                 <entry key="7" value="720" /><!-- squirrel SpeTri2.0 -->
             </map>
         </property>
