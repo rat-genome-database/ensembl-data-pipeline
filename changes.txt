@@ -1,3 +1,6 @@
+Jun 9, 2026
+  updated GFF3 and TSV source URLs to Ensembl release 116: path changed from pub/current_gff3 and pub/current_tsv to pub/current/gff3 and pub/current/tsv; all assemblies unchanged
+
 Jun 8, 2026
   naked mole-rat has no NCBI assembly matching the Ensembl 'Naked mole-rat maternal' genome: dropped its NCBI map entry; NCBI map is now optional per species; verified all other NCBI/Ensembl map pairs share the same assembly
   AppConfigure: assembly-map comments now show common species name + official assembly name
