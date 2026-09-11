@@ -1,3 +1,10 @@
+Sep 11, 2026
+  added '-mapKey' run mode (gff3 loader): load genes and transcripts onto explicitly given assembly maps,
+    f.e. the rat strain assemblies 301, 302, 303; Ensembl positions coexist with NCBI ones on the same map key
+  config restructured: one 'assemblies' list with a bean per assembly grouped per species (map keys, xref
+    authority and source files together); a run with no '-species' processes all configured species and
+    assemblies; '-species' and '-mapKey' are optional filters; updated dependencies
+
 Jun 9, 2026
   updated GFF3 and TSV source URLs to Ensembl release 116: path changed from pub/current_gff3 and pub/current_tsv to pub/current/gff3 and pub/current/tsv; all assemblies unchanged
 

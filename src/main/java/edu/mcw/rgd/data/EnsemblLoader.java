@@ -23,12 +23,7 @@ public class EnsemblLoader {
     EnsemblGff3Parser dataGff3Parser;
     EnsemblGeneLoader geneLoader;
     EnsemblTranscriptLoader transcriptLoader;
-    private Map<Integer, Integer> ensemblAssemblyMap;
-    private Map<Integer, Integer> ncbiAssemblyMap;
-    private Map<Integer, String> assemblyMapNames;
-    private Map<Integer, String> gff3XrefAuthorities; // species -> 'RGD' | 'MGI' | 'HGNC' (gff3 loader only)
-    private Map<Integer, String> gff3SourceFiles;     // species -> full Ensembl gff3.gz URL (gff3 loader only)
-    private Map<Integer, String> entrezSourceFiles;   // species -> full Ensembl entrez.tsv.gz URL (gff3 loader only)
+    private List<AssemblyConfig> assemblies; // all assemblies processed by the pipeline, grouped per species in AppConfigure.xml
 
     private boolean skipGeneLoader = false;
     private boolean skipTranscriptLoader = false;
@@ -47,16 +42,22 @@ public class EnsemblLoader {
         edu.mcw.rgd.data.EnsemblLoader loader=(edu.mcw.rgd.data.EnsemblLoader) (bf.getBean("loader"));
 
         // parse cmd line params
-        if( args.length<2 ) {
+        if( args.length<1 ) {
             usage();
             return;
         }
 
-        int speciesTypeKey = -1;
+        int speciesTypeKey = SpeciesType.ALL; // default: all configured species
+        List<Integer> mapKeys = new ArrayList<>();
         for( int argc=0; argc<args.length; argc++ ) {
             String arg = args[argc];
             if (arg.equals("-species")) {
                 speciesTypeKey = SpeciesType.parse(args[++argc]);
+            }
+            else if( arg.equals("-mapKey") ) {
+                for( String mapKeyStr: args[++argc].split(",") ) {
+                    mapKeys.add(Integer.parseInt(mapKeyStr.trim()));
+                }
             }
             else if( arg.equals("-skipGenes") ) {
                 loader.skipGeneLoader = true;
@@ -82,46 +83,86 @@ public class EnsemblLoader {
             return;
         }
 
-        // if species type key is all, run for all species
-        if( speciesTypeKey<0 ) {
-            throw new Exception("Aborted: please specify the species in cmd line");
-        }
-
-        if( speciesTypeKey== SpeciesType.ALL ) {
-            List<Integer> speciesList = new ArrayList<>(loader.getEnsemblAssemblyMap().keySet());
-            Collections.shuffle(speciesList);
-            for( Integer spKey: speciesList){
-                loader.run(spKey);
-            }
-        }
-        else {
-            loader.run(speciesTypeKey);
+        List<AssemblyConfig> assembliesToRun = loader.selectAssemblies(speciesTypeKey, mapKeys);
+        Collections.shuffle(assembliesToRun);
+        for( AssemblyConfig assembly: assembliesToRun ) {
+            loader.run(assembly);
         }
     }
 
     /**
-     * run the Ensembl pipeline in download+process mode;
+     * select the configured assemblies to be processed in this run:
+     * all of them by default, restricted by the optional '-species' and '-mapKey' cmdline filters
+     */
+    List<AssemblyConfig> selectAssemblies(int speciesTypeKey, List<Integer> mapKeys) throws Exception {
+
+        List<AssemblyConfig> result = new ArrayList<>(getAssemblies());
+
+        if( speciesTypeKey!=SpeciesType.ALL ) {
+            result.removeIf(a -> a.getSpeciesTypeKey()!=speciesTypeKey);
+        }
+
+        if( !mapKeys.isEmpty() ) {
+            result.removeIf(a -> !mapKeys.contains(a.getEnsemblMapKey()));
+
+            for( int mapKey: mapKeys ) {
+                boolean found = false;
+                for( AssemblyConfig a: result ) {
+                    if( a.getEnsemblMapKey()==mapKey ) {
+                        found = true;
+                        break;
+                    }
+                }
+                if( !found ) {
+                    throw new Exception("Aborted: map_key "+mapKey+" is not configured"
+                        + (speciesTypeKey!=SpeciesType.ALL ? " for species "+SpeciesType.getCommonName(speciesTypeKey) : "")
+                        + " -- see the 'assemblies' property in AppConfigure.xml");
+                }
+            }
+        }
+
+        // strain assemblies (Ensembl and NCBI positions share one map key) are loadable only from GFF3 files
+        if( !useGff3Loader ) {
+            for( AssemblyConfig a: new ArrayList<>(result) ) {
+                if( a.isSharedMapKey() ) {
+                    log.info("  "+a.describe()+" skipped -- available only with -useGff3Loader");
+                    result.remove(a);
+                }
+            }
+        }
+
+        if( result.isEmpty() ) {
+            throw new Exception("Aborted: no assemblies selected to run");
+        }
+        return result;
+    }
+
+    /**
+     * run the Ensembl pipeline for one configured assembly in download+process mode;
      * <ol>
-     *     <li>download genes data from Ensembl biomart and store it locally in data folder</li>
+     *     <li>download genes data from Ensembl (gff3 file, or biomart) and store it locally in data folder</li>
      *     <li>download file with NcbiGene ids mapped to Ensembl ids</li>
      * </ol>
-     * @param speciesTypeKey species type key
+     * @param assembly assembly to be processed
      * @throws Exception
      */
-    public void run(int speciesTypeKey) throws Exception {
+    public void run(AssemblyConfig assembly) throws Exception {
         long time0 = System.currentTimeMillis();
+        int speciesTypeKey = assembly.getSpeciesTypeKey();
         String speciesName = SpeciesType.getCommonName(speciesTypeKey);
-        int ensemblMapKey = getEnsemblAssemblyMap().get(speciesTypeKey);
-        Integer ncbiMapKeyBoxed = getNcbiAssemblyMap().get(speciesTypeKey);
-        int ncbiAssemblyMapKey = ncbiMapKeyBoxed!=null ? ncbiMapKeyBoxed : 0; // 0 = no NCBI assembly (f.e. naked mole-rat)
+        int ensemblMapKey = assembly.getEnsemblMapKey();
+        int ncbiAssemblyMapKey = assembly.getNcbiMapKey(); // 0 = no NCBI assembly (f.e. naked mole-rat)
         log.info(speciesName+" " +getVersion());
+        log.info("  assembly: "+assembly.describe());
 
-        // QC pre-check: the assembly we load onto must be an Ensembl-source assembly in RGD
-        checkLoadingAssemblyIsEnsembl(ensemblMapKey, speciesName);
+        // QC pre-check: the assembly we load onto must be an Ensembl-source assembly in RGD;
+        // a strain assembly shares one NCBI-source map with the NCBI positions -- allowed for the GFF3
+        // path, because the assembly identity is verified by GenBank accession right after the download
+        checkLoadingAssemblyIsEnsembl(ensemblMapKey, speciesName, useGff3Loader && assembly.isSharedMapKey());
 
-        // GFF3 path: download the species' gff3 + entrez files and configure the parser
+        // GFF3 path: download the assembly's gff3 + entrez files and configure the parser
         if( useGff3Loader ) {
-            prepareGff3Parser(speciesTypeKey, ensemblMapKey, ncbiAssemblyMapKey);
+            prepareGff3Parser(assembly);
         }
 
         MemoryMonitor memoryMonitor = new MemoryMonitor();
@@ -138,7 +179,7 @@ public class EnsemblLoader {
                     ensemblMapKey = dataGff3Parser.getEnsemblAssemblyMapKey();
                     ncbiAssemblyMapKey = dataGff3Parser.getNcbiAssemblyMapKey();
                 } else {
-                    validateAssemblyName(ensemblMapKey);
+                    validateAssemblyName(assembly);
 
                     String dataFile = dataPuller.downloadGenesFile();
                     genes = dataParser.parseGene(dataFile);
@@ -186,17 +227,26 @@ public class EnsemblLoader {
     }
 
     /**
-     * QC pre-check run before processing a species: the assembly map we load Ensembl positions onto
+     * QC pre-check run before processing an assembly: the assembly map we load Ensembl positions onto
      * must itself be an Ensembl-source assembly in RGD. Guards against a misconfigured map key
-     * that would load Ensembl data onto an NCBI (or other) assembly.
+     * that would load Ensembl data onto an NCBI (or other) assembly. For a strain assembly the map is
+     * typically NCBI-source: allowed (GFF3 path only), because the Ensembl positions coexist on the same
+     * map key, distinguished by SRC_PIPELINE='Ensembl', and the assembly identity is verified by
+     * GenBank accession.
      */
-    void checkLoadingAssemblyIsEnsembl(int ensemblMapKey, String speciesName) throws Exception {
+    void checkLoadingAssemblyIsEnsembl(int ensemblMapKey, String speciesName, boolean allowNonEnsemblSource) throws Exception {
 
         edu.mcw.rgd.datamodel.Map map = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
         if( map==null ) {
             throw new Exception("QC pre-check failed for "+speciesName+": assembly map_key "+ensemblMapKey+" not found in RGD");
         }
         if( !Utils.stringsAreEqualIgnoreCase(map.getSource(), "Ensembl") ) {
+            if( allowNonEnsemblSource ) {
+                log.warn("  QC: loading assembly map_key "+ensemblMapKey+" ["+map.getName()+"] has source '"+map.getSource()
+                        +"'; Ensembl positions will coexist on this map, distinguished by SRC_PIPELINE='Ensembl';"
+                        +" assembly identity is verified by GenBank accession");
+                return;
+            }
             throw new Exception("QC pre-check failed for "+speciesName+": loading assembly map_key "+ensemblMapKey
                     +" ["+map.getName()+"] has source '"+map.getSource()+"', expected 'Ensembl'");
         }
@@ -207,7 +257,7 @@ public class EnsemblLoader {
      * QC pre-check (GFF3 path): make certain the map_key we load onto is the SAME assembly as the downloaded
      * GFF3 -- so there is no doubt which assembly the data goes into. The check is by GenBank assembly
      * accession only (the definitive identity of an assembly); a missing or mismatched accession aborts the
-     * species rather than guessing by assembly name.
+     * assembly rather than guessing by assembly name.
      * @param ensemblMapKey the map_key the pipeline loads Ensembl positions onto
      * @param gff3AssemblyName  GFF3 '#!genome-build' value, f.e. 'Naked_mole-rat_maternal' (for messages)
      * @param gff3Accession     GFF3 '#!genome-build-accession' value, f.e. 'GCA_944319715.1'
@@ -235,59 +285,56 @@ public class EnsemblLoader {
                 +" == GFF3 "+gff3Accession+" -- OK");
     }
 
-    /// download the species' gff3 + entrez source files (full URLs configured per species in AppConfigure.xml)
-    /// and configure the gff3 parser for this species
-    void prepareGff3Parser(int speciesTypeKey, int ensemblMapKey, int ncbiAssemblyMapKey) throws Exception {
+    /// download the assembly's gff3 + entrez source files (full URLs configured per assembly in
+    /// AppConfigure.xml) and configure the gff3 parser
+    void prepareGff3Parser(AssemblyConfig assembly) throws Exception {
 
-        dataPuller.setSpeciesTypeKey(speciesTypeKey);
-        String gff3Url = getGff3SourceFiles()==null ? null : getGff3SourceFiles().get(speciesTypeKey);
-        String entrezUrl = getEntrezSourceFiles()==null ? null : getEntrezSourceFiles().get(speciesTypeKey);
-        if( gff3Url==null || entrezUrl==null ) {
-            throw new Exception("no GFF3/entrez source file configured for "+SpeciesType.getCommonName(speciesTypeKey)
-                    +" (species "+speciesTypeKey+") -- add it to gff3SourceFiles/entrezSourceFiles in AppConfigure.xml");
+        dataPuller.setSpeciesTypeKey(assembly.getSpeciesTypeKey());
+        if( Utils.isStringEmpty(assembly.getGff3Url()) || Utils.isStringEmpty(assembly.getEntrezUrl()) ) {
+            throw new Exception("no GFF3/entrez source file configured for "+assembly.describe()
+                    +" -- see the 'assemblies' property in AppConfigure.xml");
         }
 
-        String gff3File = dataPuller.downloadEnsemblFile(gff3Url);
-        String entrezFile = dataPuller.downloadEnsemblFile(entrezUrl);
+        String gff3File = dataPuller.downloadEnsemblFile(assembly.getGff3Url());
+        String entrezFile = dataPuller.downloadEnsemblFile(assembly.getEntrezUrl());
 
         // pre-check: the map_key we load onto must be the SAME assembly as the GFF3 we just downloaded
         String[] gff3Assembly = EnsemblGff3Parser.readAssemblyHeader(gff3File); // { name, GenBank accession }
-        verifyLoadingAssembly(ensemblMapKey, gff3Assembly[0], gff3Assembly[1]);
-
-        String xrefAuthority = getGff3XrefAuthorities()==null ? null : getGff3XrefAuthorities().get(speciesTypeKey);
+        verifyLoadingAssembly(assembly.getEnsemblMapKey(), gff3Assembly[0], gff3Assembly[1]);
 
         dataGff3Parser.setGff3File(gff3File);
         dataGff3Parser.setEntrezFile(entrezFile);
-        dataGff3Parser.setGenomeBuild(resolveEnsemblAssembly(ensemblMapKey));
-        dataGff3Parser.setXrefAuthority(xrefAuthority);
-        dataGff3Parser.setEnsemblAssemblyMapKey(ensemblMapKey);
-        dataGff3Parser.setNcbiAssemblyMapKey(ncbiAssemblyMapKey);
+        dataGff3Parser.setGenomeBuild(resolveEnsemblAssembly(assembly));
+        dataGff3Parser.setXrefAuthority(assembly.getXrefAuthority());
+        dataGff3Parser.setEnsemblAssemblyMapKey(assembly.getEnsemblMapKey());
+        dataGff3Parser.setNcbiAssemblyMapKey(assembly.getNcbiMapKey());
 
-        log.info("  GFF3: "+gff3Url);
+        log.info("  GFF3: "+assembly.getGff3Url());
     }
 
-    /// Ensembl assembly name for a map key: the assemblyMapNames override if present, else the RGD map name,
-    /// with the trailing ' Ensembl' stripped. f.e. map 381 -> 'GRCr8'; map 1411 (override) -> 'Naked_mole-rat_maternal'
-    String resolveEnsemblAssembly(int ensemblMapKey) throws Exception {
-        String name = getAssemblyMapNames()!=null ? getAssemblyMapNames().get(ensemblMapKey) : null;
+    /// Ensembl assembly name for a configured assembly: the assemblyName override if present, else the RGD
+    /// map name, with the trailing ' Ensembl' stripped. f.e. map 381 -> 'GRCr8';
+    /// naked mole-rat (override) -> 'Naked_mole-rat_maternal'
+    String resolveEnsemblAssembly(AssemblyConfig assembly) throws Exception {
+        String name = assembly.getAssemblyName();
         if( name==null ) {
-            name = new EnsemblDAO().getAssemblyMap(ensemblMapKey).getName();
+            name = new EnsemblDAO().getAssemblyMap(assembly.getEnsemblMapKey()).getName();
         }
         return name.replace(" Ensembl", "").trim();
     }
 
-    void validateAssemblyName(int ensemblMapKey) throws Exception {
+    void validateAssemblyName(AssemblyConfig assembly) throws Exception {
 
         String assemblyName = dataPuller.getAssemblyNameFromEnsemblRest();
         log.info("Ensembl Rest service: assembly name: "+assemblyName);
         String expectedAssemblyNameInRgd = assemblyName+" Ensembl";
 
-        edu.mcw.rgd.datamodel.Map ensemblMap = new EnsemblDAO().getAssemblyMap(ensemblMapKey);
+        edu.mcw.rgd.datamodel.Map ensemblMap = new EnsemblDAO().getAssemblyMap(assembly.getEnsemblMapKey());
 
         if( !expectedAssemblyNameInRgd.equalsIgnoreCase(ensemblMap.getName()) ) {
 
-            // try to use alternate map names, if available
-            String altAssemblyName = getAssemblyMapNames().get(ensemblMapKey);
+            // try to use alternate assembly name, if available
+            String altAssemblyName = assembly.getAssemblyName();
             if( altAssemblyName!=null ) {
                 if (expectedAssemblyNameInRgd.equalsIgnoreCase(altAssemblyName)) {
                     return; // validation succeeded on alt assembly name
@@ -304,9 +351,11 @@ public class EnsemblLoader {
      * print to stdout the information about command line parameters
      */
     static public void usage() {
-        System.out.println("Command line parameters required:");
-        System.out.println(" -species 0|1|2|3|...|Rat|Mouse|Human|...|All");
-        System.out.println(" data source (pick one): -useBioMart | -useGff3Loader");
+        System.out.println("Command line parameters:");
+        System.out.println(" data source (pick one, required): -useBioMart | -useGff3Loader");
+        System.out.println(" optional: -species 1|2|3|...|Rat|Mouse|Human|... -- process only the given species");
+        System.out.println("           (default: all species and assemblies configured in AppConfigure.xml)");
+        System.out.println(" optional: -mapKey <k1[,k2,...]> -- process only the given assembly map(s), f.e. -mapKey 301,302,303");
         System.out.println(" optional: -skipGenes -skipTranscripts");
     }
 
@@ -350,52 +399,12 @@ public class EnsemblLoader {
         this.transcriptLoader = transcriptLoader;
     }
 
-    public void setEnsemblAssemblyMap(Map<Integer, Integer> ensemblAssemblyMap) {
-        this.ensemblAssemblyMap = ensemblAssemblyMap;
+    public List<AssemblyConfig> getAssemblies() {
+        return assemblies;
     }
 
-    public Map<Integer, Integer> getEnsemblAssemblyMap() {
-        return ensemblAssemblyMap;
-    }
-
-    public Map<Integer, Integer> getNcbiAssemblyMap() {
-        return ncbiAssemblyMap;
-    }
-
-    public void setNcbiAssemblyMap(Map<Integer, Integer> ncbiAssemblyMap) {
-        this.ncbiAssemblyMap = ncbiAssemblyMap;
-    }
-
-    public Map<Integer, String> getAssemblyMapNames() {
-        return assemblyMapNames;
-    }
-
-    public void setAssemblyMapNames(Map<Integer, String> assemblyMapNames) {
-        this.assemblyMapNames = assemblyMapNames;
-    }
-
-    public Map<Integer, String> getGff3XrefAuthorities() {
-        return gff3XrefAuthorities;
-    }
-
-    public void setGff3XrefAuthorities(Map<Integer, String> gff3XrefAuthorities) {
-        this.gff3XrefAuthorities = gff3XrefAuthorities;
-    }
-
-    public Map<Integer, String> getGff3SourceFiles() {
-        return gff3SourceFiles;
-    }
-
-    public void setGff3SourceFiles(Map<Integer, String> gff3SourceFiles) {
-        this.gff3SourceFiles = gff3SourceFiles;
-    }
-
-    public Map<Integer, String> getEntrezSourceFiles() {
-        return entrezSourceFiles;
-    }
-
-    public void setEntrezSourceFiles(Map<Integer, String> entrezSourceFiles) {
-        this.entrezSourceFiles = entrezSourceFiles;
+    public void setAssemblies(List<AssemblyConfig> assemblies) {
+        this.assemblies = assemblies;
     }
 
     public EnsemblGff3Parser getDataGff3Parser() {

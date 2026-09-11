@@ -1,79 +1,138 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Jun 9, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Sep 11, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
         <property name="geneLoader" ref="GeneLoader"/>
         <property name="transcriptLoader" ref="TranscriptLoader"/>
-        <property name="ensemblAssemblyMap">
-            <map>
-                <entry key="3" value="381"/><!-- rat GRCr8 -->
-                <entry key="2" value="240"/><!-- mouse GRCm39 -->
-                <entry key="1" value="40"/><!-- human GRCh38.p14 -->
-                <entry key="4" value="45"/><!-- chinchilla ChiLan1.0 -->
-                <entry key="6" value="638"/><!-- dog ROS_Cfam_1.0 -->
-                <entry key="9" value="912" /><!-- pig Sscrofa11.1 -->
-                <entry key="5" value="512"/><!-- bonobo PanPan1.1 -->
-                <entry key="13" value="1312" /><!-- vervet ChlSab1.1 -->
-                <entry key="14" value="1412" /><!-- naked mole-rat 'Naked mole-rat maternal' -->
-                <entry key="7" value="721"/><!-- squirrel SpeTri2.0 -->
-            </map>
-        </property>
-        <property name="ncbiAssemblyMap">
-            <map>
-                <entry key="3" value="380"/><!-- rat GRCr8 -->
-                <entry key="2" value="239"/><!-- mouse GRCm39 -->
-                <entry key="1" value="38"/><!-- human GRCh38 -->
-                <entry key="4" value="44"/><!-- chinchilla ChiLan1.0 -->
-                <entry key="6" value="634"/><!-- dog ROS_Cfam_1.0 -->
-                <entry key="9" value="911" /><!-- pig Sscrofa11.1 -->
-                <entry key="5" value="511"/><!-- bonobo PanPan1.1 -->
-                <entry key="13" value="1311" /><!-- vervet ChlSab1.1 -->
-                <!-- naked mole-rat (14): no NCBI map; the Ensembl 'Naked mole-rat maternal' (GCA_944319715.1) has no NCBI/RefSeq counterpart -->
-                <entry key="7" value="720" /><!-- squirrel SpeTri2.0 -->
-            </map>
-        </property>
-        <property name="assemblyMapNames" ><!-- assembly map names, as found at Ensembl or  NCBI -->
-            <map>
-                <entry key="1412" value="Naked_mole-rat_maternal Ensembl" /><!-- map_name has spaces; use Ensembl's underscore form for the transcript file name + BioMart name check -->
-            </map>
-        </property>
-        <property name="gff3XrefAuthorities"><!-- gff3 loader: species type key -> species xref authority in the gff3 gene description -->
-            <map>
-                <entry key="3" value="RGD"/><!-- rat -->
-                <entry key="2" value="MGI"/><!-- mouse -->
-                <entry key="1" value="HGNC"/><!-- human -->
-            </map>
-        </property>
-        <property name="gff3SourceFiles"><!-- gff3 loader: species type key -> full Ensembl GFF3 source URL (update file names on each Ensembl release) -->
-            <map>
-                <entry key="3"  value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus/Rattus_norvegicus.GRCr8.116.gff3.gz"/><!-- rat -->
-                <entry key="2"  value="https://ftp.ensembl.org/pub/current/gff3/mus_musculus/Mus_musculus.GRCm39.116.gff3.gz"/><!-- mouse -->
-                <entry key="1"  value="https://ftp.ensembl.org/pub/current/gff3/homo_sapiens/Homo_sapiens.GRCh38.116.gff3.gz"/><!-- human -->
-                <entry key="4"  value="https://ftp.ensembl.org/pub/current/gff3/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.116.gff3.gz"/><!-- chinchilla -->
-                <entry key="6"  value="https://ftp.ensembl.org/pub/current/gff3/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.116.gff3.gz"/><!-- dog -->
-                <entry key="9"  value="https://ftp.ensembl.org/pub/current/gff3/sus_scrofa/Sus_scrofa.Sscrofa11.1.116.gff3.gz"/><!-- pig -->
-                <entry key="5"  value="https://ftp.ensembl.org/pub/current/gff3/pan_paniscus/Pan_paniscus.panpan1.1.116.gff3.gz"/><!-- bonobo -->
-                <entry key="13" value="https://ftp.ensembl.org/pub/current/gff3/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.116.gff3.gz"/><!-- vervet -->
-                <entry key="14" value="https://ftp.ensembl.org/pub/current/gff3/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.116.gff3.gz"/><!-- naked mole-rat -->
-                <entry key="7"  value="https://ftp.ensembl.org/pub/current/gff3/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.116.gff3.gz"/><!-- squirrel -->
-            </map>
-        </property>
-        <property name="entrezSourceFiles"><!-- gff3 loader: species type key -> full Ensembl entrez (NCBI gene id) tsv source URL -->
-            <map>
-                <entry key="3"  value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus/Rattus_norvegicus.GRCr8.116.entrez.tsv.gz"/><!-- rat -->
-                <entry key="2"  value="https://ftp.ensembl.org/pub/current/tsv/mus_musculus/Mus_musculus.GRCm39.116.entrez.tsv.gz"/><!-- mouse -->
-                <entry key="1"  value="https://ftp.ensembl.org/pub/current/tsv/homo_sapiens/Homo_sapiens.GRCh38.116.entrez.tsv.gz"/><!-- human -->
-                <entry key="4"  value="https://ftp.ensembl.org/pub/current/tsv/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.116.entrez.tsv.gz"/><!-- chinchilla -->
-                <entry key="6"  value="https://ftp.ensembl.org/pub/current/tsv/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.116.entrez.tsv.gz"/><!-- dog -->
-                <entry key="9"  value="https://ftp.ensembl.org/pub/current/tsv/sus_scrofa/Sus_scrofa.Sscrofa11.1.116.entrez.tsv.gz"/><!-- pig -->
-                <entry key="5"  value="https://ftp.ensembl.org/pub/current/tsv/pan_paniscus/Pan_paniscus.panpan1.1.116.entrez.tsv.gz"/><!-- bonobo -->
-                <entry key="13" value="https://ftp.ensembl.org/pub/current/tsv/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.116.entrez.tsv.gz"/><!-- vervet -->
-                <entry key="14" value="https://ftp.ensembl.org/pub/current/tsv/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.116.entrez.tsv.gz"/><!-- naked mole-rat -->
-                <entry key="7"  value="https://ftp.ensembl.org/pub/current/tsv/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.116.entrez.tsv.gz"/><!-- squirrel -->
-            </map>
+        <!-- every assembly processed by the pipeline: one bean per assembly, grouped per species.
+             Per assembly: the map keys the data is loaded onto (ensemblMapKey = the map the Ensembl positions
+             go to; ncbiMapKey = the NCBI map used for gene-by-position matching, 0/absent = none;
+             a strain assembly has ONE shared map key: Ensembl and NCBI positions coexist on it,
+             distinguished by SRC_PIPELINE), the xref authority in the gff3 gene description,
+             and the gff3/entrez source files (update file names on each Ensembl release). -->
+        <property name="assemblies">
+            <list>
+                <!-- ================= rat (species 3) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- GRCr8, the primary rat assembly -->
+                    <property name="speciesTypeKey" value="3"/>
+                    <property name="ensemblMapKey" value="381"/><!-- 'GRCr8 Ensembl' -->
+                    <property name="ncbiMapKey" value="380"/><!-- 'GRCr8' -->
+                    <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus/Rattus_norvegicus.GRCr8.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus/Rattus_norvegicus.GRCr8.116.entrez.tsv.gz"/>
+                </bean>
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- SHR/Utx strain assembly UTH_Rnor_SHR_Utx -->
+                    <property name="speciesTypeKey" value="3"/>
+                    <property name="ensemblMapKey" value="301"/>
+                    <property name="ncbiMapKey" value="301"/><!-- shared map key -->
+                    <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_shrutx/Rattus_norvegicus_shrutx.UTH_Rnor_SHR_Utx.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_shrutx/Rattus_norvegicus_shrutx.UTH_Rnor_SHR_Utx.116.entrez.tsv.gz"/>
+                </bean>
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- SHRSP/BbbUtx strain assembly UTH_Rnor_SHRSP_BbbUtx_1.0 -->
+                    <property name="speciesTypeKey" value="3"/>
+                    <property name="ensemblMapKey" value="302"/>
+                    <property name="ncbiMapKey" value="302"/><!-- shared map key -->
+                    <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_shrspbbbutx/Rattus_norvegicus_shrspbbbutx.UTH_Rnor_SHRSP_BbbUtx_1.0.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_shrspbbbutx/Rattus_norvegicus_shrspbbbutx.UTH_Rnor_SHRSP_BbbUtx_1.0.116.entrez.tsv.gz"/>
+                </bean>
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- WKY/Bbb strain assembly UTH_Rnor_WKY_Bbb_1.0 -->
+                    <property name="speciesTypeKey" value="3"/>
+                    <property name="ensemblMapKey" value="303"/>
+                    <property name="ncbiMapKey" value="303"/><!-- shared map key -->
+                    <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_wkybbb/Rattus_norvegicus_wkybbb.UTH_Rnor_WKY_Bbb_1.0.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_wkybbb/Rattus_norvegicus_wkybbb.UTH_Rnor_WKY_Bbb_1.0.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= mouse (species 2) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- GRCm39 -->
+                    <property name="speciesTypeKey" value="2"/>
+                    <property name="ensemblMapKey" value="240"/><!-- 'GRCm39 Ensembl' -->
+                    <property name="ncbiMapKey" value="239"/><!-- 'GRCm39' -->
+                    <property name="xrefAuthority" value="MGI"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/mus_musculus/Mus_musculus.GRCm39.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/mus_musculus/Mus_musculus.GRCm39.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= human (species 1) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- GRCh38 -->
+                    <property name="speciesTypeKey" value="1"/>
+                    <property name="ensemblMapKey" value="40"/><!-- 'GRCh38.p14 Ensembl' -->
+                    <property name="ncbiMapKey" value="38"/><!-- 'GRCh38' -->
+                    <property name="xrefAuthority" value="HGNC"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/homo_sapiens/Homo_sapiens.GRCh38.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/homo_sapiens/Homo_sapiens.GRCh38.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= chinchilla (species 4) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- ChiLan1.0 -->
+                    <property name="speciesTypeKey" value="4"/>
+                    <property name="ensemblMapKey" value="45"/>
+                    <property name="ncbiMapKey" value="44"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/chinchilla_lanigera/Chinchilla_lanigera.ChiLan1.0.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= bonobo (species 5) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- PanPan1.1 -->
+                    <property name="speciesTypeKey" value="5"/>
+                    <property name="ensemblMapKey" value="512"/>
+                    <property name="ncbiMapKey" value="511"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/pan_paniscus/Pan_paniscus.panpan1.1.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/pan_paniscus/Pan_paniscus.panpan1.1.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= dog (species 6) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- ROS_Cfam_1.0 -->
+                    <property name="speciesTypeKey" value="6"/>
+                    <property name="ensemblMapKey" value="638"/>
+                    <property name="ncbiMapKey" value="634"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/canis_lupus_familiaris/Canis_lupus_familiaris.ROS_Cfam_1.0.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= squirrel (species 7) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- SpeTri2.0 -->
+                    <property name="speciesTypeKey" value="7"/>
+                    <property name="ensemblMapKey" value="721"/>
+                    <property name="ncbiMapKey" value="720"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/ictidomys_tridecemlineatus/Ictidomys_tridecemlineatus.SpeTri2.0.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= pig (species 9) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- Sscrofa11.1 -->
+                    <property name="speciesTypeKey" value="9"/>
+                    <property name="ensemblMapKey" value="912"/>
+                    <property name="ncbiMapKey" value="911"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/sus_scrofa/Sus_scrofa.Sscrofa11.1.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/sus_scrofa/Sus_scrofa.Sscrofa11.1.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= vervet (species 13) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- ChlSab1.1 -->
+                    <property name="speciesTypeKey" value="13"/>
+                    <property name="ensemblMapKey" value="1312"/>
+                    <property name="ncbiMapKey" value="1311"/>
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/chlorocebus_sabaeus/Chlorocebus_sabaeus.ChlSab1.1.116.entrez.tsv.gz"/>
+                </bean>
+
+                <!-- ================= naked mole-rat (species 14) ================= -->
+                <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- 'Naked mole-rat maternal' (GCA_944319715.1); no NCBI/RefSeq counterpart -->
+                    <property name="speciesTypeKey" value="14"/>
+                    <property name="ensemblMapKey" value="1412"/>
+                    <!-- no ncbiMapKey: Ensembl-only assembly -->
+                    <property name="assemblyName" value="Naked_mole-rat_maternal Ensembl"/><!-- map_name has spaces; use Ensembl's underscore form for the transcript file name + BioMart name check -->
+                    <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.116.gff3.gz"/>
+                    <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/heterocephalus_glaber_female/Heterocephalus_glaber_female.Naked_mole-rat_maternal.116.entrez.tsv.gz"/>
+                </bean>
+            </list>
         </property>
     </bean>
 
