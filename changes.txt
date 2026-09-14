@@ -1,3 +1,12 @@
+Sep 14, 2026
+  bug fix: transcript versions for newly created transcripts failed to insert into STABLE_TRANSCRIPTS
+    ('no RGD ID provided') -- affected every transcript on a freshly loaded assembly;
+    rat strain assemblies now load onto their own Ensembl maps 311, 312, 313 (NCBI maps 301, 302, 303);
+    new per-assembly 'gff3Only' config flag replaces the shared-map-key heuristic for BioMart skips
+
+Sep 14, 2026
+  UTH rat strain loading to correct map keys
+
 Sep 11, 2026
   added '-mapKey' run mode (gff3 loader): load genes and transcripts onto explicitly given assembly maps,
     f.e. the rat strain assemblies 301, 302, 303; Ensembl positions coexist with NCBI ones on the same map key

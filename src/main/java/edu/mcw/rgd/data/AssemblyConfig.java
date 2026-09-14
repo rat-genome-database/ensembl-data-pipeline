@@ -14,6 +14,8 @@ public class AssemblyConfig {
     private String entrezUrl;     // full Ensembl entrez tsv source URL (gff3 loader)
     private String xrefAuthority; // 'RGD' | 'MGI' | 'HGNC' | null -- xref authority in the gff3 gene description
     private String assemblyName;  // optional override of the RGD map name, f.e. 'Naked_mole-rat_maternal Ensembl'
+    private boolean gff3Only;     // true for assemblies loadable only from GFF3 files (f.e. rat strain assemblies,
+                                  //   which have no BioMart dataset matching the species default dataset)
 
     /// true for strain assemblies: Ensembl and NCBI positions share one map key (SRC_PIPELINE tells them apart)
     public boolean isSharedMapKey() {
@@ -79,5 +81,13 @@ public class AssemblyConfig {
 
     public void setAssemblyName(String assemblyName) {
         this.assemblyName = assemblyName;
+    }
+
+    public boolean isGff3Only() {
+        return gff3Only;
+    }
+
+    public void setGff3Only(boolean gff3Only) {
+        this.gff3Only = gff3Only;
     }
 }

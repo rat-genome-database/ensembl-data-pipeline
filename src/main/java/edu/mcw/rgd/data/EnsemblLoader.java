@@ -121,10 +121,10 @@ public class EnsemblLoader {
             }
         }
 
-        // strain assemblies (Ensembl and NCBI positions share one map key) are loadable only from GFF3 files
+        // some assemblies (f.e. rat strain assemblies) are loadable only from GFF3 files
         if( !useGff3Loader ) {
             for( AssemblyConfig a: new ArrayList<>(result) ) {
-                if( a.isSharedMapKey() ) {
+                if( a.isGff3Only() ) {
                     log.info("  "+a.describe()+" skipped -- available only with -useGff3Loader");
                     result.remove(a);
                 }

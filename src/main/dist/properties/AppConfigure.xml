@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Sep 11, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Sep 14, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -26,25 +26,28 @@
                 </bean>
                 <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- SHR/Utx strain assembly UTH_Rnor_SHR_Utx -->
                     <property name="speciesTypeKey" value="3"/>
-                    <property name="ensemblMapKey" value="301"/>
-                    <property name="ncbiMapKey" value="301"/><!-- shared map key -->
+                    <property name="ensemblMapKey" value="311"/><!-- 'UTH_Rnor_SHR_Utx Ensembl' -->
+                    <property name="ncbiMapKey" value="301"/><!-- 'UTH_Rnor_SHR_Utx' (same assembly, GCA_023515785.1) -->
                     <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Only" value="true"/>
                     <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_shrutx/Rattus_norvegicus_shrutx.UTH_Rnor_SHR_Utx.116.gff3.gz"/>
                     <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_shrutx/Rattus_norvegicus_shrutx.UTH_Rnor_SHR_Utx.116.entrez.tsv.gz"/>
                 </bean>
                 <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- SHRSP/BbbUtx strain assembly UTH_Rnor_SHRSP_BbbUtx_1.0 -->
                     <property name="speciesTypeKey" value="3"/>
-                    <property name="ensemblMapKey" value="302"/>
-                    <property name="ncbiMapKey" value="302"/><!-- shared map key -->
+                    <property name="ensemblMapKey" value="312"/><!-- 'UTH_Rnor_SHRSP_BbbUtx_1.0 Ensembl' -->
+                    <property name="ncbiMapKey" value="302"/><!-- 'UTH_Rnor_SHRSP_BbbUtx_1.0' (same assembly, GCA_021556685.1) -->
                     <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Only" value="true"/>
                     <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_shrspbbbutx/Rattus_norvegicus_shrspbbbutx.UTH_Rnor_SHRSP_BbbUtx_1.0.116.gff3.gz"/>
                     <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_shrspbbbutx/Rattus_norvegicus_shrspbbbutx.UTH_Rnor_SHRSP_BbbUtx_1.0.116.entrez.tsv.gz"/>
                 </bean>
                 <bean class="edu.mcw.rgd.data.AssemblyConfig"><!-- WKY/Bbb strain assembly UTH_Rnor_WKY_Bbb_1.0 -->
                     <property name="speciesTypeKey" value="3"/>
-                    <property name="ensemblMapKey" value="303"/>
-                    <property name="ncbiMapKey" value="303"/><!-- shared map key -->
+                    <property name="ensemblMapKey" value="313"/><!-- 'UTH_Rnor_WKY_Bbb_1.0 Ensembl' -->
+                    <property name="ncbiMapKey" value="303"/><!-- 'UTH_Rnor_WKY_Bbb_1.0' (same assembly, GCA_023515805.1) -->
                     <property name="xrefAuthority" value="RGD"/>
+                    <property name="gff3Only" value="true"/>
                     <property name="gff3Url" value="https://ftp.ensembl.org/pub/current/gff3/rattus_norvegicus_wkybbb/Rattus_norvegicus_wkybbb.UTH_Rnor_WKY_Bbb_1.0.116.gff3.gz"/>
                     <property name="entrezUrl" value="https://ftp.ensembl.org/pub/current/tsv/rattus_norvegicus_wkybbb/Rattus_norvegicus_wkybbb.UTH_Rnor_WKY_Bbb_1.0.116.entrez.tsv.gz"/>
                 </bean>

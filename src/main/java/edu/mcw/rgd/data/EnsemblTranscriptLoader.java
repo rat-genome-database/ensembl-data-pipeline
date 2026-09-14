@@ -309,6 +309,11 @@ public class EnsemblTranscriptLoader {
         ensemblDAO.insertTranscript(newTranscript, speciesTypeKey);
         counters.increment("TRANSCRIPTS_INSERTED");
 
+        // register the rgd id of the newly created transcript, so its version can be stored
+        // in STABLE_TRANSCRIPTS; without this, version insert fails with 'no RGD ID provided'
+        // (matched transcripts get registered in updateTranscriptType)
+        TranscriptVersionManager.getInstance().addRgdId(newTranscript.getAccId(), newTranscript.getRgdId());
+
         insertExons(newTranscript.getRgdId(), transcript.getExonList(), mapKey, speciesTypeKey, counters);
 
         List<TranscriptFeature> utrs = transcript.getUtrs();
