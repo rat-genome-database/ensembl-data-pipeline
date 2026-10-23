@@ -191,7 +191,7 @@ public class EnsemblDAO extends AbstractDAO {
     }
 
     public MapData checkrecord_rgdid(String start_pos,String stop_pos,String strand,String chromosome, int mapKey) throws Exception {
-     String query="select * from maps_data where map_key=? and start_pos=? and stop_pos=? and strand=? and chromosome=?";
+     String query="select * from maps_data where map_key=? and start_pos=CAST(? AS NUMERIC) and stop_pos=CAST(? AS NUMERIC) and strand=? and chromosome=?";
         MapDataQuery q=new MapDataQuery(this.getDataSource(),query);
         List<MapData> mp=execute(q,mapKey,start_pos,stop_pos,strand,chromosome);
         if(!mp.isEmpty())
