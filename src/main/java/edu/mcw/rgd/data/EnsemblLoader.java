@@ -71,6 +71,11 @@ public class EnsemblLoader {
             else if( arg.equals("-useBioMart") ) {
                 loader.useBioMart = true;
             }
+            else if( arg.equals("-polyphen") ) {
+                // load PolyPhen-2 predictions for human variants; all assemblies configured for 'polyphenLoader'
+                ((PolyphenLoader) bf.getBean("polyphenLoader")).run();
+                return;
+            }
         }
 
         // the data source must be chosen explicitly -- exactly one of -useBioMart / -useGff3Loader
@@ -357,6 +362,7 @@ public class EnsemblLoader {
         System.out.println("           (default: all species and assemblies configured in AppConfigure.xml)");
         System.out.println(" optional: -mapKey <k1[,k2,...]> -- process only the given assembly map(s), f.e. -mapKey 301,302,303");
         System.out.println(" optional: -skipGenes -skipTranscripts");
+        System.out.println(" or: -polyphen -- load PolyPhen-2 predictions for human variants from Ensembl (no other params)");
     }
 
     public void setVersion(String version) {

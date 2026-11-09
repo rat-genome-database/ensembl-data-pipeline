@@ -1,6 +1,7 @@
 package edu.mcw.rgd.data;
 
 import edu.mcw.rgd.dao.AbstractDAO;
+import edu.mcw.rgd.dao.DataSourceFactory;
 import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.dao.spring.MapDataQuery;
 import edu.mcw.rgd.dao.spring.StringListQuery;
@@ -9,8 +10,15 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.jdbc.object.BatchSqlUpdate;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -292,6 +300,173 @@ public class EnsemblDAO extends AbstractDAO {
 
     public List<MapData> getGenePositions(int mapKey) throws Exception {
         return mapDAO.getMapDataByMapKeyObject(mapKey, RgdId.OBJECT_KEY_GENES, "Ensembl");
+    }
+
+    ///// POLYPHEN -- variant tables live in the Carpe database
+
+    interface RowHandler {
+        void handle(ResultSet rs) throws Exception;
+    }
+
+    DataSource getCarpeDataSource() throws Exception {
+        return DataSourceFactory.getInstance().getCarpeNovoDataSource();
+    }
+
+    /// streams the rows of a query from the Carpe database (Postgres streams only with autocommit off)
+    void queryCarpe(String sql, RowHandler handler, Object... params) throws Exception {
+        try( Connection conn = getCarpeDataSource().getConnection() ) {
+            conn.setAutoCommit(false);
+            try( PreparedStatement ps = conn.prepareStatement(sql) ) {
+                ps.setFetchSize(10000);
+                for( int i=0; i<params.length; i++ ) {
+                    if( params[i] instanceof Long[] array ) {
+                        ps.setArray(i+1, conn.createArrayOf("bigint", array));
+                    } else {
+                        ps.setObject(i+1, params[i]);
+                    }
+                }
+                try( ResultSet rs = ps.executeQuery() ) {
+                    while( rs.next() ) {
+                        handler.handle(rs);
+                    }
+                }
+            } finally {
+                conn.rollback();
+            }
+        }
+    }
+
+    /// missense variant transcripts on given assemblies: one reference and one variant amino acid, different;
+    /// returns map_key -> rows. All assemblies are read in ONE query: VARIANT_TRANSCRIPT is huge (2 billion rows)
+    /// and the planner reads it with a full table scan, so one scan for all assemblies instead of one per assembly
+    public java.util.Map<Integer, List<PolyphenLoader.VtRow>> getMissenseVariantTranscripts(Collection<Integer> mapKeys) throws Exception {
+        String sql = """
+            SELECT map_key, variant_rgd_id, transcript_rgd_id, full_ref_aa_pos, ref_aa, var_aa, full_ref_aa_seq_key
+            FROM variant_transcript
+            WHERE map_key = ANY(?) AND full_ref_aa_seq_key IS NOT NULL AND full_ref_aa_pos IS NOT NULL
+              AND LENGTH(ref_aa)=1 AND LENGTH(var_aa)=1 AND ref_aa<>var_aa
+            """;
+        java.util.Map<Integer, List<PolyphenLoader.VtRow>> result = new HashMap<>();
+        Long[] mapKeyArray = mapKeys.stream().map(Long::valueOf).toArray(Long[]::new);
+        queryCarpe(sql, rs -> result.computeIfAbsent(rs.getInt(1), k -> new ArrayList<>())
+            .add(new PolyphenLoader.VtRow(rs.getLong(2), rs.getLong(3), rs.getInt(4),
+                rs.getString(5).charAt(0), rs.getString(6).charAt(0), rs.getLong(7))), (Object) mapKeyArray);
+        return result;
+    }
+
+    /// protein sequences by seq_key: seq_key -> md5 and length of the protein sequence without the trailing
+    /// stop codon '*' (the same convention as Ensembl's translation_md5); looked up in batches by key,
+    /// which uses the seq_key and data_md5 indexes instead of scanning SEQ_DATA
+    public java.util.Map<Long, PolyphenLoader.SeqInfo> getProteinSequences(Collection<Long> seqKeys) throws Exception {
+        String sql = """
+            SELECT s.seq_key, MD5(RTRIM(d.seq_data, '*')), LENGTH(RTRIM(d.seq_data, '*'))
+            FROM rgd_sequences s
+            JOIN seq_data d ON d.data_md5=s.seq_data_md5
+            WHERE s.seq_key = ANY(?)
+            """;
+        java.util.Map<Long, PolyphenLoader.SeqInfo> result = new HashMap<>();
+        for( Long[] batch: batches(seqKeys) ) {
+            queryCarpe(sql, rs -> result.put(rs.getLong(1), new PolyphenLoader.SeqInfo(rs.getString(2), rs.getInt(3))), (Object) batch);
+        }
+        return result;
+    }
+
+    /// transcript_rgd_id -> { protein accession, gene symbol }; looked up in batches by key
+    public java.util.Map<Long, String[]> getTranscriptProteins(Collection<Long> transcriptRgdIds) throws Exception {
+        String sql = """
+            SELECT t.transcript_rgd_id, t.protein_acc_id, g.gene_symbol
+            FROM transcripts t
+            LEFT JOIN genes g ON g.rgd_id=t.gene_rgd_id
+            WHERE t.transcript_rgd_id = ANY(?)
+            """;
+        java.util.Map<Long, String[]> result = new HashMap<>();
+        for( Long[] batch: batches(transcriptRgdIds) ) {
+            queryCarpe(sql, rs -> result.put(rs.getLong(1), new String[]{rs.getString(2), rs.getString(3)}), (Object) batch);
+        }
+        return result;
+    }
+
+    /// POLYPHEN rows of given variants; looked up in batches by key
+    public List<PolyphenRow> getPolyphenRows(Collection<Long> variantRgdIds) throws Exception {
+        String sql = """
+            SELECT p.polyphen_id, p.variant_rgd_id, p.transcript_rgd_id, p.gene_symbol, p.protein_id, p.position,
+              p.aa1, p.aa2, p.prediction, p.pph2_class, p.pph2_prob
+            FROM polyphen p
+            WHERE p.variant_rgd_id = ANY(?)
+            """;
+        List<PolyphenRow> rows = new ArrayList<>();
+        RowHandler handler = rs -> {
+            PolyphenRow r = new PolyphenRow();
+            r.polyphenId = rs.getLong(1);
+            r.variantRgdId = rs.getLong(2);
+            r.transcriptRgdId = rs.getLong(3);
+            r.geneSymbol = rs.getString(4);
+            r.proteinId = rs.getString(5);
+            r.position = Integer.parseInt(rs.getString(6));
+            r.aa1 = rs.getString(7);
+            r.aa2 = rs.getString(8);
+            r.prediction = rs.getString(9);
+            r.pph2Class = rs.getString(10);
+            r.pph2Prob = rs.getString(11);
+            rows.add(r);
+        };
+        for( Long[] batch: batches(variantRgdIds) ) {
+            queryCarpe(sql, handler, (Object) batch);
+        }
+        return rows;
+    }
+
+    /// splits ids into arrays of up to 1000, for '= ANY(?)' lookups by key
+    List<Long[]> batches(Collection<Long> ids) {
+        List<Long> list = new ArrayList<>(ids);
+        List<Long[]> result = new ArrayList<>();
+        for( int i=0; i<list.size(); i+=1000 ) {
+            result.add(list.subList(i, Math.min(i+1000, list.size())).toArray(new Long[0]));
+        }
+        return result;
+    }
+
+    public void insertPolyphenRows(List<PolyphenRow> rows) throws Exception {
+        String sql = """
+            INSERT INTO polyphen (polyphen_id, variant_rgd_id, transcript_rgd_id, gene_symbol, protein_id, position,
+              aa1, aa2, o_aa1, o_aa2, prediction, pph2_class, pph2_prob, protein_status, creation_date)
+            VALUES (NEXTVAL('polyphen_seq'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '100 PERC MATCH', LOCALTIMESTAMP(0))
+            """;
+        BatchSqlUpdate su = new BatchSqlUpdate(getCarpeDataSource(), sql, new int[]{Types.BIGINT, Types.BIGINT,
+            Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,
+            Types.VARCHAR, Types.VARCHAR, Types.VARCHAR}, 10000);
+        su.compile();
+        for( PolyphenRow r: rows ) {
+            su.update(r.variantRgdId, r.transcriptRgdId, r.geneSymbol, r.proteinId, Integer.toString(r.position),
+                r.aa1, r.aa2, r.aa1, r.aa2, r.prediction, r.pph2Class, r.pph2Prob);
+        }
+        su.flush();
+    }
+
+    public void updatePolyphenRows(List<PolyphenRow> rows) throws Exception {
+        String sql = """
+            UPDATE polyphen SET gene_symbol=?, prediction=?, pph2_class=?, pph2_prob=?
+            WHERE polyphen_id=?
+            """;
+        BatchSqlUpdate su = new BatchSqlUpdate(getCarpeDataSource(), sql, new int[]{Types.VARCHAR, Types.VARCHAR,
+            Types.VARCHAR, Types.VARCHAR, Types.BIGINT}, 10000);
+        su.compile();
+        for( PolyphenRow r: rows ) {
+            su.update(r.geneSymbol, r.prediction, r.pph2Class, r.pph2Prob, r.polyphenId);
+        }
+        su.flush();
+    }
+
+    public void deletePolyphenRows(List<PolyphenRow> rows) throws Exception {
+        String sql = """
+            DELETE FROM polyphen WHERE polyphen_id=?
+            """;
+        BatchSqlUpdate su = new BatchSqlUpdate(getCarpeDataSource(), sql, new int[]{Types.BIGINT}, 10000);
+        su.compile();
+        for( PolyphenRow r: rows ) {
+            su.update(r.polyphenId);
+        }
+        su.flush();
     }
 }
 

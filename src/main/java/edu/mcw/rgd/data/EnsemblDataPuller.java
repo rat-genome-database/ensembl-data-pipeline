@@ -236,7 +236,13 @@ public class EnsemblDataPuller {
     /// AppConfigure.xml; returns the local path. The local file name is the URL's file name, date-stamped, f.e.
     /// https://ftp.ensembl.org/pub/current_gff3/rattus_norvegicus/Rattus_norvegicus.GRCr8.115.gff3.gz
     public String downloadEnsemblFile(String url) throws Exception {
-        String localName = url.substring(url.lastIndexOf('/')+1);
+        return downloadEnsemblFile(url, "");
+    }
+
+    /// as above, with a prefix prepended to the local file name -- for sources whose file names repeat
+    /// across Ensembl databases, f.e. 'translation_md5.txt.gz' in the GRCh37 and GRCh38 variation dumps
+    public String downloadEnsemblFile(String url, String localNamePrefix) throws Exception {
+        String localName = localNamePrefix + url.substring(url.lastIndexOf('/')+1);
         FileDownloader2 fd = new FileDownloader2();
         fd.setExternalFile(url);
         fd.setLocalFile("data/"+localName);

@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Oct 23, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Nov 9, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -190,6 +190,36 @@
             </list>
         </property>
 
+    </bean>
+
+    <!-- PolyPhen-2 predictions for human variants (cmdline '-polyphen'), from Ensembl variation database dumps;
+         RGD reference proteins of missense variant transcripts are matched to Ensembl proteins by sequence md5 -->
+    <bean id="polyphenLoader" class="edu.mcw.rgd.data.PolyphenLoader">
+        <property name="version" value="ensembl-data-pipeline polyphen loader -- build Nov 9, 2026"/>
+        <property name="dataPuller" ref="ensemblDataPuller"/>
+        <!-- PolyPhen-2 classifier model: 'humdiv' (default; also used for RGD's own rat and dog PolyPhen runs)
+             or 'humvar' (trained on human disease variants; Ensembl VEP shows humvar by default) -->
+        <property name="model" value="humdiv"/>
+        <!-- all assemblies are processed together in every run: GRCh37 and GRCh38 variants share variant RGD ids;
+             update the urls on each Ensembl release -->
+        <property name="sources">
+            <list>
+                <bean class="edu.mcw.rgd.data.PolyphenSource"><!-- GRCh38 -->
+                    <property name="mapKey" value="38"/>
+                    <property name="attribUrl" value="https://ftp.ensembl.org/pub/release-116/mysql/homo_sapiens_variation_116_38/attrib.txt.gz"/>
+                    <property name="translationMd5Url" value="https://ftp.ensembl.org/pub/release-116/mysql/homo_sapiens_variation_116_38/translation_md5.txt.gz"/>
+                    <property name="predictionsUrl" value="https://ftp.ensembl.org/pub/release-116/mysql/homo_sapiens_variation_116_38/protein_function_predictions.txt.gz"/>
+                </bean>
+                <bean class="edu.mcw.rgd.data.PolyphenSource"><!-- GRCh37 -->
+                    <property name="mapKey" value="17"/>
+                    <property name="attribUrl" value="https://ftp.ensembl.org/pub/grch37/release-116/mysql/homo_sapiens_variation_116_37/attrib.txt"/>
+                    <!-- the 116_37 dump has no translation_md5 file; the 115_37 one is identical to the 116_37 database table
+                         (all 117,525 rows, verified on Nov 9, 2026 against ensembldb.ensembl.org:3337) -->
+                    <property name="translationMd5Url" value="https://ftp.ensembl.org/pub/grch37/release-115/mysql/homo_sapiens_variation_115_37/translation_md5.txt.gz"/>
+                    <property name="predictionsUrl" value="https://ftp.ensembl.org/pub/grch37/release-116/mysql/homo_sapiens_variation_116_37/protein_function_predictions.txt"/>
+                </bean>
+            </list>
+        </property>
     </bean>
 
     <bean id="GeneLoader" class="edu.mcw.rgd.data.EnsemblGeneLoader">
