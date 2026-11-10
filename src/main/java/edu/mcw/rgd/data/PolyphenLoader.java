@@ -89,7 +89,7 @@ public class PolyphenLoader {
         }
         java.util.Map<Long, SeqInfo> sequences = dao.getProteinSequences(seqKeys);
         java.util.Map<Long, String[]> transcriptProteins = dao.getTranscriptProteins(transcriptRgdIds);
-        log.info("  missense variant transcripts: "+Utils.formatThousands(vtRows.size())
+        log.info("  variant transcripts with a single amino acid change: "+Utils.formatThousands(vtRows.size())
             +", distinct reference proteins: "+Utils.formatThousands(sequences.size()));
 
         String prefix = "polyphen_"+mapKey+"_";
@@ -104,8 +104,12 @@ public class PolyphenLoader {
         // group the variant transcripts by Ensembl protein
         java.util.Map<Integer, List<VtRow>> rowsByTranslation = new HashMap<>();
         java.util.Map<Integer, Integer> proteinLengths = new HashMap<>();
-        int nonStandardAa = 0, noEnsemblProtein = 0;
+        int stopCodon = 0, nonStandardAa = 0, noEnsemblProtein = 0;
         for( VtRow vt: vtRows ) {
+            if( vt.refAa()=='*' || vt.varAa()=='*' ) {
+                stopCodon++; // stop gained or stop lost: not scored by PolyPhen
+                continue;
+            }
             if( AMINO_ACIDS.indexOf(vt.refAa())<0 || AMINO_ACIDS.indexOf(vt.varAa())<0 ) {
                 nonStandardAa++;
                 continue;
@@ -162,14 +166,15 @@ public class PolyphenLoader {
         }
 
         log.info("  variant transcripts with PolyPhen prediction: "+Utils.formatThousands(counts[0]+counts[5])
-            +(counts[5]>0 ? " (incl. "+Utils.formatThousands(counts[5])+" identical to another assembly)" : ""));
+            +(counts[5]>0 ? " (incl. "+Utils.formatThousands(counts[5])+" already loaded from another assembly)" : ""));
         log.info("  variant transcripts without prediction:");
-        log.info("    reference protein not in Ensembl: "+Utils.formatThousands(noEnsemblProtein));
+        log.info("    RGD reference protein not found in Ensembl (md5 mismatch): "+Utils.formatThousands(noEnsemblProtein));
         log.info("    Ensembl protein without PolyPhen matrix: "+Utils.formatThousands(rowsNoMatrix)
             +" (proteins: "+Utils.formatThousands(rowsByTranslation.size())+")");
-        log.info("    no PolyPhen prediction for the substitution: "+Utils.formatThousands(counts[1]));
+        log.info("    PolyPhen matrix has no score for the substitution: "+Utils.formatThousands(counts[1]));
+        log.info("    stop gained or stop lost (not scored by PolyPhen): "+Utils.formatThousands(stopCodon));
         if( nonStandardAa>0 ) {
-            log.info("    non-standard amino acid: "+Utils.formatThousands(nonStandardAa));
+            log.info("    other non-standard amino acid: "+Utils.formatThousands(nonStandardAa));
         }
         if( counts[2]>0 ) {
             log.info("    position beyond protein end: "+Utils.formatThousands(counts[2]));
