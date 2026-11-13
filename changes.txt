@@ -1,3 +1,7 @@
+Nov 13, 2026
+  -polyphen: missense = variant protein differs from the reference at the variant position only
+    (VAR_AA holds the variant protein up to the stop codon); rows of withdrawn transcripts skipped
+
 Nov 9, 2026
   new -polyphen module: loads PolyPhen-2 predictions (HumDiv, configurable) for human GRCh37/GRCh38 missense variants
     from Ensembl variation dumps into POLYPHEN, matching RGD reference proteins to Ensembl by sequence md5

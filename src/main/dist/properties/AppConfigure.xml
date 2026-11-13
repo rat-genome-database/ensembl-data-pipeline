@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="loader" class="edu.mcw.rgd.data.EnsemblLoader">
-        <property name="version" value="ensembl-data-pipeline  -- build Nov 9, 2026"/>
+        <property name="version" value="ensembl-data-pipeline  -- build Nov 13, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <property name="dataParser" ref="Parser"/>
         <property name="dataGff3Parser" ref="gff3Parser"/>
@@ -195,7 +195,7 @@
     <!-- PolyPhen-2 predictions for human variants (cmdline '-polyphen'), from Ensembl variation database dumps;
          RGD reference proteins of missense variant transcripts are matched to Ensembl proteins by sequence md5 -->
     <bean id="polyphenLoader" class="edu.mcw.rgd.data.PolyphenLoader">
-        <property name="version" value="ensembl-data-pipeline polyphen loader -- build Nov 9, 2026"/>
+        <property name="version" value="ensembl-data-pipeline polyphen loader -- build Nov 13, 2026"/>
         <property name="dataPuller" ref="ensemblDataPuller"/>
         <!-- PolyPhen-2 classifier model: 'humdiv' (default; also used for RGD's own rat and dog PolyPhen runs)
              or 'humvar' (trained on human disease variants; Ensembl VEP shows humvar by default) -->

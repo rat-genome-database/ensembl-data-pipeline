@@ -336,37 +336,41 @@ public class EnsemblDAO extends AbstractDAO {
         }
     }
 
-    /// missense variant transcripts on given assemblies: one reference and one variant amino acid, different;
-    /// returns map_key -> rows. All assemblies are read in ONE query: VARIANT_TRANSCRIPT is huge (2 billion rows)
+    /// variant transcripts on given assemblies whose amino acid at the variant position changes;
+    /// returns map_key -> rows. VAR_AA holds the variant protein from the variant position to the first stop codon,
+    /// so only its first letter and the md5 of the rest (cut to the 3900 chars VAR_AA keeps) are returned:
+    /// the loader compares that md5 with the reference protein to keep only single amino acid substitutions.
+    /// All assemblies are read in ONE query: VARIANT_TRANSCRIPT is huge (2 billion rows)
     /// and the planner reads it with a full table scan, so one scan for all assemblies instead of one per assembly
     public java.util.Map<Integer, List<PolyphenLoader.VtRow>> getMissenseVariantTranscripts(Collection<Integer> mapKeys) throws Exception {
         String sql = """
-            SELECT map_key, variant_rgd_id, transcript_rgd_id, full_ref_aa_pos, ref_aa, var_aa, full_ref_aa_seq_key
+            SELECT map_key, variant_rgd_id, transcript_rgd_id, full_ref_aa_pos, ref_aa, LEFT(var_aa, 1), full_ref_aa_seq_key,
+              MD5(SUBSTR(var_aa, 2, 3899))
             FROM variant_transcript
             WHERE map_key = ANY(?) AND full_ref_aa_seq_key IS NOT NULL AND full_ref_aa_pos IS NOT NULL
-              AND LENGTH(ref_aa)=1 AND LENGTH(var_aa)=1 AND ref_aa<>var_aa
+              AND LENGTH(ref_aa)=1 AND LEFT(var_aa, 1)<>ref_aa
             """;
         java.util.Map<Integer, List<PolyphenLoader.VtRow>> result = new HashMap<>();
         Long[] mapKeyArray = mapKeys.stream().map(Long::valueOf).toArray(Long[]::new);
         queryCarpe(sql, rs -> result.computeIfAbsent(rs.getInt(1), k -> new ArrayList<>())
             .add(new PolyphenLoader.VtRow(rs.getLong(2), rs.getLong(3), rs.getInt(4),
-                rs.getString(5).charAt(0), rs.getString(6).charAt(0), rs.getLong(7))), (Object) mapKeyArray);
+                rs.getString(5).charAt(0), rs.getString(6).charAt(0), rs.getLong(7),
+                PolyphenLoader.md5Prefix(rs.getString(8)))), (Object) mapKeyArray);
         return result;
     }
 
-    /// protein sequences by seq_key: seq_key -> md5 and length of the protein sequence without the trailing
-    /// stop codon '*' (the same convention as Ensembl's translation_md5); looked up in batches by key,
-    /// which uses the seq_key and data_md5 indexes instead of scanning SEQ_DATA
-    public java.util.Map<Long, PolyphenLoader.SeqInfo> getProteinSequences(Collection<Long> seqKeys) throws Exception {
+    /// protein sequences by seq_key: seq_key -> sequence, as stored (with the trailing stop codon '*');
+    /// looked up in batches by key, which uses the seq_key and data_md5 indexes instead of scanning SEQ_DATA
+    public java.util.Map<Long, String> getProteinSequences(Collection<Long> seqKeys) throws Exception {
         String sql = """
-            SELECT s.seq_key, MD5(RTRIM(d.seq_data, '*')), LENGTH(RTRIM(d.seq_data, '*'))
+            SELECT s.seq_key, d.seq_data
             FROM rgd_sequences s
             JOIN seq_data d ON d.data_md5=s.seq_data_md5
             WHERE s.seq_key = ANY(?)
             """;
-        java.util.Map<Long, PolyphenLoader.SeqInfo> result = new HashMap<>();
+        java.util.Map<Long, String> result = new HashMap<>();
         for( Long[] batch: batches(seqKeys) ) {
-            queryCarpe(sql, rs -> result.put(rs.getLong(1), new PolyphenLoader.SeqInfo(rs.getString(2), rs.getInt(3))), (Object) batch);
+            queryCarpe(sql, rs -> result.put(rs.getLong(1), rs.getString(2)), (Object) batch);
         }
         return result;
     }

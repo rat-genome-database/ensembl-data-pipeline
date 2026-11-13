@@ -15,6 +15,8 @@ import java.util.zip.GZIPInputStream;
 /// Ensembl keeps one precomputed prediction matrix per protein sequence (every position x every amino acid),
 /// keyed by the md5 of the protein sequence. RGD reference protein sequences of missense variant transcripts
 /// are matched to Ensembl proteins by md5, so the match is exact and works for RefSeq and Ensembl transcripts alike.
+/// A variant transcript is missense when its variant protein (VAR_AA, from the variant position to the first stop codon)
+/// differs from the reference protein at the variant position only; rows of withdrawn transcripts are skipped.
 /// <p>
 /// Matrix format (Ensembl ProteinFunctionPredictionMatrix.pm): gzipped; 'VEP' header followed by a 16-bit
 /// little-endian value for every protein position and every amino acid in order ACDEFGHIKLMNPQRSTVWY;
@@ -35,8 +37,11 @@ public class PolyphenLoader {
 
     EnsemblDAO dao = new EnsemblDAO();
 
-    record VtRow(long variantRgdId, long transcriptRgdId, int pos, char refAa, char varAa, long seqKey) {}
+    /// varTailMd5: first 64 bits of the md5 of the variant protein after the variant position (see EnsemblDAO)
+    record VtRow(long variantRgdId, long transcriptRgdId, int pos, char refAa, char varAa, long seqKey, long varTailMd5) {}
     record SeqInfo(String md5, int length) {}
+
+    static final int VAR_TAIL_LENGTH = 3899; // VAR_AA keeps up to 3900 amino acids, the changed one included
 
     static final String AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY"; // matrix column order
     static final String[] PREDICTIONS = {"probably damaging", "possibly damaging", "benign", "unknown"};
@@ -87,15 +92,22 @@ public class PolyphenLoader {
             transcriptRgdIds.add(vt.transcriptRgdId());
             variantRgdIds.add(vt.variantRgdId());
         }
-        java.util.Map<Long, SeqInfo> sequences = dao.getProteinSequences(seqKeys);
+        java.util.Map<Long, String> sequences = dao.getProteinSequences(seqKeys);
         java.util.Map<Long, String[]> transcriptProteins = dao.getTranscriptProteins(transcriptRgdIds);
-        log.info("  variant transcripts with a single amino acid change: "+Utils.formatThousands(vtRows.size())
+        log.info("  variant transcripts with a changed amino acid: "+Utils.formatThousands(vtRows.size())
             +", distinct reference proteins: "+Utils.formatThousands(sequences.size()));
+
+        // reference proteins without the trailing stop codon '*': md5 and length, as in Ensembl's translation_md5
+        java.util.Map<Long, SeqInfo> proteins = new HashMap<>();
+        for( java.util.Map.Entry<Long, String> e: sequences.entrySet() ) {
+            String protein = Utils.defaultString(e.getValue()).replaceAll("\\*+$", "");
+            proteins.put(e.getKey(), new SeqInfo(md5(protein), protein.length()));
+        }
 
         String prefix = "polyphen_"+mapKey+"_";
         int attribId = resolveAnalysisAttribId(dataPuller.downloadEnsemblFile(source.getAttribUrl(), prefix));
         Set<String> md5s = new HashSet<>();
-        for( SeqInfo si: sequences.values() ) {
+        for( SeqInfo si: proteins.values() ) {
             md5s.add(si.md5());
         }
         java.util.Map<String, Integer> translationIds = loadTranslationIds(dataPuller.downloadEnsemblFile(source.getTranslationMd5Url(), prefix), md5s);
@@ -104,7 +116,7 @@ public class PolyphenLoader {
         // group the variant transcripts by Ensembl protein
         java.util.Map<Integer, List<VtRow>> rowsByTranslation = new HashMap<>();
         java.util.Map<Integer, Integer> proteinLengths = new HashMap<>();
-        int stopCodon = 0, nonStandardAa = 0, noEnsemblProtein = 0;
+        int stopCodon = 0, nonStandardAa = 0, noTranscript = 0, notSingleSubstitution = 0, noEnsemblProtein = 0;
         for( VtRow vt: vtRows ) {
             if( vt.refAa()=='*' || vt.varAa()=='*' ) {
                 stopCodon++; // stop gained or stop lost: not scored by PolyPhen
@@ -114,8 +126,16 @@ public class PolyphenLoader {
                 nonStandardAa++;
                 continue;
             }
-            SeqInfo seq = sequences.get(vt.seqKey());
-            Integer translationId = seq==null ? null : translationIds.get(seq.md5());
+            if( !transcriptProteins.containsKey(vt.transcriptRgdId()) ) {
+                noTranscript++; // stale VARIANT_TRANSCRIPT row of a withdrawn transcript
+                continue;
+            }
+            if( !isSingleSubstitution(vt, sequences.get(vt.seqKey())) ) {
+                notSingleSubstitution++;
+                continue;
+            }
+            SeqInfo seq = proteins.get(vt.seqKey());
+            Integer translationId = translationIds.get(seq.md5());
             if( translationId==null ) {
                 noEnsemblProtein++;
                 continue;
@@ -124,6 +144,7 @@ public class PolyphenLoader {
             proteinLengths.put(translationId, seq.length());
         }
         vtRows = null;
+        sequences = null;
 
         // stream the prediction matrices once, decoding only the cells of our variants
         int[] counts = new int[6]; // 0: with prediction, 1: no prediction in matrix, 2: position beyond protein end,
@@ -168,6 +189,8 @@ public class PolyphenLoader {
         log.info("  variant transcripts with PolyPhen prediction: "+Utils.formatThousands(counts[0]+counts[5])
             +(counts[5]>0 ? " (incl. "+Utils.formatThousands(counts[5])+" already loaded from another assembly)" : ""));
         log.info("  variant transcripts without prediction:");
+        log.info("    transcript no longer in RGD: "+Utils.formatThousands(noTranscript));
+        log.info("    not a single amino acid substitution (in-frame indel or several changes): "+Utils.formatThousands(notSingleSubstitution));
         log.info("    RGD reference protein not found in Ensembl (md5 mismatch): "+Utils.formatThousands(noEnsemblProtein));
         log.info("    Ensembl protein without PolyPhen matrix: "+Utils.formatThousands(rowsNoMatrix)
             +" (proteins: "+Utils.formatThousands(rowsByTranslation.size())+")");
@@ -183,6 +206,31 @@ public class PolyphenLoader {
             log.warn("    WARNING: malformed prediction matrix: "+Utils.formatThousands(counts[4])
                 +" (proteins: "+Utils.formatThousands(counts[3])+")");
         }
+    }
+
+    /// VAR_AA is the variant protein from the variant position to its first stop codon: the variant is a single
+    /// amino acid substitution when the reference has the reference amino acid at the variant position and
+    /// the rest of the variant protein is the same as the rest of the reference protein (stop codon included)
+    boolean isSingleSubstitution(VtRow vt, String refSequence) {
+        if( refSequence==null || vt.pos()<1 || vt.pos()>refSequence.length() || refSequence.charAt(vt.pos()-1)!=vt.refAa() ) {
+            return false;
+        }
+        String refTail = refSequence.substring(vt.pos(), Math.min(refSequence.length(), vt.pos()+VAR_TAIL_LENGTH));
+        return md5Prefix(md5(refTail))==vt.varTailMd5();
+    }
+
+    static String md5(String s) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("MD5").digest(s.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+            return HexFormat.of().formatHex(digest);
+        } catch( java.security.NoSuchAlgorithmException e ) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /// first 64 bits of an md5 hex string
+    static long md5Prefix(String md5Hex) {
+        return Long.parseUnsignedLong(md5Hex.substring(0, 16), 16);
     }
 
     PolyphenRow createRow(VtRow vt, int value, String[] transcriptProtein) {
